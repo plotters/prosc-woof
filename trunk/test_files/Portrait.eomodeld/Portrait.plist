@@ -1,0 +1,129 @@
+{
+    attributes = (
+        {
+            allowsNull = Y; 
+            columnName = "Alternate Mime Type"; 
+            externalType = TEXT; 
+            name = alternateMimeType; 
+            valueClassName = NSString; 
+            valueType = C; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "Alternate Portrait"; 
+            externalType = BLOB; 
+            name = alternatePortrait; 
+            valueClassName = NSData; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = contactID; 
+            externalType = NUMBER; 
+            name = contactid; 
+            precision = 400; 
+            scale = 17; 
+            valueClassName = NSDecimalNumber; 
+            valueType = B; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "Date Created"; 
+            externalType = DATE; 
+            name = dateCreated; 
+            valueClassName = NSCalendarDate; 
+            valueType = D; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "Floating point"; 
+            externalType = NUMBER; 
+            name = floatingPoint; 
+            precision = 400; 
+            scale = 17; 
+            valueClassName = NSDecimalNumber; 
+            valueType = B; 
+        }, 
+        {
+            columnName = ID; 
+            externalType = TEXT; 
+            name = id; 
+            valueClassName = NSString; 
+            valueType = C; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = mimeType; 
+            externalType = TEXT; 
+            name = mimetype; 
+            valueClassName = NSString; 
+            valueType = C; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "Picture taken"; 
+            externalType = TIMESTAMP; 
+            name = pictureTaken; 
+            valueClassName = NSCalendarDate; 
+            valueType = T; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = portrait; 
+            externalType = BLOB; 
+            name = portrait; 
+            valueClassName = NSData; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = recordidCalc; 
+            externalType = NUMBER; 
+		isReadOnly = Y;
+            name = recordidcalc; 
+            precision = 400; 
+            scale = 17; 
+            valueClassName = NSDecimalNumber; 
+            valueType = B; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "Time inserted"; 
+            externalType = TIME; 
+            name = timeInserted; 
+            valueClassName = NSCalendarDate; 
+            valueType = t; 
+        }
+    ); 
+    attributesUsedForLocking = (
+        contactid, 
+        mimetype, 
+        alternateMimeType, 
+        recordidcalc, 
+        dateCreated, 
+        id, 
+        timeInserted, 
+        pictureTaken, 
+        floatingPoint
+    ); 
+    className = EOGenericRecord; 
+    classProperties = (
+        contactid, 
+        portrait, 
+        mimetype, 
+        alternateMimeType, 
+        alternatePortrait, 
+        recordidcalc, 
+        dateCreated, 
+        timeInserted, 
+        pictureTaken, 
+        floatingPoint
+    ); 
+    externalName = "Contacts.Portrait"; 
+    fetchSpecificationDictionary = {}; 
+    name = Portrait; 
+    primaryKeyAttributes = (id); 
+}

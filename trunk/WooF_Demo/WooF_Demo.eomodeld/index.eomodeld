@@ -1,0 +1,81 @@
+{
+    EOModelVersion = "2.1"; 
+    adaptorName = JDBC; 
+    connectionDictionary = {
+        URL = "jdbc:fmp360://fmwpe.360works.com/WooF_Demo"; 
+        driver = ""; 
+        jdbc2Info = {
+            "ANSI92_CONFORMANCE" = ANSI92EntryLevel; 
+            "DBMS_NAME" = "FileMaker Web Publishing Engine"; 
+            "DRIVER_NAME" = "fmp360_jdbc"; 
+            "DRIVER_VER" = "1.0"; 
+            "IDENTIFIER_QUOTE_STRING" = "\""; 
+            "NON_NULLABLE_COLUMNS" = T; 
+            "STRING_FUNCTIONS" = ""; 
+            typeInfo = {
+                BLOB = {
+                    createParams = 0; 
+                    defaultJDBCType = (BLOB); 
+                    isNullable = T; 
+                    isSearchable = F; 
+                    maxScale = 100; 
+                    minScale = 0; 
+                    precision = 2147483647; 
+                }; 
+                DATE = {
+                    createParams = 0; 
+                    defaultJDBCType = (DATE); 
+                    isNullable = T; 
+                    isSearchable = T; 
+                    maxScale = 100; 
+                    minScale = 0; 
+                    precision = 32; 
+                }; 
+                NUMBER = {
+                    createParams = 2; 
+                    defaultJDBCType = (DECIMAL); 
+                    isNullable = T; 
+                    isSearchable = T; 
+                    maxScale = 100; 
+                    minScale = 0; 
+                    precision = 400; 
+                }; 
+                TEXT = {
+                    createParams = 1; 
+                    defaultJDBCType = (VARCHAR); 
+                    isNullable = T; 
+                    isSearchable = T; 
+                    maxScale = 100; 
+                    minScale = 0; 
+                    precision = 2147483647; 
+                }; 
+                TIME = {
+                    createParams = 0; 
+                    defaultJDBCType = (TIME); 
+                    isNullable = T; 
+                    isSearchable = T; 
+                    maxScale = 100; 
+                    minScale = 0; 
+                    precision = 32; 
+                }; 
+                TIMESTAMP = {
+                    createParams = 0; 
+                    defaultJDBCType = (TIMESTAMP); 
+                    isNullable = T; 
+                    isSearchable = T; 
+                    maxScale = 100; 
+                    minScale = 0; 
+                    precision = 64; 
+                }; 
+            }; 
+        }; 
+        password = 1234; 
+        plugin = ""; 
+        username = WooF; 
+    }; 
+    entities = (
+        {className = EOGenericRecord; name = Address; }, 
+        {className = EOGenericRecord; name = Person; }, 
+        {className = EOGenericRecord; name = Phone; }
+    ); 
+}

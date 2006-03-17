@@ -1,0 +1,9 @@
+PopUpButton1: WOPopUpButton {
+	displayString = aString;
+	escapeHTML = ^escapeHTML;
+	item = aString;
+	list = valueListValues;
+	name = ^name;
+	selection = ^selection;
+	value = ^value;
+}

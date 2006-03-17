@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<wodefinitions>
+	<wo class="FMRadioButtonMatrix" wocomponentcontent="false">
+		<image path="image.tiff"/>
+
+		<binding name="valueListName"/>
+		<binding name="selection"/>
+		<binding name="entityName"/>
+		<binding name="maxColumns"/>
+		<binding name="escapeHTML"/>
+
+		<validation message="&apos;valueListName&apos; is a required binding">
+			<unbound name="valueListName"/>
+		</validation>
+
+		<validation message="&apos;entityName&apos; is a required binding">
+			<unbound name="entityName"/>
+		</validation>
+
+		<validation message="&apos;selection&apos; must be bound to a settable value">
+			<unsettable name="selection"/>
+		</validation>
+	</wo>
+</wodefinitions>

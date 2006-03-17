@@ -1,0 +1,11 @@
+RadioButtonMatrix1: WORadioButtonMatrix {
+	item = aString;
+	list = valueListValues;
+	maxColumns = ^maxColumns;
+	selection = ^selection;
+}
+
+String1: WOString {
+	escapeHTML = ^escapeHTML;
+	value = aString;
+}

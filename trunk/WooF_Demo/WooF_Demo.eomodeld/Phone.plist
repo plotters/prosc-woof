@@ -1,0 +1,55 @@
+{
+    attributes = (
+        {
+            columnName = id; 
+            externalType = TEXT; 
+            name = id; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = Label; 
+            externalType = TEXT; 
+            name = label; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "person ID"; 
+            externalType = TEXT; 
+            name = personId; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "Phone Number"; 
+            externalType = TEXT; 
+            name = phoneNumber; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }
+    ); 
+    attributesUsedForLocking = (id); 
+    className = EOGenericRecord; 
+    classProperties = (label, phoneNumber, person); 
+    externalName = "WooF_Demo.Phone"; 
+    fetchSpecificationDictionary = {}; 
+    name = Phone; 
+    primaryKeyAttributes = (id); 
+    relationships = (
+        {
+            destination = Person; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = id; sourceAttribute = personId; }); 
+            name = person; 
+        }
+    ); 
+}

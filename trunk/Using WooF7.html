@@ -1,0 +1,325 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+	<head>
+		<title>
+			360Works Wiki: WooF - WebObjects on FileMaker
+		</title>
+	<body>
+		<h2>
+			WooF7: WebObjects on Filemaker adaptor
+		</h2>
+		<p>
+			<b>
+				� 2005 by Prometheus Systems Consulting LLC d/b/a 360Works</b>
+			<br />
+			<b>
+				All rights reserved</b>
+		</p>
+		<p>
+			<b>
+				360Works</b>
+			<br />
+			<b>
+				3700 Hedgecliff Court</b>
+			<br />
+			<b>
+				Alpharetta, GA 30022</b>
+			<br />
+			<b>
+				USA</b>
+		</p>
+		<p>
+			<b>
+				(770) 234-9293</b>
+			<br />
+			<b>
+				<a class="url" href="http://www.360works.com">
+					http://www.360works.com
+				</a>
+			</b>
+		</p>
+		<p>
+			<b>
+				For support and questions on WooF, use the contact form on our website.</b>
+		</p>
+		<h3>
+			Introduction to WooF
+		</h3>
+		<p>
+			WooF is a JDBC plug-in for using WebObjects with FileMaker Pro. This software allows WebObjects to utilize FileMaker Pro as a back-end database for creating high-volume, scalable web applications.
+		</p>
+		<p>
+			This software will allow FileMaker developers to create Java-based web sites that will greatly exceed the transaction volumes that would have been possible with traditional FileMaker web publishing techniques, such as using the built-in Web Companion software. It is targeted towards advanced FileMaker developers who have run into limitations on the speed and complexity that they can achieve using the built-in web publishing tools.
+		</p>
+		<p>
+			In addition to basic insert/edit/delete operations, WooF supports these FileMaker-specific features:
+		</p>
+		<ul>
+			<li>
+				Support for all FileMaker Pro data types - text, number, date, time, timestamp, and containers.
+			</li>
+			<li>
+				Support for FileMaker Pro's built-in serial number generation for primary keys.
+			</li>
+			<li>
+				Supports spaces and special characters in FileMaker databases and field names.
+			</li>
+			<li>
+				Handles very large tables containing hundreds of fields
+			</li>
+			<li>
+				Reverse-engineer FileMaker databases to use for WebObjects, E-R diagramming in EOModeler, or conversion to another database platform.
+			</li>
+			<li>
+				Execute Filemaker scripts as stored procedures.
+			</li>
+			<li>
+				Easy installation - works fine with existing WebObjects applications.
+			</li>
+		</ul>
+		<h3>
+			System requirements
+		</h3>
+		<p>
+			WooF works through the XML publishing feature of FileMaker Server Advanced. The following software components will need to be pre-installed to use WooF:
+			<br />
+		</p>
+		<ul>
+			<li>
+				FileMaker Server Advanced (version 7 or 8)
+			</li>
+			<li>
+				FileMaker Web Publishing Engine (included with FileMaker Server Advanced)
+			</li>
+			<li>
+				WebObjects 5.2 or later
+			</li>
+		</ul>
+		<h3>
+			Installing WooF
+		</h3>
+		<p>
+			WooF consists of two bundles and two jar files. The EOMBundle lets EOModeler communicate with Filemaker. The WooF7.framework is a WebObjects JDBC plugin. The fmp360_jdbc.jar file is a custom JDBC driver for Filemaker.
+		</p>
+		<p>
+			To install WooF on OS X:
+			<br />
+			Copy WooF_EOModelerPlugIn.EOMplugin to 
+			<code>
+				/Developer/EOMBundles/</code>
+			<br />
+			Copy WooF7.framework to 
+			<code>
+				/Library/Frameworks/</code>
+			<br />
+			Copy fmp360_jdbc.jar to 
+			<code>
+				/Library/Java/Extensions/</code>
+		</p>
+		<h3>
+			Sharing your Filemaker databases
+		</h3>
+		<p>
+			WooF uses Filemaker XML publishing to communicate with your Filemaker databases. Therefore, the Filemaker databases to be accessed via WooF must have XML publishing enabled. JDBC sharing is not required.
+		</p>
+		<p>
+			Consult the Filemaker documentation for in-depth information on enabling XML publishing for your database. For the impatient, perform the following steps (applies to Filemaker 7 and above):
+		</p>
+		<p>
+			1. Open your Filemaker database as an admin user
+			<br />
+			2. Create a new extended privilege with the fmxml keyword.
+			<br />
+			3. Assign the new privilege to one or more privilege sets.
+		</p>
+		<h3>
+			Creating an EOModel
+		</h3>
+		<p>
+			Make sure that your Filemaker database is running, and that XML publishing is enabled, and that WooF is properly installed (both the framework and EOMBundle).
+		</p>
+		<p>
+			Create a new EOModel, and select JDBC as the adaptor.
+		</p>
+		<p>
+			Enter the username and password you use to access the Filemaker database, and the JDBC URL. The JDBC URL should use the following format:
+		</p>
+<pre class="real">jdbc:fmp360://host/database
+</pre>
+		<p>
+			Hit continue. You should now be presented with a list of all tables within the database you specified. WooF can also reverse-engineer the script names as stored procedures. See 
+			<i>
+				“Connecting to multiple databases”
+			</i>
+			below for more information on that topic.
+		</p>
+		<h3>
+			Some Notes on Using WooF
+		</h3>
+		<p>
+			<b>
+				Number fields</b>: Any 
+			<code>
+				NUMBER
+			</code>
+			fields in your filemaker database will be imported as 
+			<code>
+				BigDecimal
+			</code>
+			attributes. The precision and scale will be set to the maximum values allowed by Filemaker (400 and 17). You will need to set the appropriate values for these fields, or change their Internal Data Type to 
+			<code>
+				Integer</code>. You may want to consider using 
+			<code>
+				TEXT
+			</code>
+			fields for primary key fields instead of 
+			<code>
+				NUMBER
+			</code>
+			fields.
+		</p>
+		<p>
+			<b>
+				Container fields</b>: WooF can read container data and mime-type information from a Filemaker database, returning them as 
+			<code>
+				FMData
+			</code>
+			objects (a subclass of 
+			<code>
+				NSData
+			</code>
+			which contains a mimeType attribute). This means you can bind container fields directly to a 
+			<code>
+				WOImage
+			</code>
+			(use an empty String for the mimeType binding), or stream the container contents to the user in a 
+			<code>
+				WOResponse</code>, setting the mimeType. For WooF to read container information from your database, the data must be stored inside Filemaker, not as a reference to a file.
+		</p>
+		<p>
+			<b>
+				Calculation Fields</b>: WooF can read data from 
+			<code>
+				CALCULATION
+			</code>
+			fields in Filemaker. It is recommended that you designate these as read-only attributes in your EOModel.
+		</p>
+		<p>
+			<b>
+				Alter Table</b>: WooF cannot alter table structure, or create tables from an existing EOModel.
+		</p>
+		<p>
+			<b>
+				Connecting to Multiple Databases</b>: A single filemaker file can contain multiple tables, and references to tables stored in other files. If you need to access tables stored in multiple database files, you have two options:
+			<br />
+			1. In the database specified in the JDBC URL, add table references to the tables in the other databases.
+			<br />
+			2. Leave off the database portion of the JDBC URL, and in your SQL, use a dot notation to specify both the database name and the table name. For example, the following JDBC URL and SQL query would be appropriate:
+			<br />
+		</p>
+<pre class="real">jdbc:fmp360://host?loglevel=INFO
+SELECT * FROM contacts.address where contactID = 1;
+</pre>
+		<p>
+			<b>
+				JDBC URL Properties</b>: You can customize the behavior of the JDBC driver by passing in optional properties in the JDBC url. The significant property names are:
+		</p>
+		<dl>
+			<dt>
+				user
+			</dt>
+			<dd>
+				the user to connect to the database as.
+				<br />
+			</dd>
+			<dt>
+				password
+			</dt>
+			<dd>
+				the password to use.
+				<br />
+			</dd>
+			<dt>
+				fmversion
+			</dt>
+			<dd>
+				set the version of Filemaker which is being accessed. Should be an integer of 6 or higher.
+				<br />
+			</dd>
+			<dt>
+				ssl
+			</dt>
+			<dd>
+				whether to use SSL encryption for XML communication with the database.
+				<br />
+			</dd>
+			<dt>
+				loglevel
+			</dt>
+			<dd>
+				the amount of detail to use for logging. This can be an integer between 0 (no logging) and 1000 (all logging), or one of the reserved java.util.logging.Level keywords (<code>ALL, SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST, OFF</code>). INFO is the default, which will only log errors. 
+				<code>
+					FINE
+				</code>
+				will log all SQL commands. 
+				<code>
+					FINER
+				</code>
+				and 
+				<code>
+					FINEST
+				</code>
+				will generate additional log messages about parsing individual record and fields.
+			</dd>
+		</dl>
+		<p>
+			An example JDBC url with custom properties:
+			<br />
+		</p>
+<pre class="real">jdbc:fmp360://host/database?user=Admin&amp;password=1234&amp;loglevel=1000&amp;fmversion=7&amp;ssl=true
+</pre>
+		<h3>
+			Troubleshooting
+		</h3>
+		<p>
+			<b>
+				Q</b>: I am getting the following exception: 
+			<code>
+				java.lang.IllegalStateException: _obtainOpenChannel -- com.webobjects.eoaccess.EODatabaseContext com.webobjects.eoaccess.EODatabaseContext@164feb: failed to open database channel. Check your connection dictionary, and ensure your database is correctly configured.</code>
+			<br />
+			<b>
+				A</b>: Ensure that WooF7.framework is correctly installed in 
+			<code>
+				/Library/Frameworks/</code>, and is included in your project. Check that you can browse the data in EOModeler, and that your username and password and URL are correct. Verify that Filemaker is running, and correctly serving XML.
+		</p>
+		<p>
+			<b>
+				Q</b>: I am getting the following exception: updateValuesInRowDescribedByQualifier -- com.webobjects.jdbcadaptor.JDBCChannel method failed to update row in database
+			<br />
+			<b>
+				A</b>: You are probably using a 
+			<code>
+				BigDecimal
+			</code>
+			for your primary key, or locking on a 
+			<code>
+				DateTime
+			</code>
+			field. You should change numeric primary keys to an 
+			<code>
+				Integer</code>, or consider using 
+			<code>
+				TEXT
+			</code>
+			fields as your primary keys, and only lock on primary keys.
+		</p>
+		<p>
+			<b>
+				Q</b>: I'm getting a "missing field" exception.
+			<br />
+			<b>
+				A</b>: Add the field in question to the layout. WooF uses the table name in an SQL query as the layout name in a filemaker database. The actual name of the table in Filemaker is inconsequential.
+		</p>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module version="4" relativePaths="true" type="JAVA_MODULE">
+  <component name="ModuleRootManager" />
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/Resources/Java" />
+    <exclude-output />
+    <exclude-exploded />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/Resources/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/test_src" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/EOMBundle/build" />
+      <excludeFolder url="file://$MODULE_DIR$/Installer" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="WebObjects" level="application" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="module" module-name="Fmp360_JDBC" />
+    <orderEntry type="library" name="junit" level="project" />
+    <orderEntryProperties />
+  </component>
+</module>
+

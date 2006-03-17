@@ -1,0 +1,156 @@
+<!--
+This is the buildfile for WooF. It resolves external dependencies by using genjar to create a
+single jar file, and then embedding that into a WebObjects framework that should be self-standing.
+To use this, you must specify the basedir, projectName, and frameworkDestDir property (the other properties
+are not required), and include the WooF class folder in the ant classpath.
+-->
+
+<!--Requires the following properties to be set from the IDE:
+Required
+basedir, ie. '/Users/jesse/Projects/Exchange'
+projectName, ie. 'Exchange'. This should NOT include an extension like .woa or .framework
+
+Optional
+principalClass (required for applications), ie. 'com.prosc.Application'
+frameworkDestDir (required for frameworks), ie. '/Library/Frameworks'. Can also be a relative folder like 'build'.
+eomodel (required for the eogenerator task), ie. 'CoolApp.eomodeld'
+refmodel (optional for the eogenerator task), ie. 'PrototyptesMysql.emodeld'
+-->
+<project name="WooF" default="Install" basedir="./">
+	<description>
+        Builds WooF.framework, a framework for using FileMaker with WebObjects
+	</description>
+
+	<property name="resourceDir" value="${basedir}/WooF7/Resources"/>
+	<property name="fmp360_jdbcDir" value="Fmp360_JDBC" />
+
+	<property name="projectName" value="WooF7" />
+	<property name="frameworkDestDir" value="/Library/Frameworks"/>
+
+	<!--Pattern sets that will be referenced from the targets-->
+	<patternset id="sourcefiles">
+		<include name="src/**/*.java" ></include>
+	</patternset>
+
+	<patternset id="wocomponents">
+		<exclude name="Java/"/>
+		<exclude name="src/"/>
+		<include name="**/*.wo/**"/>
+	</patternset>
+
+	<patternset id="wocomponent_folders">
+		<exclude name="Java/"/>
+		<exclude name="src/"/>
+		<include name="**/*.wo"/>
+	</patternset>
+
+	<patternset id="resourcefiles">
+		<exclude name="Java/"/>
+		<exclude name="src/"/>
+		<include name="*.d2wmodel/"/>
+		<include name="*.api/"/>
+		<include name="*.txt/"/>
+		<include name="Properties"/>
+	</patternset>
+
+	<patternset id="eomodels">
+		<include name="*.eomodeld/"/>
+	</patternset>
+
+	<patternset id="webserverresources">
+		<exclude name="Java/"/>
+		<exclude name="src/"/>
+		<include name="**/*.jpg"/>
+		<include name="**/*.gif"/>
+		<include name="**/*.css"/>
+		<include name="**/*.png"/>
+		<include name="**/*.mov"/>
+		<include name="**/*.swf"/>
+		<include name="**/*.ico"/>
+		<include name="**/*.txt"/>
+		<include name="**/*.js"/>
+	</patternset>
+
+	<patternset id="externaljars">
+		<!--Nested jar files go here-->
+		<exclude name="**/**"/>
+	</patternset>
+
+	<path id="jars_development">
+		<fileset dir="jars_development" includes="*.jar" />
+	</path>
+
+	<taskdef name="woapplication" classname="org.objectstyle.woproject.ant.WOApplication" classpathref="jars_development" />
+	<taskdef name="pbindex" classname="org.objectstyle.woproject.ant.PBIndex" classpathref="jars_development"/>
+	<taskdef name="woframework" classname="org.objectstyle.woproject.ant.WOFramework" classpathref="jars_development"/>
+	<!--<taskdef name="eogenerator" classname="com.prosc.ant.EOGenerator"/>
+-->
+	<!--FIX!! These should be derived from the class path-->
+	<!--Insert application framework names here-->
+	<patternset id="localprojectframeworks">
+		<include name="ProscFramework.framework"/>
+		<include name="WooF.framework"/>
+		<include name="WOComponentElements.framework"/>
+		<include name="Survey.framework"/>
+	</patternset>
+	<patternset id="defaultprojectframeworks">
+		<include name="JavaWebObjects.framework"/>
+		<include name="JavaEOAccess.framework"/>
+		<include name="JavaEOControl.framework"/>
+		<include name="JavaEOProject.framework"/>
+		<include name="JavaFoundation.framework"/>
+		<include name="JavaJDBCAdaptor.framework"/>
+		<include name="JavaWOExtensions.framework"/>
+		<include name="JavaXML.framework"/>
+		<include name="JavaDirectToWeb.framework"/>
+		<include name="JavaDTWGeneration.framework"/>
+		<include name="JavaEOProject.framework"/>
+		<include name="JavaWebServicesClient.framework"/>
+		<!-- include name="JavaWebServicesGeneration.framework"/ Commented out; seems to screw with D2W -->
+		<include name="JavaWebServicesSupport.framework"/>
+	</patternset>
+
+	<target name="compile_source">
+		<ant antfile="woof7.xml" />
+	</target>
+
+	<target name="build_jdbc_driver" depends="compile_source" description="Builds the 360Works XML-based JDBC driver">
+		<mkdir dir="build" />
+		<jar destfile="build/fmp360_jdbc.jar"  basedir="Fmp360_JDBC/classes" />
+	</target>
+
+	<target name="build_eombundle" description="Since this involves C compiling and XCode, we include a pre-built EOMBundle with the source code release.">
+		<mkdir dir="build" />
+		<copy todir="build">
+			<fileset dir="EOMBundle" includes="WooF_EOModelerPlugIn.EOMplugin/**" />
+		</copy>
+	</target>
+
+	<target name="build_woof7_framework" depends="compile_source" description="Build WooF7 framework into the build directory.">
+		<mkdir dir="build" />
+		<woframework name="${projectName}" destDir="build">
+			<classes dir="${resourceDir}/Java">
+				<include name="**/**" />
+			</classes>
+			<resources dir="${resourceDir}">
+				<patternset refid="resourcefiles"/>
+				<include name="*.eomodeld/"/>
+				<patternset refid="wocomponents"/>
+			</resources>
+			<wsresources dir="${resourceDir}">
+				<patternset refid="webserverresources"/>
+			</wsresources>
+		</woframework>
+	</target>
+
+	<target name="Install" depends="build_jdbc_driver, build_woof7_framework, build_eombundle" description="Builds and installs WooF7. Read the README.txt for more information.">
+		<copy todir="/Library/Java/Extensions" file="build/fmp360_jdbc.jar" />
+		<copy todir="${frameworkDestDir}">
+			<fileset dir="build" includes="WooF7.framework/**" />
+		</copy>
+		<copy todir="/Developer/EOMBundles">
+			<fileset dir="build" includes="WooF_EOModelerPlugIn.EOMplugin/**" />
+		</copy>
+	</target>
+</project>
+

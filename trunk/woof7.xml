@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="woof7" default="all">
+  
+  
+  <property file="woof7.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- 
+  <property name="skip.tests" value="true"/>
+   -->
+  
+  <!-- Compiler options -->
+  
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="128m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/.dependency-info/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/RCS/**"/>
+    <exclude name="**/SCCS/**"/>
+    <exclude name="**/rcs/**"/>
+    <exclude name="**/.svn/**"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <include name="**/?*.properties"/>
+    <include name="**/?*.xml"/>
+    <include name="**/?*.gif"/>
+    <include name="**/?*.png"/>
+    <include name="**/?*.jpeg"/>
+    <include name="**/?*.jpg"/>
+    <include name="**/?*.html"/>
+    <include name="**/?*.dtd"/>
+    <include name="**/?*.tld"/>
+  </patternset>
+  
+  <!-- JDK definitions -->
+  <path id="jdk.classpath.1.4">
+    <fileset dir="${jdk.home.1.4}">
+      <include name="../Classes/dt.jar"/>
+      <include name="lib/jaws.jar"/>
+      <include name="lib/jce.jar"/>
+      <include name="lib/netscape.jar"/>
+      <include name="../Classes/charsets.jar"/>
+      <include name="../Classes/classes.jar"/>
+      <include name="../Classes/dt.jar"/>
+      <include name="../Classes/jce.jar"/>
+      <include name="../Classes/jsse.jar"/>
+      <include name="../Classes/laf.jar"/>
+      <include name="../Classes/sunrsasign.jar"/>
+      <include name="../Classes/ui.jar"/>
+      <include name="lib/ext/apple_provider.jar"/>
+      <include name="lib/ext/ldapsec.jar"/>
+      <include name="lib/ext/localedata.jar"/>
+      <include name="lib/ext/sunjce_provider.jar"/>
+    </fileset>
+  </path>
+  
+  <property name="project.jdk.home" value="${jdk.home.1.4}"/>
+  <property name="project.jdk.classpath" value="jdk.classpath.1.4"/>
+  
+  
+  <!-- Project Libraries -->
+  
+  <path id="library.junit.classpath">
+    <pathelement location="${basedir}/jars_development/junit.jar"/>
+  </path>
+  
+  
+  <!-- Global Libraries -->
+  
+  <path id="library.webobjects.classpath">
+    <pathelement location="/System/Library/Frameworks/JavaDirectToWeb.framework/Resources/Java/javadirecttoweb.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaDTWGeneration.framework/Resources/Java/javadtwgeneration.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaEOAccess.framework/Resources/Java/javaeoaccess.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaEOControl.framework/Resources/Java/javaeocontrol.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaEOProject.framework/Resources/Java/javaeoproject.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaFoundation.framework/Resources/Java/javafoundation.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaJDBCAdaptor.framework/Resources/Java/javajdbcadaptor.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaWebObjects.framework/Resources/Java/javawebobjects.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaWOExtensions.framework/Versions/A/Resources/Java/JavaWOExtensions.jar"/>
+    <pathelement location="/System/Library/Frameworks/JavaXML.framework/Resources/Java/javaxml.jar"/>
+  </path>
+  
+  <!-- Modules -->
+  
+  
+  <!-- Module Fmp360_JDBC -->
+  
+  <dirname property="module.fmp360_jdbc.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.fmp360_jdbc" value="${project.jdk.home}"/>
+  <property name="module.jdk.classpath.fmp360_jdbc" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.fmp360_jdbc" value="${compiler.args}"/>
+  
+  <property name="fmp360_jdbc.output.dir" value="${module.fmp360_jdbc.basedir}/Fmp360_JDBC/classes"/>
+  <property name="fmp360_jdbc.testoutput.dir" value="${module.fmp360_jdbc.basedir}/Fmp360_JDBC/test_classes"/>
+  
+  <path id="fmp360_jdbc.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="fmp360_jdbc.module.classpath">
+    <path refid="${module.jdk.classpath.fmp360_jdbc}"/>
+    <path refid="library.junit.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.fmp360_jdbc">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.fmp360_jdbc">
+    <patternset refid="excluded.from.module.fmp360_jdbc"/>
+  </patternset>
+  
+  <path id="fmp360_jdbc.module.sourcepath">
+    <dirset dir="${module.fmp360_jdbc.basedir}/Fmp360_JDBC">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  <path id="fmp360_jdbc.module.test.sourcepath">
+    <dirset dir="${module.fmp360_jdbc.basedir}/Fmp360_JDBC">
+      <include name="test_src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.fmp360_jdbc" depends="compile.module.fmp360_jdbc.production,compile.module.fmp360_jdbc.tests" description="compile module(s) Fmp360_JDBC"/>
+  
+  <target name="compile.module.fmp360_jdbc.production" description="compile module(s) Fmp360_JDBC production classes">
+    <mkdir dir="${fmp360_jdbc.output.dir}"/>
+    <javac destdir="${fmp360_jdbc.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memoryMaximumSize="${compiler.max.memory}" fork="true" executable="${module.jdk.home.fmp360_jdbc}/bin/javac">
+      <compilerarg line="${compiler.args.fmp360_jdbc}"/>
+      <bootclasspath refid="fmp360_jdbc.module.bootclasspath"/>
+      <classpath refid="fmp360_jdbc.module.classpath"/>
+      <src refid="fmp360_jdbc.module.sourcepath"/>
+    </javac>
+    <copy todir="${fmp360_jdbc.output.dir}">
+      <fileset dir="${module.fmp360_jdbc.basedir}/Fmp360_JDBC/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.fmp360_jdbc.tests" depends="compile.module.fmp360_jdbc.production" description="compile module(s) Fmp360_JDBC test classes" unless="skip.tests">
+    <mkdir dir="${fmp360_jdbc.testoutput.dir}"/>
+    <javac destdir="${fmp360_jdbc.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memoryMaximumSize="${compiler.max.memory}" fork="true" executable="${module.jdk.home.fmp360_jdbc}/bin/javac">
+      <compilerarg line="${compiler.args.fmp360_jdbc}"/>
+      <classpath refid="fmp360_jdbc.module.classpath"/>
+      <classpath location="${fmp360_jdbc.output.dir}"/>
+      <src refid="fmp360_jdbc.module.test.sourcepath"/>
+    </javac>
+    <copy todir="${fmp360_jdbc.testoutput.dir}">
+      <fileset dir="${module.fmp360_jdbc.basedir}/Fmp360_JDBC/test_src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="clean.module.fmp360_jdbc" description="cleanup module">
+    <delete dir="${fmp360_jdbc.output.dir}"/>
+    <delete dir="${fmp360_jdbc.testoutput.dir}"/>
+  </target>
+  
+  
+  <!-- Module WooF -->
+  
+  <dirname property="module.woof.basedir" file="${ant.file}"/>
+  
+  
+  <property name="module.jdk.home.woof" value="${project.jdk.home}"/>
+  <property name="module.jdk.classpath.woof" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.woof" value="${compiler.args}"/>
+  
+  <property name="woof.output.dir" value="${module.woof.basedir}/WooF7/Resources/Java"/>
+  <property name="woof.testoutput.dir" value="${module.woof.basedir}/WooF7/Resources/Java"/>
+  
+  <path id="woof.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="woof.module.classpath">
+    <path refid="library.webobjects.classpath"/>
+    <path refid="${module.jdk.classpath.woof}"/>
+    <pathelement location="${fmp360_jdbc.output.dir}"/>
+    <pathelement location="${fmp360_jdbc.testoutput.dir}"/>
+    <path refid="library.junit.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.woof">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.woof">
+    <patternset refid="excluded.from.module.woof"/>
+  </patternset>
+  
+  <path id="woof.module.sourcepath">
+    <dirset dir="${module.woof.basedir}/WooF7">
+      <include name="Resources/src"/>
+    </dirset>
+  </path>
+  
+  <path id="woof.module.test.sourcepath">
+    <dirset dir="${module.woof.basedir}/WooF7">
+      <include name="test_src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.woof" depends="compile.module.woof.production,compile.module.woof.tests" description="compile module(s) WooF"/>
+  
+  <target name="compile.module.woof.production" depends="compile.module.fmp360_jdbc" description="compile module(s) WooF production classes">
+    <mkdir dir="${woof.output.dir}"/>
+    <javac destdir="${woof.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memoryMaximumSize="${compiler.max.memory}" fork="true" executable="${module.jdk.home.woof}/bin/javac">
+      <compilerarg line="${compiler.args.woof}"/>
+      <bootclasspath refid="woof.module.bootclasspath"/>
+      <classpath refid="woof.module.classpath"/>
+      <src refid="woof.module.sourcepath"/>
+    </javac>
+    <copy todir="${woof.output.dir}">
+      <fileset dir="${module.woof.basedir}/WooF7/Resources/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.woof.tests" depends="compile.module.woof.production" description="compile module(s) WooF test classes" unless="skip.tests">
+    <mkdir dir="${woof.testoutput.dir}"/>
+    <javac destdir="${woof.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memoryMaximumSize="${compiler.max.memory}" fork="true" executable="${module.jdk.home.woof}/bin/javac">
+      <compilerarg line="${compiler.args.woof}"/>
+      <classpath refid="woof.module.classpath"/>
+      <classpath location="${woof.output.dir}"/>
+      <src refid="woof.module.test.sourcepath"/>
+    </javac>
+    <copy todir="${woof.testoutput.dir}">
+      <fileset dir="${module.woof.basedir}/WooF7/test_src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="clean.module.woof" description="cleanup module">
+    <delete dir="${woof.output.dir}"/>
+    <delete dir="${woof.testoutput.dir}"/>
+  </target>
+  
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+  
+  <target name="clean" depends="clean.module.fmp360_jdbc, clean.module.woof" description="cleanup all"/>
+  
+  <target name="all" depends="init, clean, compile.module.fmp360_jdbc, compile.module.woof" description="build all"/>
+</project>

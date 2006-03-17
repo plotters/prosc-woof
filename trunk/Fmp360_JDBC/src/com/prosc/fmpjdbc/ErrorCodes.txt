@@ -1,0 +1,17 @@
+100 "File is missing" - Either the database name was incorrectly entered, or it is not open on the FileMaker server, or XML publishing is not enabled.
+101 "Record is missing"
+102 "Field is missing" - Make sure that the fields you are specifing in your WHERE or UPDATE clauses actually exist in the specified table/layout.
+105 "Layout is missing" - Make sure that the table name you have requested in the SQL query is the name of a layout in the current database.
+108 "Value list is missing"
+201 "Field cannot be modified" - You cannot change the value of calculation fields or other fields where modification is prohibited.
+401 "No records match the request"
+500 "Date value does not meet validation entry options"
+501 "Time value does not meet validation entry options"
+504 "Value in field is not unique as required in validation entry options"
+509 "Field requires a valid value" - Often happens when a new record is inserted, but not all required values are supplied in the INSERT statement.
+802	"Unable to open file" - Check to make sure that you are including a valid database name in the JDBC URL or SQL statement. Also check to make sure that 'fmxml' extended privilege is enabled for your privilege set, and that the database is published in the FileMaker Server Advanced web console.
+958 "Parameter missing in query"
+
+*see FileMaker Server 7 Advanced Custom Web Publishing Guide p.89 for all error codes
+
+#A comment

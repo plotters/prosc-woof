@@ -1,0 +1,74 @@
+Form1: WOForm {
+}
+
+GenericContainer1: WOGenericContainer {
+	bgcolor = cssRowBackground;
+	elementName = "TR";
+}
+
+GenericElement1: WOGenericElement {
+	elementName = "INPUT";
+	name = "q";
+	type = "search";
+	value = queryString;
+}
+
+Hyperlink1: WOHyperlink {
+	disabled = mailtoIsDisabled;
+	href = mailtoHref;
+}
+
+Hyperlink2: WOHyperlink {
+	action = editPersonAction;
+}
+
+Hyperlink3: WOHyperlink {
+	action = addPersonAction;
+}
+
+Hyperlink4: WOHyperlink {
+	action = deleteAction;
+	onclick = "return confirm('Are you sure you want to delete this contact?');";
+}
+
+Repetition1: WORepetition {
+	item = eachPerson;
+	list = personDisplayGroup.displayedObjects;
+}
+
+SortOrder1: WOSortOrder {
+	displayGroup = personDisplayGroup;
+	key = "lastName";
+}
+
+SortOrder2: WOSortOrder {
+	displayGroup = personDisplayGroup;
+	key = "company";
+}
+
+SortOrder3: WOSortOrder {
+	displayGroup = personDisplayGroup;
+	key = "email";
+}
+
+String1: WOString {
+	value = eachPerson.firstName;
+}
+
+String2: WOString {
+	value = eachPerson.company;
+}
+
+String3: WOString {
+	value = eachPerson.email;
+}
+
+String4: WOString {
+	value = eachPerson.lastName;
+}
+
+SubmitButton1: WOSubmitButton {
+	action = searchAction;
+	value = "Search by last name";
+}
+
