@@ -1,0 +1,10 @@
+Browser1: WOBrowser {
+	displayString = aString;
+	escapeHTML = ^escapeHTML;
+	item = aString;
+	list = valueListValues;
+	multiple = ^multiple;
+	otherTagString = ^otherTagString;
+	selections = ^selections;
+	size = ^size;
+}

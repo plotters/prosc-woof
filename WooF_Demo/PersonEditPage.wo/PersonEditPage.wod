@@ -1,0 +1,123 @@
+Conditional1: WOConditional {
+	condition = person.portrait.length;
+}
+
+Form1: WOForm {
+	multipleSubmit = true;
+}
+
+Image1: WOImage {
+	data = person.portrait;
+	mimeType = "";
+	style = "border:1px solid silver;";
+	width = 65;
+}
+
+PopUpButton1: WOPopUpButton {
+	list = phoneLabelOptions;
+	selection = eachPhone.label;
+}
+
+PopUpButton2: WOPopUpButton {
+	list = addressOptions;
+	selection = eachAddress.label;
+}
+
+Repetition1: WORepetition {
+	item = eachPhone;
+	list = person.phones;
+}
+
+Repetition2: WORepetition {
+	item = eachAddress;
+	list = person.addresses;
+}
+
+SubmitButton1: WOSubmitButton {
+	action = deletePhoneAction;
+	value = "X";
+}
+
+SubmitButton2: WOSubmitButton {
+	action = addPhoneAction;
+	value = "Add Phone";
+}
+
+SubmitButton3: WOSubmitButton {
+	action = deleteAddressAction;
+	value = "X";
+}
+
+SubmitButton4: WOSubmitButton {
+	action = addAddressAction;
+	value = "Add Address";
+}
+
+SubmitButton5: WOSubmitButton {
+	action = saveAction;
+	value = "Save";
+}
+
+SubmitButton7: WOSubmitButton {
+	action = cancelAction;
+	value = "Cancel";
+}
+
+Text1: WOText {
+	cols = 42;
+	name = "notes";
+	rows = 6;
+	value = person.notes;
+}
+
+TextField1: WOTextField {
+	name = "first name";
+	size = 10;
+	value = person.firstName;
+}
+
+TextField10: WOTextField {
+	value = person.email;
+}
+
+TextField2: WOTextField {
+	name = "last name";
+	size = 18;
+	value = person.lastName;
+}
+
+TextField3: WOTextField {
+	name = "company";
+	size = 42;
+	value = person.company;
+}
+
+TextField4: WOTextField {
+	size = 14;
+	value = eachPhone.phoneNumber;
+}
+
+TextField5: WOTextField {
+	size = 42;
+	value = eachAddress.street;
+}
+
+TextField6: WOTextField {
+	value = eachAddress.city;
+}
+
+TextField7: WOTextField {
+	size = 2;
+	value = eachAddress.state;
+}
+
+TextField8: WOTextField {
+	size = 5;
+	value = eachAddress.zip;
+}
+
+TextField9: WOTextField {
+	value = person.birthday;
+	dateformat = "%m/%d/%Y";
+	size = 10;
+}

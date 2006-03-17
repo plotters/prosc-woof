@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<wodefinitions>
+	<wo class="FMPopUpButton" wocomponentcontent="false">
+		<image path="image.tiff"/>
+
+		<binding name="entityName"/>
+		<binding name="escapeHTML" defaults="Boolean"/>
+		<binding name="valueListName"/>
+		<binding name="selection"/>
+
+		<validation message="&apos;entityName&apos; is a required binding">
+			<unbound name="entityName"/>
+		</validation>
+
+		<validation message="&apos;selection&apos; must be bound to a settable value">
+			<unsettable name="selection"/>
+		</validation>
+
+		<validation message="&apos;valueListName&apos; is a required binding">
+			<unbound name="valueListName"/>
+		</validation>
+	</wo>
+</wodefinitions>

@@ -1,0 +1,107 @@
+{
+    attributes = (
+        {
+            allowsNull = Y; 
+            columnName = Birthday; 
+            externalType = DATE; 
+            name = birthday; 
+            valueClassName = NSCalendarDate; 
+            valueType = D; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = Company; 
+            externalType = TEXT; 
+            name = company; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = Email; 
+            externalType = TEXT; 
+            name = email; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "First Name"; 
+            externalType = TEXT; 
+            name = firstName; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            columnName = id; 
+            externalType = TEXT; 
+            name = id; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "Last Name"; 
+            externalType = TEXT; 
+            name = lastName; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = Notes; 
+            externalType = TEXT; 
+            name = notes; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = Portrait; 
+            externalType = BLOB; 
+            name = portrait; 
+            valueClassName = NSData; 
+            width = 2147483647; 
+        }
+    ); 
+    attributesUsedForLocking = (id); 
+    className = EOGenericRecord; 
+    classProperties = (
+        firstName, 
+        lastName, 
+        company, 
+        email, 
+        birthday, 
+        notes, 
+        portrait, 
+        addresses, 
+        phones
+    ); 
+    externalName = "WooF_Demo.Person"; 
+    fetchSpecificationDictionary = {}; 
+    name = Person; 
+    primaryKeyAttributes = (id); 
+    relationships = (
+        {
+            destination = Address; 
+            internalInfo = {"_nameInObjectStore" = addresss; }; 
+            isToMany = Y; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = personId; sourceAttribute = id; }); 
+            name = addresses; 
+        }, 
+        {
+            destination = Phone; 
+            isToMany = Y; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = personId; sourceAttribute = id; }); 
+            name = phones; 
+        }
+    ); 
+}

@@ -1,0 +1,82 @@
+{
+    attributes = (
+        {
+            allowsNull = Y; 
+            columnName = City; 
+            externalType = TEXT; 
+            name = city; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            columnName = id; 
+            externalType = TEXT; 
+            name = id; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = Label; 
+            externalType = TEXT; 
+            name = label; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = "person ID"; 
+            externalType = TEXT; 
+            name = personId; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = State; 
+            externalType = TEXT; 
+            name = state; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = Street; 
+            externalType = TEXT; 
+            name = street; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }, 
+        {
+            allowsNull = Y; 
+            columnName = Zip; 
+            externalType = TEXT; 
+            name = zip; 
+            valueClassName = NSString; 
+            valueType = S; 
+            width = 2147483647; 
+        }
+    ); 
+    attributesUsedForLocking = (id); 
+    className = EOGenericRecord; 
+    classProperties = (label, street, city, state, zip, person); 
+    externalName = "WooF_Demo.Address"; 
+    fetchSpecificationDictionary = {}; 
+    name = Address; 
+    primaryKeyAttributes = (id); 
+    relationships = (
+        {
+            destination = Person; 
+            isToMany = N; 
+            joinSemantic = EOInnerJoin; 
+            joins = ({destinationAttribute = id; sourceAttribute = personId; }); 
+            name = person; 
+        }
+    ); 
+}
