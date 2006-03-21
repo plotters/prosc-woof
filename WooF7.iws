@@ -13,6 +13,8 @@
     <option name="DATE_AFTER" value="" />
     <option name="CHANGE_BEFORE" value="" />
     <option name="CHANGE_AFTER" value="" />
+    <option name="USE_USER_FILTER" value="false" />
+    <option name="USER" value="" />
   </component>
   <component name="CheckinPanelState" />
   <component name="Commander">
@@ -68,9 +70,6 @@
     <option name="UPDATE_KEYWORD_SUBSTITUTION" />
     <option name="MAKE_NEW_FILES_READONLY" value="false" />
     <option name="SHOW_CORRUPTED_PROJECT_FILES" value="0" />
-    <option name="TAG_AFTER_FILE_COMMIT" value="false" />
-    <option name="OVERRIDE_EXISTING_TAG_FOR_FILE" value="true" />
-    <option name="TAG_AFTER_FILE_COMMIT_NAME" value="" />
     <option name="TAG_AFTER_PROJECT_COMMIT" value="false" />
     <option name="OVERRIDE_EXISTING_TAG_FOR_PROJECT" value="true" />
     <option name="TAG_AFTER_PROJECT_COMMIT_NAME" value="" />
@@ -81,6 +80,21 @@
   </component>
   <component name="DebuggerManager">
     <breakpoint_any>
+      <breakpoint>
+        <option name="NOTIFY_CAUGHT" value="true" />
+        <option name="NOTIFY_UNCAUGHT" value="true" />
+        <option name="ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="false" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
       <breakpoint>
         <option name="NOTIFY_CAUGHT" value="true" />
         <option name="NOTIFY_UNCAUGHT" value="true" />
@@ -119,91 +133,84 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="SqlParseException.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/SqlParseException.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="21" column="2" selection-start="971" selection-end="971" vertical-scroll-proportion="0.51760566">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="StatementProcessor.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/StatementProcessor.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="31" column="2" selection-start="1253" selection-end="1253" vertical-scroll-proportion="0.5316456">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FMPCalcSupport.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMPCalcSupport.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="24" column="2" selection-start="1106" selection-end="1106" vertical-scroll-proportion="0.5316456">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FMPopUpButton.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMPopUpButton.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FMRadioButtonMatrix.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMRadioButtonMatrix.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="19" column="12" selection-start="926" selection-end="926" vertical-scroll-proportion="0.049295776">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FMValueList.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueList.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="19" column="0" selection-start="0" selection-end="914" vertical-scroll-proportion="0.48101267">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FMValueListBrowser.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueListBrowser.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="19" column="0" selection-start="914" selection-end="914" vertical-scroll-proportion="0.049295776">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FMValueListInput.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueListInput.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="-0.0036166366">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Fmp360PlugIn.java" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="Fmp360PlugIn.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/webobjects/jdbcadaptor/Fmp360PlugIn.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="35" column="28" selection-start="1381" selection-end="1381" vertical-scroll-proportion="0.20072332">
+            <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.28065395">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="woof7.xml" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="woof7.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/woof7.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="263" column="2" selection-start="10786" selection-end="10786" vertical-scroll-proportion="6.267631">
+            <state line="245" column="39" selection-start="10238" selection-end="10238" vertical-scroll-proportion="0.8610354">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Driver.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/Driver.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.5667575">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="build.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/build.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="123" column="29" selection-start="4647" selection-end="4647" vertical-scroll-proportion="0.3841962">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="QuickConnectionTest.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc/fmpjdbc/QuickConnectionTest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="18" column="0" selection-start="619" selection-end="619" vertical-scroll-proportion="0.65968585">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="HttpURLConnection.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Home/src.jar!/src/java/net/HttpURLConnection.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="271" column="0" selection-start="8992" selection-end="8992" vertical-scroll-proportion="0.33246073">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FmXmlRequest.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmXmlRequest.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="106" column="110" selection-start="4311" selection-end="4311" vertical-scroll-proportion="0.21798365">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FmMetaData.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmMetaData.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="51" column="0" selection-start="1942" selection-end="1942" vertical-scroll-proportion="0.33242506">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FmConnection.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmConnection.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="164" column="50" selection-start="6837" selection-end="6837" vertical-scroll-proportion="0.33242506">
               <folding />
             </state>
           </provider>
@@ -227,6 +234,7 @@
     <option name="GROUP_BY_SEVERITY" value="false" />
     <option name="ANALYZE_TEST_SOURCES" value="true" />
     <option name="SCOPE_TYPE" value="1" />
+    <option name="CUSTOM_SCOPE_NAME" value="" />
     <profile name="Default" />
   </component>
   <component name="J2EEProjectPane">
@@ -252,13 +260,10 @@
     </PATH>
   </component>
   <component name="PerforceChangeBrowserSettings">
-    <option name="USE_USER_FILTER" value="true" />
     <option name="USE_CLIENT_FILTER" value="true" />
-    <option name="USER" value="" />
     <option name="CLIENT" value="" />
   </component>
   <component name="PerforceDirect.Settings">
-    <option name="CURRENT_CHANGE_LIST" value="-1" />
     <option name="useP4CONFIG" value="true" />
     <option name="port" value="jasper:1666" />
     <option name="client" value="" />
@@ -276,6 +281,13 @@
     <option name="ENABLED" value="true" />
     <option name="USE_LOGIN" value="false" />
     <option name="LOGIN_SILENTLY" value="false" />
+    <option name="INTEGRATE_BRANCH_NAME" />
+    <option name="INTEGRATE_CHANGELIST_NUM" value="-1" />
+    <option name="INTEGRATE_RUN_RESOLVE" value="true" />
+    <option name="INTEGRATE_REVERT_UNCHANGED" value="true" />
+    <option name="INTEGRATE_CHANGE_LIST_NUMBER" value="" />
+    <option name="INTEGRATE_CHANGE_LIST" value="false" />
+    <option name="INTEGRATE_REVERSE" value="false" />
   </component>
   <component name="ProjectLevelVcsManager">
     <OptionsSetting value="true" id="Add" />
@@ -432,6 +444,54 @@
         <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
       </PATH_ELEMENT>
       <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/Fmp360_JDBC/test_src" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+    </PATH>
+    <PATH>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="WooF7.ipr" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="Fmp360_JDBC" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/Fmp360_JDBC" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/Fmp360_JDBC/test_src" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc/fmpjdbc" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+    </PATH>
+    <PATH>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="WooF7.ipr" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="Fmp360_JDBC" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
+        <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/Fmp360_JDBC" />
+        <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+      </PATH_ELEMENT>
+      <PATH_ELEMENT>
         <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/Fmp360_JDBC/src" />
         <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
       </PATH_ELEMENT>
@@ -460,16 +520,18 @@
   </component>
   <component name="PropertiesComponent">
     <property name="MemberChooser.copyJavadoc" value="false" />
-    <property name="GenerateAntBuildDialog.generateSingleFile" value="true" />
-    <property name="GoToClass.includeLibraries" value="false" />
-    <property name="MemberChooser.showClasses" value="true" />
     <property name="MemberChooser.sorted" value="false" />
+    <property name="RunManagerConfig.compileBeforeRunning" value="true" />
     <property name="GoToFile.includeJavaFiles" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/Fmp360_JDBC" />
-    <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="GenerateAntBuildDialog.enableUiFormCompile" value="false" />
     <property name="GenerateAntBuildDialog.forceTargetJdk" value="true" />
     <property name="GenerateAntBuildDialog.backupFiles" value="false" />
+    <property name="GoToClass.includeLibraries" value="false" />
+    <property name="GenerateAntBuildDialog.generateSingleFile" value="true" />
+    <property name="MemberChooser.showClasses" value="true" />
+    <property name="GoToClass.toSaveIncludeLibraries" value="false" />
+    <property name="RunManagerConfig.showSettingsBeforeRunnig" value="true" />
   </component>
   <component name="ReadonlyStatusHandler">
     <option name="SHOW_DIALOG" value="true" />
@@ -478,6 +540,21 @@
   <component name="RestoreUpdateTree" />
   <component name="RunManager">
     <activeType name="Application" />
+    <tempConfiguration selected="true" default="false" name="QuickConnectionTest" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="com.prosc.fmpjdbc.QuickConnectionTest" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <module name="Fmp360_JDBC" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="61684" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <ConfigurationWrapper RunnerId="Debug" />
+    </tempConfiguration>
     <configuration selected="false" default="true" type="Applet" factoryName="Applet">
       <module name="" />
       <option name="MAIN_CLASS_NAME" />
@@ -490,13 +567,6 @@
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
     </configuration>
-    <configuration selected="false" default="true" type="Remote" factoryName="Remote">
-      <option name="USE_SOCKET_TRANSPORT" value="true" />
-      <option name="SERVER_MODE" value="false" />
-      <option name="SHMEM_ADDRESS" value="javadebug" />
-      <option name="HOST" value="localhost" />
-      <option name="PORT" value="5005" />
-    </configuration>
     <configuration selected="false" default="true" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" />
       <option name="VM_PARAMETERS" />
@@ -505,6 +575,13 @@
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
       <module name="" />
+    </configuration>
+    <configuration selected="false" default="true" type="Remote" factoryName="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" value="javadebug" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
     </configuration>
     <configuration selected="false" default="true" type="JUnit" factoryName="JUnit">
       <module name="" />
@@ -549,6 +626,7 @@
   <component name="SvnConfiguration">
     <option name="USER" value="" />
     <option name="PASSWORD" value="" />
+    <option name="PROCESS_UNRESOLVED" value="false" />
     <configuration useDefault="true">/Users/jesse/.subversion</configuration>
   </component>
   <component name="TodoView" selected-index="0">
@@ -566,24 +644,24 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="2" y="22" width="1676" height="1028" extended-state="6" />
-    <editor active="false" />
+    <frame x="2" y="22" width="1273" height="828" extended-state="0" />
+    <editor active="true" />
     <layout>
       <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="7" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.25429976" order="0" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.2587755" order="0" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="1" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="1" />
-      <window_info id="Messages" active="true" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.32867885" order="8" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.32831737" order="8" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.4" order="6" />
       <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
       <window_info id="Favorites" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.21928747" order="1" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.21877551" order="1" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="2" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="2" />
       <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.4" order="4" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.3994528" order="4" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="sliding" type="sliding" visible="false" weight="0.4" order="0" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
       <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="2" />
@@ -600,8 +678,10 @@
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="PUT_FOCUS_INTO_COMMENT" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
+    <option name="LAST_COMMIT_MESSAGE" />
     <option name="SAVE_LAST_COMMIT_MESSAGE" value="true" />
     <option name="CHECKIN_DIALOG_SPLITTER_PROPORTION" value="0.8" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
@@ -688,62 +768,6 @@
     </buildFile>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmTable.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="2" selection-start="940" selection-end="940" vertical-scroll-proportion="0.48101267">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmXmlRequest.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="37" column="2" selection-start="1415" selection-end="1415" vertical-scroll-proportion="0.5316456">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/SearchTerm.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="2" selection-start="940" selection-end="940" vertical-scroll-proportion="0.46830985">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/SortTerm.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="2" selection-start="940" selection-end="940" vertical-scroll-proportion="0.46830985">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/SqlCommand.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="2" selection-start="961" selection-end="961" vertical-scroll-proportion="0.51760566">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/SqlParseException.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="2" selection-start="971" selection-end="971" vertical-scroll-proportion="0.51760566">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/StatementProcessor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="31" column="2" selection-start="1253" selection-end="1253" vertical-scroll-proportion="0.5316456">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMPCalcSupport.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="2" selection-start="1106" selection-end="1106" vertical-scroll-proportion="0.5316456">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMPopUpButton.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
@@ -753,42 +777,100 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMRadioButtonMatrix.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="12" selection-start="926" selection-end="926" vertical-scroll-proportion="0.049295776">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueListBrowser.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="0" selection-start="914" selection-end="914" vertical-scroll-proportion="0.049295776">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/webobjects/jdbcadaptor/Fmp360PlugIn.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="35" column="28" selection-start="1381" selection-end="1381" vertical-scroll-proportion="0.20072332">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueListInput.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="-0.0036166366">
+        <state line="19" column="12" selection-start="926" selection-end="926" vertical-scroll-proportion="0.06451613">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueList.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="0" selection-start="0" selection-end="914" vertical-scroll-proportion="0.48101267">
+        <state line="19" column="0" selection-start="0" selection-end="914" vertical-scroll-proportion="0.03341289">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueListBrowser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="0" selection-start="914" selection-end="914" vertical-scroll-proportion="0.06451613">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueListInput.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/woof7.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="263" column="2" selection-start="10786" selection-end="10786" vertical-scroll-proportion="6.267631">
+        <state line="245" column="39" selection-start="10238" selection-end="10238" vertical-scroll-proportion="0.8610354">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/Driver.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.5667575">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="123" column="29" selection-start="4647" selection-end="4647" vertical-scroll-proportion="0.3841962">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Classes/classes.jar!/sun/net/www/protocol/http/HttpURLConnection.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="79" column="0" selection-start="3982" selection-end="3982" vertical-scroll-proportion="0.33242506">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Home/src.jar!/src/java/net/HttpURLConnection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="271" column="0" selection-start="8992" selection-end="8992" vertical-scroll-proportion="0.33246073">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmMetaData.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="51" column="0" selection-start="1942" selection-end="1942" vertical-scroll-proportion="0.33242506">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmConnection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="164" column="50" selection-start="6837" selection-end="6837" vertical-scroll-proportion="0.33242506">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmXmlRequest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="106" column="110" selection-start="4311" selection-end="4311" vertical-scroll-proportion="0.21798365">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc/fmpjdbc/QuickConnectionTest.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="18" column="0" selection-start="619" selection-end="619" vertical-scroll-proportion="0.65968585">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/webobjects/jdbcadaptor/Fmp360PlugIn.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.28065395">
           <folding />
         </state>
       </provider>

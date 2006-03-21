@@ -116,18 +116,20 @@ refmodel (optional for the eogenerator task), ie. 'PrototyptesMysql.emodeld'
 
 	<target name="build_jdbc_driver" depends="compile_source" description="Builds the 360Works XML-based JDBC driver">
 		<mkdir dir="build" />
+		<delete file="build/fmp360_jdbc.jar" />
 		<jar destfile="build/fmp360_jdbc.jar"  basedir="Fmp360_JDBC/classes" />
 	</target>
 
 	<target name="build_eombundle" description="Since this involves C compiling and XCode, we include a pre-built EOMBundle with the source code release.">
 		<mkdir dir="build" />
-		<copy todir="build">
-			<fileset dir="EOMBundle" includes="WooF_EOModelerPlugIn.EOMplugin/**" />
+		<copy todir="build" overwrite="true">
+			<fileset dir="EOMBundle" includes="WooF7_EOModelerPlugIn.EOMplugin/**" />
 		</copy>
 	</target>
 
 	<target name="build_woof7_framework" depends="compile_source" description="Build WooF7 framework into the build directory.">
 		<mkdir dir="build" />
+		<delete dir="build/${projectName}.framework" />
 		<woframework name="${projectName}" destDir="build">
 			<classes dir="${resourceDir}/Java">
 				<include name="**/**" />
@@ -144,12 +146,12 @@ refmodel (optional for the eogenerator task), ie. 'PrototyptesMysql.emodeld'
 	</target>
 
 	<target name="Install" depends="build_jdbc_driver, build_woof7_framework, build_eombundle" description="Builds and installs WooF7. Read the README.txt for more information.">
-		<copy todir="/Library/Java/Extensions" file="build/fmp360_jdbc.jar" />
-		<copy todir="${frameworkDestDir}">
+		<copy todir="/Library/Java/Extensions" file="build/fmp360_jdbc.jar" overwrite="true" />
+		<copy todir="${frameworkDestDir}" overwrite="true">
 			<fileset dir="build" includes="WooF7.framework/**" />
 		</copy>
-		<copy todir="/Developer/EOMBundles">
-			<fileset dir="build" includes="WooF_EOModelerPlugIn.EOMplugin/**" />
+		<copy todir="/Developer/EOMBundles" overwrite="true">
+			<fileset dir="build" includes="WooF7_EOModelerPlugIn.EOMplugin/**" />
 		</copy>
 	</target>
 </project>
