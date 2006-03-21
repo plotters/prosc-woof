@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>WooF_EOModelerPlugIn</string>
+	<string>WooF7_EOModelerPlugIn</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -18,8 +18,7 @@
 	<string>YES</string>
 	<key>NSJavaPath</key>
 	<array>
-		<string>WooF_EOModelerPlugIn.jar</string>
-		<string>fmp360_jdbc.jar</string>
+		<string>WooF7_EOModelerPlugIn.jar</string>
 	</array>
 	<key>NSJavaRoot</key>
 	<string>Contents/Resources/Java</string>
