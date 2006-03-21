@@ -17,5 +17,5 @@ public class Fmp360PlugIn extends JDBCPlugIn {
 	
 	public String defaultDriverName() {return "com.prosc.fmpjdbc.Driver";}
 	
-	public Class defaultExpressionClass() {return FMPExpression.class;}
+	public Class defaultExpressionClass() {return FMPExpression7.class;}
 }

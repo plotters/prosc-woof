@@ -9,14 +9,14 @@
 //
 import com.apple.yellow.eoaccess.*;
 
-public class FMPExpression extends JDBCExpression {
+public class FMPExpression7 extends JDBCExpression {
 	//Only in bridged version
-	public FMPExpression() {
+	public FMPExpression7() {
 		super();
 	}
 	//End bridge code
 	
-	public FMPExpression(EOEntity theEntity) {super(theEntity);}
+	public FMPExpression7(EOEntity theEntity) {super(theEntity);}
 	
 	public boolean useAliases() {return false;}
 	
