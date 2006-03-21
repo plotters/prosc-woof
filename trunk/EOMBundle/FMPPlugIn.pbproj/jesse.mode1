@@ -255,7 +255,6 @@
 							<array>
 								<string>013357CDFF5DD5F011CD2B9D</string>
 								<string>1C37FBAC04509CD000000102</string>
-								<string>88B5D0CB09D0379100DE8BA8</string>
 								<string>1C37FABC05509CD000000102</string>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
@@ -295,12 +294,14 @@
 					<key>Dock</key>
 					<array>
 						<dict>
+							<key>BecomeActive</key>
+							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>Fmp360PlugIn7.java</string>
+								<string>Fmp360PlugIn.java</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -308,33 +309,26 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>Fmp360PlugIn7.java</string>
+										<string>Fmp360PlugIn.java</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>88B5D0DB09D0379100DE8BA8</string>
+										<string>88B5D0F409D047F500DE8BA8</string>
 										<key>history</key>
 										<array>
 											<string>88B5D0CC09D0379100DE8BA8</string>
-											<string>88B5D0CD09D0379100DE8BA8</string>
-											<string>88B5D0CE09D0379100DE8BA8</string>
+											<string>88B5D0EE09D047F500DE8BA8</string>
+											<string>88B5D0EF09D047F500DE8BA8</string>
 										</array>
 										<key>prevStack</key>
 										<array>
 											<string>886328320860B68100E55902</string>
 											<string>886328330860B68100E55902</string>
-											<string>88B5D0CF09D0379100DE8BA8</string>
-											<string>88B5D0D009D0379100DE8BA8</string>
 											<string>88B5D0D109D0379100DE8BA8</string>
-											<string>88B5D0D209D0379100DE8BA8</string>
-											<string>88B5D0D309D0379100DE8BA8</string>
-											<string>88B5D0D409D0379100DE8BA8</string>
-											<string>88B5D0D509D0379100DE8BA8</string>
-											<string>88B5D0D609D0379100DE8BA8</string>
-											<string>88B5D0D709D0379100DE8BA8</string>
-											<string>88B5D0D809D0379100DE8BA8</string>
-											<string>88B5D0D909D0379100DE8BA8</string>
-											<string>88B5D0DA09D0379100DE8BA8</string>
+											<string>88B5D0F009D047F500DE8BA8</string>
+											<string>88B5D0F109D047F500DE8BA8</string>
+											<string>88B5D0F209D047F500DE8BA8</string>
+											<string>88B5D0F309D047F500DE8BA8</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -356,8 +350,6 @@
 							<string>505pt</string>
 						</dict>
 						<dict>
-							<key>BecomeActive</key>
-							<true/>
 							<key>ContentConfiguration</key>
 							<dict>
 								<key>PBXProjectModuleGUID</key>
@@ -394,9 +386,9 @@
 			</array>
 			<key>TableOfContents</key>
 			<array>
-				<string>88B5D0DC09D0379100DE8BA8</string>
+				<string>88B5D0F509D047F500DE8BA8</string>
 				<string>1CE0B1FE06471DED0097A5F4</string>
-				<string>88B5D0DD09D0379100DE8BA8</string>
+				<string>88B5D0F609D047F500DE8BA8</string>
 				<string>1CE0B20306471E060097A5F4</string>
 				<string>1CE0B20506471E060097A5F4</string>
 			</array>
@@ -530,7 +522,6 @@
 	<integer>5</integer>
 	<key>WindowOrderList</key>
 	<array>
-		<string>88467C9E08C8D771002CC560</string>
 		<string>/Users/jesse/VersionControl/woof/EOMBundle/FMPPlugIn.pbproj</string>
 	</array>
 	<key>WindowString</key>
