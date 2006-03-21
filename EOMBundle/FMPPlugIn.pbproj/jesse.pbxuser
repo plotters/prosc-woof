@@ -2,17 +2,15 @@
 {
 	013357CCFF5DD5F011CD2B9D = {
 		activeBuildStyle = 01A3BF6FFFB0C37D11CD2B9D;
-		activeExecutable = C6E4231E007BED7904000001;
+		activeExecutable = F5BE508D02519FD801A80107;
 		activeTarget = F5BE50350251994001A80107;
 		addToTargets = (
 			F5BE50350251994001A80107,
 		);
 		breakpoints = (
-			F56FF21802C165BB01000125,
 		);
 		codeSenseManager = 8830FF69085FD5B30056BF1D;
 		executables = (
-			C6E4231E007BED7904000001,
 			F5BE508D02519FD801A80107,
 		);
 		perUserDictionary = {
@@ -74,7 +72,7 @@
 					PBXFileDataSource_Warnings_ColumnID,
 				);
 			};
-			PBXPerProjectTemplateStateSaveDate = 154900057;
+			PBXPerProjectTemplateStateSaveDate = 164641145;
 			"PBXTemplateGeometry-F5314676015831810DCA290F" = {
 				ContentSize = "{685, 434}";
 				LeftSlideOut = {
@@ -386,40 +384,31 @@
 					WindowLocation = "{24, 69}";
 				},
 			);
-			PBXWorkspaceStateSaveDate = 154900057;
+			PBXWorkspaceStateSaveDate = 164641145;
 		};
 		perUserProjectItems = {
-			880A669408EC82B8002A71D9 = 880A669408EC82B8002A71D9;
-			886328300860B68100E55902 = 886328300860B68100E55902;
 			886328320860B68100E55902 = 886328320860B68100E55902;
 			886328330860B68100E55902 = 886328330860B68100E55902;
-			887756F8093B98EE00E1AFA4 = 887756F8093B98EE00E1AFA4;
+			88B5D0CC09D0379100DE8BA8 = 88B5D0CC09D0379100DE8BA8;
+			88B5D0CD09D0379100DE8BA8 = 88B5D0CD09D0379100DE8BA8;
+			88B5D0CE09D0379100DE8BA8 = 88B5D0CE09D0379100DE8BA8;
+			88B5D0CF09D0379100DE8BA8 = 88B5D0CF09D0379100DE8BA8;
+			88B5D0D009D0379100DE8BA8 = 88B5D0D009D0379100DE8BA8;
+			88B5D0D109D0379100DE8BA8 = 88B5D0D109D0379100DE8BA8;
+			88B5D0D209D0379100DE8BA8 = 88B5D0D209D0379100DE8BA8;
+			88B5D0D309D0379100DE8BA8 = 88B5D0D309D0379100DE8BA8;
+			88B5D0D409D0379100DE8BA8 = 88B5D0D409D0379100DE8BA8;
+			88B5D0D509D0379100DE8BA8 = 88B5D0D509D0379100DE8BA8;
+			88B5D0D609D0379100DE8BA8 = 88B5D0D609D0379100DE8BA8;
+			88B5D0D709D0379100DE8BA8 = 88B5D0D709D0379100DE8BA8;
+			88B5D0D809D0379100DE8BA8 = 88B5D0D809D0379100DE8BA8;
+			88B5D0D909D0379100DE8BA8 = 88B5D0D909D0379100DE8BA8;
+			88B5D0DA09D0379100DE8BA8 = 88B5D0DA09D0379100DE8BA8;
+			88B5D0DB09D0379100DE8BA8 = 88B5D0DB09D0379100DE8BA8;
 		};
 		sourceControlManager = 8830FF68085FD5B30056BF1D;
 		userBuildSettings = {
 		};
-	};
-	017C60B4FFD2F2BB7F000001 = {
-		activeExec = 0;
-	};
-	017C60D6FFD2F2BB7F000001 = {
-		activeExec = 0;
-	};
-	017C6100FFD43DA37F000001 = {
-		activeExec = 0;
-		executables = (
-			C6E4231E007BED7904000001,
-		);
-	};
-	880A669408EC82B8002A71D9 = {
-		fRef = F5BE504C02519A6B01A80107;
-		isa = PBXTextBookmark;
-		name = "Fmp360PlugIn.java: Fmp360PlugIn";
-		rLen = 0;
-		rLoc = 313;
-		rType = 0;
-		vrLen = 561;
-		vrLoc = 0;
 	};
 	8830FF68085FD5B30056BF1D = {
 		fallbackIsa = XCSourceControlManager;
@@ -432,16 +421,6 @@
 	8830FF69085FD5B30056BF1D = {
 		indexTemplatePath = "";
 		isa = PBXCodeSenseManager;
-	};
-	886328300860B68100E55902 = {
-		fRef = F5BE504B02519A6B01A80107;
-		isa = PBXTextBookmark;
-		name = "FMPExpression.java: FMPExpression";
-		rLen = 0;
-		rLoc = 699;
-		rType = 0;
-		vrLen = 705;
-		vrLoc = 0;
 	};
 	886328320860B68100E55902 = {
 		fRef = F5BE504C02519A6B01A80107;
@@ -458,78 +437,195 @@
 		isa = PBXTextBookmark;
 		name = "FMPExpression.java: FMPExpression";
 		rLen = 0;
-		rLoc = 699;
+		rLoc = 702;
 		rType = 0;
 		vrLen = 705;
 		vrLoc = 0;
 	};
-	887756F8093B98EE00E1AFA4 = {
+	88B5D0CC09D0379100DE8BA8 = {
+		fRef = F5BE504D02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "main.c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 215;
+		vrLoc = 0;
+	};
+	88B5D0CD09D0379100DE8BA8 = {
+		fRef = F5BE504B02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "FMPExpression7.java: FMPExpression";
+		rLen = 0;
+		rLoc = 434;
+		rType = 0;
+		vrLen = 755;
+		vrLoc = 0;
+	};
+	88B5D0CE09D0379100DE8BA8 = {
+		fRef = F5BE504C02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "Fmp360PlugIn7.java: Fmp360PlugIn";
+		rLen = 0;
+		rLoc = 554;
+		rType = 0;
+		vrLen = 562;
+		vrLoc = 0;
+	};
+	88B5D0CF09D0379100DE8BA8 = {
 		fRef = F5BE504C02519A6B01A80107;
 		isa = PBXTextBookmark;
 		name = "Fmp360PlugIn.java: Fmp360PlugIn";
 		rLen = 0;
-		rLoc = 313;
+		rLoc = 315;
 		rType = 0;
 		vrLen = 561;
 		vrLoc = 0;
 	};
-	C6E4231E007BED7904000001 = {
-		activeArgIndex = 0;
-		activeArgIndices = (
-			YES,
-		);
-		argumentStrings = (
-			"-WOPort 8888 -WOAutoOpenInBrowser NO",
-		);
-		configStateDict = {
-		};
-		cppStopOnCatchEnabled = 0;
-		cppStopOnThrowEnabled = 0;
-		customDataFormattersEnabled = 1;
-		debuggerPlugin = JavaDebugging;
-		disassemblyDisplayState = 0;
-		dylibVariantSuffix = "";
-		enableDebugStr = 1;
-		environmentEntries = (
-		);
-		executableSystemSymbolLevel = 0;
-		executableUserSymbolLevel = 0;
-		isa = PBXExecutable;
-		libgmallocEnabled = 0;
-		name = FMPTest;
-		shlibInfoDictList = (
-		);
-		shlibInfoDictList_v2 = (
-		);
-		sourceDirectories = (
-		);
+	88B5D0D009D0379100DE8BA8 = {
+		fRef = F5BE504B02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "FMPExpression.java: FMPExpression";
+		rLen = 0;
+		rLoc = 702;
+		rType = 0;
+		vrLen = 752;
+		vrLoc = 0;
 	};
-	F56FF21802C165BB01000125 = {
-		fileReference = F5BE502F0251991201A80107;
-		isa = PBXFileBreakpoint;
-		lineNumber = 200;
-		state = 1;
+	88B5D0D109D0379100DE8BA8 = {
+		fRef = F5BE504D02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "main.c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 215;
+		vrLoc = 0;
 	};
-	F5BE501B025197F301A80107 = {
-		activeExec = 0;
+	88B5D0D209D0379100DE8BA8 = {
+		fRef = F5BE504B02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "FMPExpression.java: FMPExpression";
+		rLen = 0;
+		rLoc = 702;
+		rType = 0;
+		vrLen = 752;
+		vrLoc = 0;
+	};
+	88B5D0D309D0379100DE8BA8 = {
+		fRef = F5BE504C02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "Fmp360PlugIn.java: Fmp360PlugIn";
+		rLen = 0;
+		rLoc = 315;
+		rType = 0;
+		vrLen = 561;
+		vrLoc = 0;
+	};
+	88B5D0D409D0379100DE8BA8 = {
+		fRef = F5BE504B02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "FMPExpression.java: FMPExpression";
+		rLen = 0;
+		rLoc = 702;
+		rType = 0;
+		vrLen = 752;
+		vrLoc = 0;
+	};
+	88B5D0D509D0379100DE8BA8 = {
+		fRef = F5BE504D02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "main.c: 1";
+		rLen = 0;
+		rLoc = 0;
+		rType = 0;
+		vrLen = 215;
+		vrLoc = 0;
+	};
+	88B5D0D609D0379100DE8BA8 = {
+		fRef = F5BE504B02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "FMPExpression.java: FMPExpression";
+		rLen = 0;
+		rLoc = 702;
+		rType = 0;
+		vrLen = 752;
+		vrLoc = 0;
+	};
+	88B5D0D709D0379100DE8BA8 = {
+		fRef = F5BE504C02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "Fmp360PlugIn7.java: 13";
+		rLen = 0;
+		rLoc = 267;
+		rType = 0;
+		vrLen = 562;
+		vrLoc = 0;
+	};
+	88B5D0D809D0379100DE8BA8 = {
+		fRef = F5BE504B02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "FMPExpression7.java: FMPExpression";
+		rLen = 0;
+		rLoc = 387;
+		rType = 0;
+		vrLen = 753;
+		vrLoc = 0;
+	};
+	88B5D0D909D0379100DE8BA8 = {
+		fRef = F5BE504C02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "Fmp360PlugIn7.java: Fmp360PlugIn";
+		rLen = 0;
+		rLoc = 554;
+		rType = 0;
+		vrLen = 562;
+		vrLoc = 0;
+	};
+	88B5D0DA09D0379100DE8BA8 = {
+		fRef = F5BE504B02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "FMPExpression7.java: FMPExpression";
+		rLen = 0;
+		rLoc = 434;
+		rType = 0;
+		vrLen = 755;
+		vrLoc = 0;
+	};
+	88B5D0DB09D0379100DE8BA8 = {
+		fRef = F5BE504C02519A6B01A80107;
+		isa = PBXTextBookmark;
+		name = "Fmp360PlugIn7.java: Fmp360PlugIn7";
+		rLen = 0;
+		rLoc = 554;
+		rType = 0;
+		vrLen = 564;
+		vrLoc = 0;
 	};
 	F5BE50350251994001A80107 = {
 		activeExec = 0;
 	};
 	F5BE504B02519A6B01A80107 = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {808, 420}}";
-			sepNavSelRange = "{699, 0}";
-			sepNavVisRect = "{{0, 0}, {808, 418}}";
+			sepNavIntBoundsRect = "{{0, 0}, {808, 473}}";
+			sepNavSelRange = "{434, 0}";
+			sepNavVisRect = "{{0, 0}, {808, 473}}";
 			sepNavWindowFrame = "{{487, 34}, {967, 772}}";
 		};
 	};
 	F5BE504C02519A6B01A80107 = {
 		uiCtxt = {
-			sepNavIntBoundsRect = "{{0, 0}, {814, 386}}";
-			sepNavSelRange = "{313, 0}";
-			sepNavVisRect = "{{0, 0}, {814, 386}}";
+			sepNavIntBoundsRect = "{{0, 0}, {808, 473}}";
+			sepNavSelRange = "{554, 0}";
+			sepNavVisRect = "{{0, 0}, {808, 473}}";
 			sepNavWindowFrame = "{{38, 230}, {967, 772}}";
+		};
+	};
+	F5BE504D02519A6B01A80107 = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {808, 473}}";
+			sepNavSelRange = "{0, 0}";
+			sepNavVisRect = "{{0, 0}, {808, 473}}";
 		};
 	};
 	F5BE508D02519FD801A80107 = {
