@@ -136,7 +136,7 @@
       <file leaf-file-name="Fmp360PlugIn.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/webobjects/jdbcadaptor/Fmp360PlugIn.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.28065395">
+            <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.15465465">
               <folding />
             </state>
           </provider>
@@ -145,7 +145,7 @@
       <file leaf-file-name="woof7.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/woof7.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="245" column="39" selection-start="10238" selection-end="10238" vertical-scroll-proportion="0.8610354">
+            <state line="245" column="39" selection-start="10238" selection-end="10238" vertical-scroll-proportion="0.47447446">
               <folding />
             </state>
           </provider>
@@ -154,7 +154,7 @@
       <file leaf-file-name="Driver.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/Driver.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.5667575">
+            <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.3123123">
               <folding />
             </state>
           </provider>
@@ -163,7 +163,7 @@
       <file leaf-file-name="build.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/build.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="123" column="29" selection-start="4647" selection-end="4647" vertical-scroll-proportion="0.3841962">
+            <state line="123" column="29" selection-start="4647" selection-end="4647" vertical-scroll-proportion="0.2117117">
               <folding />
             </state>
           </provider>
@@ -172,7 +172,7 @@
       <file leaf-file-name="QuickConnectionTest.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc/fmpjdbc/QuickConnectionTest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="18" column="0" selection-start="619" selection-end="619" vertical-scroll-proportion="0.65968585">
+            <state line="18" column="0" selection-start="619" selection-end="619" vertical-scroll-proportion="0.37004405">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -183,7 +183,7 @@
       <file leaf-file-name="HttpURLConnection.java" pinned="false" current="false" current-in-tab="false">
         <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Home/src.jar!/src/java/net/HttpURLConnection.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="271" column="0" selection-start="8992" selection-end="8992" vertical-scroll-proportion="0.33246073">
+            <state line="271" column="0" selection-start="8992" selection-end="8992" vertical-scroll-proportion="0.18649046">
               <folding />
             </state>
           </provider>
@@ -192,7 +192,7 @@
       <file leaf-file-name="FmXmlRequest.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmXmlRequest.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="106" column="110" selection-start="4311" selection-end="4311" vertical-scroll-proportion="0.21798365">
+            <state line="106" column="110" selection-start="4311" selection-end="4311" vertical-scroll-proportion="0.12012012">
               <folding />
             </state>
           </provider>
@@ -201,7 +201,7 @@
       <file leaf-file-name="FmMetaData.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmMetaData.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="51" column="0" selection-start="1942" selection-end="1942" vertical-scroll-proportion="0.33242506">
+            <state line="51" column="0" selection-start="1942" selection-end="1942" vertical-scroll-proportion="0.18318318">
               <folding />
             </state>
           </provider>
@@ -210,7 +210,7 @@
       <file leaf-file-name="FmConnection.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmConnection.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="164" column="50" selection-start="6837" selection-end="6837" vertical-scroll-proportion="0.33242506">
+            <state line="164" column="50" selection-start="6837" selection-end="6837" vertical-scroll-proportion="0.18318318">
               <folding />
             </state>
           </provider>
@@ -661,7 +661,7 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="2" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="2" />
       <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.3994528" order="4" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.3994528" order="4" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="sliding" type="sliding" visible="false" weight="0.4" order="0" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
       <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="2" />
@@ -805,21 +805,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/woof7.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="245" column="39" selection-start="10238" selection-end="10238" vertical-scroll-proportion="0.8610354">
+        <state line="245" column="39" selection-start="10238" selection-end="10238" vertical-scroll-proportion="0.47447446">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/Driver.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.5667575">
+        <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.3123123">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/build.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="123" column="29" selection-start="4647" selection-end="4647" vertical-scroll-proportion="0.3841962">
+        <state line="123" column="29" selection-start="4647" selection-end="4647" vertical-scroll-proportion="0.2117117">
           <folding />
         </state>
       </provider>
@@ -833,35 +833,35 @@
     </entry>
     <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Home/src.jar!/src/java/net/HttpURLConnection.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="271" column="0" selection-start="8992" selection-end="8992" vertical-scroll-proportion="0.33246073">
+        <state line="271" column="0" selection-start="8992" selection-end="8992" vertical-scroll-proportion="0.18649046">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmMetaData.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="51" column="0" selection-start="1942" selection-end="1942" vertical-scroll-proportion="0.33242506">
+        <state line="51" column="0" selection-start="1942" selection-end="1942" vertical-scroll-proportion="0.18318318">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmConnection.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="164" column="50" selection-start="6837" selection-end="6837" vertical-scroll-proportion="0.33242506">
+        <state line="164" column="50" selection-start="6837" selection-end="6837" vertical-scroll-proportion="0.18318318">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmXmlRequest.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="106" column="110" selection-start="4311" selection-end="4311" vertical-scroll-proportion="0.21798365">
+        <state line="106" column="110" selection-start="4311" selection-end="4311" vertical-scroll-proportion="0.12012012">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc/fmpjdbc/QuickConnectionTest.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="0" selection-start="619" selection-end="619" vertical-scroll-proportion="0.65968585">
+        <state line="18" column="0" selection-start="619" selection-end="619" vertical-scroll-proportion="0.37004405">
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -870,7 +870,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/webobjects/jdbcadaptor/Fmp360PlugIn.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.28065395">
+        <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.15465465">
           <folding />
         </state>
       </provider>
