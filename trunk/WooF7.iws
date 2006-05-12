@@ -17,6 +17,11 @@
     <option name="USER" value="" />
   </component>
   <component name="CheckinPanelState" />
+  <component name="ClassPatternConfiguration">
+    <testPatterns>
+      <classPattern testedClass="$CLASS$" testClass="test/$CLASS$Test" />
+    </testPatterns>
+  </component>
   <component name="Commander">
     <leftPanel />
     <rightPanel />
@@ -133,10 +138,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Fmp360PlugIn.java" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="Fmp360PlugIn.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/webobjects/jdbcadaptor/Fmp360PlugIn.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.15465465">
+            <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.025408348">
               <folding />
             </state>
           </provider>
@@ -145,7 +150,7 @@
       <file leaf-file-name="woof7.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/woof7.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="245" column="39" selection-start="10238" selection-end="10238" vertical-scroll-proportion="0.47447446">
+            <state line="220" column="2" selection-start="8709" selection-end="8709" vertical-scroll-proportion="0.36479127">
               <folding />
             </state>
           </provider>
@@ -154,7 +159,7 @@
       <file leaf-file-name="Driver.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/Driver.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.3123123">
+            <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.33938295">
               <folding />
             </state>
           </provider>
@@ -163,54 +168,16 @@
       <file leaf-file-name="build.xml" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/build.xml">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="123" column="29" selection-start="4647" selection-end="4647" vertical-scroll-proportion="0.2117117">
+            <state line="151" column="49" selection-start="5805" selection-end="5805" vertical-scroll-proportion="0.94876325">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="QuickConnectionTest.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc/fmpjdbc/QuickConnectionTest.java">
+      <file leaf-file-name="FMValueList.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueList.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="18" column="0" selection-start="619" selection-end="619" vertical-scroll-proportion="0.37004405">
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="HttpURLConnection.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Home/src.jar!/src/java/net/HttpURLConnection.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="271" column="0" selection-start="8992" selection-end="8992" vertical-scroll-proportion="0.18649046">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FmXmlRequest.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmXmlRequest.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="106" column="110" selection-start="4311" selection-end="4311" vertical-scroll-proportion="0.12012012">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FmMetaData.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmMetaData.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="51" column="0" selection-start="1942" selection-end="1942" vertical-scroll-proportion="0.18318318">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="FmConnection.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/FmConnection.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="164" column="50" selection-start="6837" selection-end="6837" vertical-scroll-proportion="0.18318318">
+            <state line="57" column="71" selection-start="2320" selection-end="2320" vertical-scroll-proportion="0.7508834">
               <folding />
             </state>
           </provider>
@@ -245,6 +212,40 @@
       </PATH_ELEMENT>
     </PATH>
     <setting name="SHOW_AS_DEPLOYMENT_VIEW" value="false" />
+  </component>
+  <component name="JUnitClassTemplateConfiguration">
+    <option name="DONT_SHOW_TEMPLATE_DIALOG_IF_ONLY_ONE_TEMPLATE" value="false" />
+    <option name="DONT_SHOW_METHODS_DIALOG_IF_ONLY_ONE_METHOD" value="false" />
+    <option name="LAST_TEMPLATE_NAME" value="Default Test Class.java" />
+    <option name="TEST_TEMPLATES">
+      <value>
+        <list size="1">
+          <item index="0" class="java.lang.String" itemvalue="Default Test Class.java" />
+        </list>
+      </value>
+    </option>
+  </component>
+  <component name="JUnitMethodTemplateConfiguration">
+    <option name="DONT_SHOW_TEMPLATE_DIALOG_IF_ONLY_ONE_TEMPLATE" value="false" />
+    <option name="DONT_SHOW_METHODS_DIALOG_IF_ONLY_ONE_METHOD" value="false" />
+    <option name="LAST_TEMPLATE_NAME" value="Default Test Method.java" />
+    <option name="TEST_TEMPLATES">
+      <value>
+        <list size="2">
+          <item index="0" class="java.lang.String" itemvalue="Default Test Method.java" />
+          <item index="1" class="java.lang.String" itemvalue="Test Method throws Exception.java" />
+        </list>
+      </value>
+    </option>
+  </component>
+  <component name="JUnitTestConfiguration">
+    <option name="IS_AUTO_TEST_CLASS_RENAME_ENABLED" value="true" />
+    <option name="IS_AUTO_TEST_CLASS_MOVE_ENABLED" value="true" />
+    <option name="IS_AUTO_TEST_CLASS_REFACTORING_ENABLED" value="true" />
+    <option name="IS_AUTO_TEST_METHODS_RENAME_ENABLED" value="true" />
+    <option name="IS_UNTESTED_METHOD_ICON_ENABLED" value="true" />
+    <option name="IS_GET_METHOD_ICONS_ENABLED" value="true" />
+    <option name="IS_SET_METHOD_ICONS_ENABLED" value="true" />
   </component>
   <component name="ModuleEditorState">
     <option name="LAST_EDITED_MODULE_NAME" value="WooF" />
@@ -537,6 +538,16 @@
     <option name="SHOW_DIALOG" value="true" />
   </component>
   <component name="RecentsManager" />
+  <component name="Regex">
+    <option name="pos1" value="218" />
+    <option name="pos2" value="218" />
+    <option name="pos3" value="162" />
+    <option name="pos4" value="444" />
+    <option name="pos5" value="162" />
+    <option name="autoUpdate" value="true" />
+    <option name="referenceOn" value="false" />
+    <option name="referencePos" value="0" />
+  </component>
   <component name="RestoreUpdateTree" />
   <component name="RunManager">
     <activeType name="Application" />
@@ -555,27 +566,6 @@
       </RunnerSettings>
       <ConfigurationWrapper RunnerId="Debug" />
     </tempConfiguration>
-    <configuration selected="false" default="true" type="Applet" factoryName="Applet">
-      <module name="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="HTML_FILE_NAME" />
-      <option name="HTML_USED" value="false" />
-      <option name="WIDTH" value="400" />
-      <option name="HEIGHT" value="300" />
-      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
-      <option name="VM_PARAMETERS" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-    </configuration>
-    <configuration selected="false" default="true" type="Application" factoryName="Application">
-      <option name="MAIN_CLASS_NAME" />
-      <option name="VM_PARAMETERS" />
-      <option name="PROGRAM_PARAMETERS" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <module name="" />
-    </configuration>
     <configuration selected="false" default="true" type="Remote" factoryName="Remote">
       <option name="USE_SOCKET_TRANSPORT" value="true" />
       <option name="SERVER_MODE" value="false" />
@@ -598,6 +588,27 @@
       <option name="TEST_SEARCH_SCOPE">
         <value defaultName="wholeProject" />
       </option>
+    </configuration>
+    <configuration selected="false" default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$idea_dir$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+    </configuration>
+    <configuration selected="false" default="true" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <module name="" />
     </configuration>
   </component>
   <component name="SelectInManager" />
@@ -627,7 +638,7 @@
     <option name="USER" value="" />
     <option name="PASSWORD" value="" />
     <option name="PROCESS_UNRESOLVED" value="false" />
-    <configuration useDefault="true">/Users/jesse/.subversion</configuration>
+    <configuration useDefault="true">/Users/sbarnum/.subversion</configuration>
   </component>
   <component name="TodoView" selected-index="0">
     <todo-panel id="selected-file">
@@ -644,20 +655,21 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="2" y="22" width="1273" height="828" extended-state="0" />
+    <frame x="-3" y="22" width="1680" height="1024" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="CVS" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
+      <window_info id="Regex" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="7" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.2587755" order="0" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="1" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="1" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.32831737" order="8" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.3279396" order="8" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.4" order="6" />
       <window_info id="Module Dependencies" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
       <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="8" />
       <window_info id="Favorites" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
-      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.21877551" order="1" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="true" weight="0.21875" order="1" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="2" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.25" order="2" />
       <window_info id="File View" active="false" anchor="right" auto_hide="false" internal_type="docked" type="docked" visible="false" weight="0.33" order="3" />
@@ -737,17 +749,17 @@
       <antCommandLine value="" />
       <runInBackground value="false" />
       <targetFilters>
-        <filter targetName="clean.module.fmp360_jdbc" isVisible="true" />
-        <filter targetName="init" isVisible="true" />
-        <filter targetName="clean" isVisible="true" />
         <filter targetName="all" isVisible="true" />
+        <filter targetName="clean" isVisible="true" />
+        <filter targetName="clean.module.fmp360_jdbc" isVisible="true" />
         <filter targetName="clean.module.woof" isVisible="true" />
         <filter targetName="compile.module.fmp360_jdbc" isVisible="true" />
-        <filter targetName="compile.module.woof.production" isVisible="true" />
-        <filter targetName="compile.module.woof" isVisible="true" />
-        <filter targetName="compile.module.woof.tests" isVisible="true" />
-        <filter targetName="compile.module.fmp360_jdbc.tests" isVisible="true" />
         <filter targetName="compile.module.fmp360_jdbc.production" isVisible="true" />
+        <filter targetName="compile.module.fmp360_jdbc.tests" isVisible="true" />
+        <filter targetName="compile.module.woof" isVisible="true" />
+        <filter targetName="compile.module.woof.production" isVisible="true" />
+        <filter targetName="compile.module.woof.tests" isVisible="true" />
+        <filter targetName="init" isVisible="true" />
       </targetFilters>
       <treeView value="true" />
       <verbose value="true" />
@@ -757,10 +769,11 @@
       <antCommandLine value="" />
       <runInBackground value="false" />
       <targetFilters>
-        <filter targetName="build_framework" isVisible="true" />
-        <filter targetName="Build_LicenseChecker_app" isVisible="false" />
-        <filter targetName="Installer" isVisible="true" />
-        <filter targetName="JDBC_driver" isVisible="false" />
+        <filter targetName="build_eombundle" isVisible="true" />
+        <filter targetName="build_jdbc_driver" isVisible="true" />
+        <filter targetName="build_woof7_framework" isVisible="true" />
+        <filter targetName="compile_source" isVisible="false" />
+        <filter targetName="Install" isVisible="true" />
       </targetFilters>
       <treeView value="true" />
       <verbose value="true" />
@@ -782,13 +795,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueList.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="0" selection-start="0" selection-end="914" vertical-scroll-proportion="0.03341289">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueListBrowser.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="19" column="0" selection-start="914" selection-end="914" vertical-scroll-proportion="0.06451613">
@@ -803,37 +809,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/woof7.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="245" column="39" selection-start="10238" selection-end="10238" vertical-scroll-proportion="0.47447446">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/Driver.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.3123123">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/build.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="123" column="29" selection-start="4647" selection-end="4647" vertical-scroll-proportion="0.2117117">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Classes/classes.jar!/sun/net/www/protocol/http/HttpURLConnection.class">
       <provider selected="true" editor-type-id="text-editor">
         <state line="79" column="0" selection-start="3982" selection-end="3982" vertical-scroll-proportion="0.33242506">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///System/Library/Frameworks/JavaVM.framework/Versions/1.4.2/Home/src.jar!/src/java/net/HttpURLConnection.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="271" column="0" selection-start="8992" selection-end="8992" vertical-scroll-proportion="0.18649046">
           <folding />
         </state>
       </provider>
@@ -859,18 +837,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/test_src/com/prosc/fmpjdbc/QuickConnectionTest.java">
+    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/webobjects/jdbcadaptor/Fmp360PlugIn.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="0" selection-start="619" selection-end="619" vertical-scroll-proportion="0.37004405">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
+        <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.025408348">
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/webobjects/jdbcadaptor/Fmp360PlugIn.java">
+    <entry file="file://$PROJECT_DIR$/woof7.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="47" column="13" selection-start="2024" selection-end="2024" vertical-scroll-proportion="0.15465465">
+        <state line="220" column="2" selection-start="8709" selection-end="8709" vertical-scroll-proportion="0.36479127">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Fmp360_JDBC/src/com/prosc/fmpjdbc/Driver.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="3" selection-start="1114" selection-end="1114" vertical-scroll-proportion="0.33938295">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/build.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="151" column="49" selection-start="5805" selection-end="5805" vertical-scroll-proportion="0.94876325">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/WooF7/Resources/src/com/prosc/FMValueList.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="57" column="71" selection-start="2320" selection-end="2320" vertical-scroll-proportion="0.7508834">
           <folding />
         </state>
       </provider>
