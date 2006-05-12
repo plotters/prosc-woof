@@ -1,0 +1,14 @@
+---Install instructions (for binary downloads only)---
+
+WooF consists of 3 separate components which each need to be placed in a specific location on your hard drive.
+* Move WooF7.framework into your /Library/Frameworks/ folder
+* Move the WooF_EOModelerPlugIn.EOMplugin bundle into /Developer/EOMBundles
+* Move the 360Works JDBC driver for FileMaker Pro, Fmp360_JDBC.jar, into /Library/Java/Extensions
+
+You should now be ready to start doing WebObjects and FileMaker development. Read the 'Using WooF7.html' file for information on using WooF7.
+
+You may also want to look at the WooF_Demo folder. This contains a small working application written using WooF. For your convenience, we host the database for this sample application on our server here so that you can immediately start experimenting with WooF.
+
+--Jesse Barnum, President, 360Works
+http://www.360works.com
+770-234-9293

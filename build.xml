@@ -145,6 +145,19 @@ refmodel (optional for the eogenerator task), ie. 'PrototyptesMysql.emodeld'
 		</woframework>
 	</target>
 
+	<target name="build_binaries" description="Bundle compiled sources into a file along with the INSTALL.txt file, for binary download." depends="build_jdbc_driver,build_eombundle">
+		<mkdir dir="build/woof_binaries"/>
+		<copy todir="build/woof_binaries" overwrite="true">
+			<fileset dir="EOMBundle" includes="WooF7_EOModelerPlugIn.EOMplugin/**"/>
+			<fileset dir="build" includes="fmp360_jdbc.jar"/>
+			<fileset dir="build" includes="${projectName}.framework/**"/>
+			<fileset dir="./" includes="LICENSE.txt,INSTALL.txt,test_files/**,*html,WooF_Demo/**"/>
+		</copy>
+		<tar basedir="build" destfile="build/woof_binaries.tgz" compression="gzip">
+			<include name="woof_binaries/**"/>
+		</tar>
+	</target>
+
 	<target name="Install" depends="build_jdbc_driver, build_woof7_framework, build_eombundle" description="Builds and installs WooF7. Read the README.txt for more information.">
 		<copy todir="/Library/Java/Extensions" file="build/fmp360_jdbc.jar" overwrite="true" />
 		<copy todir="${frameworkDestDir}" overwrite="true">
