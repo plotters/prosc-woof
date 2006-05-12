@@ -134,7 +134,7 @@
   <target name="compile.module.fmp360_jdbc.production" description="compile module(s) Fmp360_JDBC production classes">
     <mkdir dir="${fmp360_jdbc.output.dir}"/>
     <javac destdir="${fmp360_jdbc.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memoryMaximumSize="${compiler.max.memory}" fork="true" executable="${module.jdk.home.fmp360_jdbc}/bin/javac">
-      <compilerarg line="${compiler.args.fmp360_jdbc}"/>
+	  <compilerarg line="${compiler.args.fmp360_jdbc}"/>
       <bootclasspath refid="fmp360_jdbc.module.bootclasspath"/>
       <classpath refid="fmp360_jdbc.module.classpath"/>
       <src refid="fmp360_jdbc.module.sourcepath"/>
@@ -142,7 +142,8 @@
     <copy todir="${fmp360_jdbc.output.dir}">
       <fileset dir="${module.fmp360_jdbc.basedir}/Fmp360_JDBC/src">
         <patternset refid="compiler.resources"/>
-        <type type="file"/>
+		  <patternset includes="**/*.txt"/>
+		<type type="file"/>
       </fileset>
     </copy>
   </target>
