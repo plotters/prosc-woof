@@ -10,11 +10,13 @@ import java.sql.SQLException;
  * Created by IntelliJ IDEA. User: jesse Date: Apr 20, 2005 Time: 11:07:58 PM
  */
 public class ExceptionTests extends TestCase {
+	private JDBCTestUtils jdbc;
 	private Connection connection;
 	private Statement statement;
 
 	protected void setUp() throws Exception {
-		connection = JDBCTestUtils.getConnection();
+		jdbc = new JDBCTestUtils();
+		connection = jdbc.getConnection();
 		statement = connection.createStatement();
 	}
 
@@ -35,7 +37,7 @@ public class ExceptionTests extends TestCase {
 	}
 
 	public void testMissingDatabase() throws SQLException {
-		Connection connection = JDBCTestUtils.getConnection( "NoSuchDatabase", "user", "password" );
+		Connection connection = jdbc.getConnection( "NoSuchDatabase", "user", "password" );
 		try {
 			connection.createStatement().executeQuery( "SELECT * FROM NoSuchTable" );
 			fail("Should have gotten an FMException");

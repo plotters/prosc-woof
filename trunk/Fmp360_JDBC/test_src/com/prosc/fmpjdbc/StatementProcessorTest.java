@@ -14,7 +14,7 @@ public class StatementProcessorTest extends TestCase {
 	private Statement statement;
 
 	public StatementProcessorTest() throws Exception {
-		statement = JDBCTestUtils.getConnection().createStatement();
+		statement = new JDBCTestUtils().getConnection().createStatement();
 	}
 
 	public void test_escapeFMWildCards7() throws Exception {

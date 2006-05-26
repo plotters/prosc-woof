@@ -78,7 +78,7 @@ public class SqlUpdateCommandTest2 extends TestCase {
 	}
 
 	public void testSpeediness() {
-		JDBCTestUtils.assertIsSpeedy(10, new Runnable() {
+		new JDBCTestUtils().assertIsSpeedy(10, new Runnable() {
 
 			public void run() {
 				try {

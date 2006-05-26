@@ -14,9 +14,11 @@ import java.io.IOException;
 public class AdvancedDriverTests extends TestCase {
 	private Connection connection;
 	private Statement statement;
+	private JDBCTestUtils jdbc;
 
 	protected void setUp() throws Exception {
-		connection = JDBCTestUtils.getConnection();
+		jdbc = new JDBCTestUtils();
+		connection = jdbc.getConnection();
 		statement = connection.createStatement();
 	}
 
@@ -27,7 +29,7 @@ public class AdvancedDriverTests extends TestCase {
 
 	/** @TestPasses */
     public void testEscapeFMWildCards() throws SQLException {
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		statement.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
 
 		//  insert record containing wildcards
@@ -58,7 +60,7 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testGetStoredProcedures() throws SQLException {
-        if (JDBCTestUtils.fmVersion < 7){connection.setCatalog("Contacts");} //Need to set the db if using 6, right?
+        if (jdbc.fmVersion < 7){connection.setCatalog("Contacts");} //Need to set the db if using 6, right?
         ResultSet procedures = connection.getMetaData().getProcedures(null, null, null); //ddtek driver does not implement this
 		int scriptCount = 0;
 		while( procedures.next() ) {
@@ -75,13 +77,13 @@ public class AdvancedDriverTests extends TestCase {
 	 */
 	public void testExecuteStoredProcedure() throws SQLException {
         connection.prepareCall("capitalizeLastNames").execute();
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		statement.executeUpdate( "INSERT INTO "+tableName+" (firstName, lastName, emailAddress) values('Fred', 'flintstone', 'fred@rubble.com')");
 		ResultSet rs = statement.getGeneratedKeys();
 		rs.next();
 		Object id = rs.getObject( "ID" );
 
-        if (JDBCTestUtils.fmVersion < 7){connection.setCatalog("Contacts");} //Need to set the db if using 6, right?
+        if (jdbc.fmVersion < 7){connection.setCatalog("Contacts");} //Need to set the db if using 6, right?
         connection.prepareCall("capitalizeLastNames").execute();
 		rs = statement.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
 		rs.next();
@@ -102,7 +104,7 @@ public class AdvancedDriverTests extends TestCase {
 	 * @TestPasses
 	 * */
 	public void testPreparedStatement() throws SQLException {
-		String tableName = JDBCTestUtils.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
 		statement.executeUpdate( "DELETE FROM " + tableName + " WHERE \"Alternate Mime Type\"='JDBC testing' "); // cleanup
 		//
 		PreparedStatement insertStatement = connection.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\") values(?,?,'JDBC testing',?,?,?)");
@@ -153,7 +155,7 @@ public class AdvancedDriverTests extends TestCase {
 
 	//Test containers/BLOBs
 	public Blob testContainerFields() throws SQLException, IOException {
-		String tableName = JDBCTestUtils.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
 		ResultSet rs = statement.executeQuery("SELECT * from " + tableName + " where contactID != null");
 		Blob eachValue = null;
 		int successCount = 0;
@@ -222,8 +224,8 @@ public class AdvancedDriverTests extends TestCase {
 	/** This test does not apply to the ddtek driver.
 	 * @TestFails */
 	public void testFmpRecordIDs() throws SQLException {
-		if( JDBCTestUtils.use360driver ) {
-			String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		if( jdbc.use360driver ) {
+			String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 			statement.executeUpdate( "DELETE from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Start out with an empty record set
 			int rowCount = statement.executeUpdate("INSERT INTO "+tableName+" (firstName, lastName) values('Robin', 'Williams')" );
 			assertEquals( 1, rowCount );
@@ -273,7 +275,7 @@ public class AdvancedDriverTests extends TestCase {
 	 */
 	public void testManyColumnsSpeed() throws SQLException {
 		System.out.println("Starting testLargeTableSpeed()");
-		String tableName = JDBCTestUtils.fmVersion >= 7 ? "ManyTextFields" : "ManyTextFields.Layout #2"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "ManyTextFields" : "ManyTextFields.Layout #2"; //Need to include the db & layout name if using 6, right?
 		for( int n=0; n<5; n++ ) {
 			java.util.Date then = new java.util.Date();
 			ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\"" );
@@ -474,15 +476,32 @@ public class AdvancedDriverTests extends TestCase {
 		assertTrue( resultCount > 100 );
 	}
 
-	public void TestGetColumnNames() throws SQLException {
+	public void testGetColumnNamesFm7() throws SQLException {
 		ResultSet rs = connection.getMetaData().getColumns("Contacts", null, "Calc Test", null);
 
 		do {
 			rs.next();
-		} while (!rs.getString(4).equals("c"));
+		} while (!rs.getString(4).equals("c")); //Check to make sure we have a column called 'C'
 
 		assertNotNull("Expected a string of \"readonly\" and received null.", rs.getString(12));
 		assertTrue(rs.getString(12).indexOf("readonly") > -1);
+	}
+
+	public void testGetColumnNamesFm6() throws SQLException {
+		JDBCTestUtils testUtils = new JDBCTestUtils();
+		testUtils.fmVersion = 6;
+		testUtils.xmlServer = "forge.360works.com";
+		testUtils.port = 4000;
+		Connection c = testUtils.getConnection();
+		Set columnNames = new HashSet();
+		ResultSet rs = c.getMetaData().getColumns( null, null, "Contacts", null );
+		while( rs.next() ) {
+			columnNames.add( rs.getString(4) );
+		}
+		c.close();
+
+		assertTrue( columnNames.contains("firstName") );
+		assertTrue( columnNames.contains("lastName") );
 	}
 
 	//FIX!! Write tests for FmResultSetMetaData, it is mostly abstract errors right now

@@ -13,21 +13,21 @@ import java.sql.SQLException;
 public class JDBCTestUtils {
 
 	//Configured via properties
-	public static boolean use360driver;
-	public static String dbUsername;
-	public static String dbPassword;
-	public static String fmServer;
-	public static String xmlServer;
-	public static String dbName;
-	public static int fmVersion;
-	public static String debugLevel;
+	public boolean use360driver;
+	public String dbUsername;
+	public String dbPassword;
+	public String fmServer;
+	public String xmlServer;
+	public String dbName;
+	public int fmVersion;
+	public String debugLevel;
 
 	//Not configured via properties
-	public static int port;
-	public static String driverClassName;
-	public static String catalogSeparator;
+	public int port;
+	public String driverClassName;
+	public String catalogSeparator;
 
-	static {
+	public JDBCTestUtils() {
 		fmVersion = Integer.valueOf( System.getProperty("fmVersion", "7") ).intValue();
 		debugLevel = System.getProperty("debugLevel", "FINE");
 		use360driver = Boolean.valueOf( System.getProperty("use360driver", "true") ).booleanValue();
@@ -53,7 +53,7 @@ public class JDBCTestUtils {
 		}
 	}
 
-	public static String getJdbcUrl(String whichDatabase) {
+	public String getJdbcUrl(String whichDatabase) {
 		if( use360driver ) {
 			StringBuffer result = new StringBuffer();
 			result.append("jdbc:fmp360://" + xmlServer + ":" + port + "/");
@@ -67,7 +67,7 @@ public class JDBCTestUtils {
 	}
 
 
-	public static void assertIsSpeedy(int maxAverageExecutionTime, Runnable runnable) {
+	public void assertIsSpeedy(int maxAverageExecutionTime, Runnable runnable) {
 		int loopCount = 1000 / maxAverageExecutionTime;
 		long sum = 0;
 		for (int i=0; i< loopCount; i++) {
@@ -86,11 +86,11 @@ public class JDBCTestUtils {
 		System.out.println("Avg execution time for " + runnable + ": " + avg + "ms");
 	}
 
-	public static Connection getConnection() {
+	public Connection getConnection() {
 		return getConnection(dbName, dbUsername, dbPassword);
 	}
 
-	public static Connection getConnection(String whichDatabaseName, String username, String password) {
+	public Connection getConnection(String whichDatabaseName, String username, String password) {
 		String jdbcUrl = getJdbcUrl(whichDatabaseName);
 		try {
 			Class.forName( driverClassName );
