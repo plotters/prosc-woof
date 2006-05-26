@@ -261,6 +261,21 @@ public class SimpleJdbcTest extends TestCase {
 		}
 	}
 
+
+
+	public void testNumberParsing() throws SQLException {
+		String tableName = jdbc.fmVersion >= 7 ? "WeirdTextFields" : "WeirdTextFields.WeirdTextFields"; //Need to include the db & layout name if using 6, right?
+		ResultSet rs = statement.executeQuery("SELECT * from " + tableName);
+		Object eachValue;
+		while( rs.next() ) {
+			eachValue =  rs.getObject(1);
+			if (eachValue != null) assertEquals( BigDecimal.class, eachValue.getClass() ); //Should FileMaker number return a Double or a BigDecimal? ddtek returns a Double, our driver returns a BigDecimal.
+			eachValue = rs.getObject(2);
+			if (eachValue != null) assertEquals( BigDecimal.class, eachValue.getClass() );
+		}
+	}
+
+
 	/** This test fails because the ddtek Statement implementations does not support the getGeneratedkeys() method, which is the
 	 * only way to get the serial number of a newly-created FileMaker record. <b>This is a critical failure which must be fixed in
 	 * order for us to be able to use this driver.</b>
