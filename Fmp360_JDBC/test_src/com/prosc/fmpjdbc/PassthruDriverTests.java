@@ -14,7 +14,7 @@ public class PassthruDriverTests extends TestCase {
 	private Statement statement;
 
 	protected void setUp() throws Exception {
-		connection = JDBCTestUtils.getConnection();
+		connection = new JDBCTestUtils().getConnection();
 		statement = connection.createStatement();
 	}
 

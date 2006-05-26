@@ -20,9 +20,11 @@ import com.prosc.shared.DebugTimer;
 public class SimpleJdbcTest extends TestCase {
 	private Connection connection;
 	private Statement statement;
+	private JDBCTestUtils jdbc;
 
 	protected void setUp() throws Exception {
-		connection = JDBCTestUtils.getConnection();
+		jdbc = new JDBCTestUtils();
+		connection = jdbc.getConnection();
 		statement = connection.createStatement();
 	}
 
@@ -33,21 +35,21 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testConnectWithoutPassword() {
-		JDBCTestUtils.getConnection( JDBCTestUtils.dbName, "nopassword", "" );
+		jdbc.getConnection( jdbc.dbName, "nopassword", "" );
 	}
 
 	/** This test does not apply to the ddtek driver. */
 	public void testRawConnection() throws IOException {
-		if( JDBCTestUtils.use360driver ) {
+		if( jdbc.use360driver ) {
 			String passwordString = "";
 			String authString = null;
-			if( JDBCTestUtils.dbUsername != null && JDBCTestUtils.dbPassword != null ) {
-				passwordString = JDBCTestUtils.dbUsername + ":" + JDBCTestUtils.dbPassword + "@";
-				authString = new sun.misc.BASE64Encoder().encode( (JDBCTestUtils.dbUsername + ":" + JDBCTestUtils.dbPassword).getBytes() );
+			if( jdbc.dbUsername != null && jdbc.dbPassword != null ) {
+				passwordString = jdbc.dbUsername + ":" + jdbc.dbPassword + "@";
+				authString = new sun.misc.BASE64Encoder().encode( (jdbc.dbUsername + ":" + jdbc.dbPassword).getBytes() );
 			}
 			String rawUrl;
-			if( JDBCTestUtils.fmVersion >= 7 ) rawUrl = "http://" + passwordString + JDBCTestUtils.xmlServer + ":" + JDBCTestUtils.port + "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts&-lay=Contacts&-findall";
-			else rawUrl = "http://" + passwordString + JDBCTestUtils.xmlServer + ":" + JDBCTestUtils.port + "/FMPro?-format=-fmp_xml&-db=Contacts&-lay=Contacts&-findall";
+			if( jdbc.fmVersion >= 7 ) rawUrl = "http://" + passwordString + jdbc.xmlServer + ":" + jdbc.port + "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts&-lay=Contacts&-findall";
+			else rawUrl = "http://" + passwordString + jdbc.xmlServer + ":" + jdbc.port + "/FMPro?-format=-fmp_xml&-db=Contacts&-lay=Contacts&-findall";
 			URL url = new URL(rawUrl);
 			java.net.HttpURLConnection connection = (java.net.HttpURLConnection)url.openConnection();
 			if( authString != null ) connection.setRequestProperty( "Authorization", "Basic " + authString );
@@ -66,14 +68,14 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testSelectAllWithLayout() throws SQLException {
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		ResultSet resultSet = statement.executeQuery( "SELECT * FROM \""+tableName+"\"" );
 		assertEquals( "firstName", resultSet.getMetaData().getColumnName(1) );
 	}
 
 	/** This test passes. */
 	public void testSimpleInsert() throws SQLException {
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		//sql = "INSERT INTO \"Contact profiles\" LAYOUT WebObjects (Contact,Email,\"Active status\") values('Al Leong', 'kungfudude@mcgyver.com', 'Inactive')";
 		String sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress) values('Al', 'Leong', 'kungfudude@mcgyver.com')";
 		int rowCount = statement.executeUpdate( sql );
@@ -82,7 +84,7 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testSimpleSelect() throws SQLException {
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		String sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al'";
 		//sql = "SELECT * FROM Contacts where lastName='Leong' and emailAddress='kungfudude@mcgyver.com'";
 		ResultSet resultSet = statement.executeQuery( sql );
@@ -96,7 +98,7 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testSelectWithNamedAttributes() throws SQLException {
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		ResultSet resultSet = statement.executeQuery( "SELECT \"firstName\", \"lastName\", emailAddress, state, city, ZIP from \""+tableName+"\" where lastName='Leong' and CITY ='San Francisco'" );
 		//ResultSet resultSet = statement.executeQuery( "SELECT \"firstName\", \"lastName\", emailAddress, state, city from \"Contacts\" where lastName='Erdos' and CITY ='Budapest'" );
 		int rowCount = 0;
@@ -118,7 +120,7 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testSimpleUpdate() throws SQLException {
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
         String sql = "INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, EMAILADDRESS, \"COMPANY ID\") VALUES( 'John', 'Hero', 'zero@yahoo.com', 3)";
         int rowCount = statement.executeUpdate( sql );
 		assertEquals( "Should have inserted one row", 1, rowCount );
@@ -135,7 +137,7 @@ public class SimpleJdbcTest extends TestCase {
 	public void testRelationalSearch() throws SQLException {
 		try {
 			String clientName = "Long-haired Kung Fu Dudes R Us";
-			String tableName = JDBCTestUtils.fmVersion >= 7 ? "Company" : "Company.company"; //Need to include the db & layout name if using 6, right?
+			String tableName = jdbc.fmVersion >= 7 ? "Company" : "Company.company"; //Need to include the db & layout name if using 6, right?
 			ResultSet rs = statement.executeQuery( "SELECT ID from " + tableName + " where \"ID\"='100'" );
 			if( rs.next() == false ) { //Record doesn't exist, create it
 				statement.execute( "INSERT INTO CONTACTS (FIRSTNAME, LASTNAME, \"COMPANY ID\") VALUES('John', 'Doe', 100)" );
@@ -169,7 +171,7 @@ public class SimpleJdbcTest extends TestCase {
 	//Test invalid relationships
 	/** This test passes. */
 	public void testSimpleDelete() throws SQLException {
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		//int rowCount = statement.executeUpdate("INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, \"COMPANY ID\") VALUES( 'Jesse', 'Barnum', 3)" );
 		//assertEquals( "Should have inserted one row", 1, rowCount );
         String sql = "INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, \"COMPANY ID\") VALUES( 'John', 'Hero', 3)";
@@ -186,7 +188,7 @@ public class SimpleJdbcTest extends TestCase {
 	/** This test passes. */
 	public void testTimestampParsing() throws SQLException {
 		//FIX!! This is a bad test, it should create some sample data to test with. We're getting empty dates that are causing parse errors. Or maybe we should be able to handle this? --jsb
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		ResultSet rs = statement.executeQuery("SELECT * from "+tableName+" where ID=2");
 		rs.next();
 		System.out.println("City: " + rs.getString(6) );
@@ -205,7 +207,7 @@ public class SimpleJdbcTest extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testDataParsing() throws SQLException {
-		String tableName = JDBCTestUtils.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
 		ResultSet rs = statement.executeQuery("SELECT * from " + tableName);
 		while( rs.next() ) {
 			rs.getInt(1);
@@ -230,7 +232,7 @@ public class SimpleJdbcTest extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testGetObjectParsing() throws SQLException {
-		String tableName = JDBCTestUtils.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
 		ResultSet rs = statement.executeQuery("SELECT * from " + tableName);
 		Object eachValue;
 		while( rs.next() ) {
@@ -265,7 +267,7 @@ public class SimpleJdbcTest extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testAutoGeneratedKeys() throws SQLException {
-        String tableName = JDBCTestUtils.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 
 		//sql = "INSERT INTO \"Contact profiles\" LAYOUT WebObjects (Contact,Email,\"Active status\") values('Al Leong', 'kungfudude@mcgyver.com', 'Inactive')";
 		String sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress) values ('Al', 'Leong', 'kungfudude@mcgyver.com')";
@@ -297,7 +299,7 @@ public class SimpleJdbcTest extends TestCase {
 		statement.executeUpdate( "INSERT INTO Contacts(firstName,lastName) values 'Toomsuba','Rawley'" );
 		statement.executeUpdate( "INSERT INTO Contacts(firstName,lastName) values 'toomsuba','Bailey'" );
 		int foundCount;
-		if( JDBCTestUtils.use360driver ) {
+		if( jdbc.use360driver ) {
 			foundCount = statement.executeUpdate( "DELETE FROM Contacts where firstName LIKE 'TOOMSUBA'" );
 		} else {
 			foundCount = statement.executeUpdate( "DELETE FROM Contacts where UCASE(firstName) LIKE 'TOOMSUBA'" );
@@ -308,12 +310,12 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test does not apply to the ddtek driver. */
 	public void testXmlSpeed() throws IOException {
-		if (JDBCTestUtils.use360driver) {
-			if( JDBCTestUtils.fmVersion < 7 ) fail("Only the FMPXMLRESULT format is supported in pre-7 FileMaker." );
+		if (jdbc.use360driver) {
+			if( jdbc.fmVersion < 7 ) fail("Only the FMPXMLRESULT format is supported in pre-7 FileMaker." );
 
-			URL format1 = new URL("http://" + JDBCTestUtils.xmlServer + "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts&-field=firstName&-lay=Contacts&-find");
-			URL format2 = new URL("http://" + JDBCTestUtils.xmlServer + "/fmi/xml/fmresultset.xml?-db=Contacts&-field=firstName&-lay=Contacts&-find");
-			URL format3 = new URL("http://" + JDBCTestUtils.xmlServer + "/fmi/xml/FMPDSORESULT.xml?-db=Contacts&-field=firstName&-lay=Contacts&-find");
+			URL format1 = new URL("http://" + jdbc.xmlServer + "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts&-field=firstName&-lay=Contacts&-find");
+			URL format2 = new URL("http://" + jdbc.xmlServer + "/fmi/xml/fmresultset.xml?-db=Contacts&-field=firstName&-lay=Contacts&-find");
+			URL format3 = new URL("http://" + jdbc.xmlServer + "/fmi/xml/FMPDSORESULT.xml?-db=Contacts&-field=firstName&-lay=Contacts&-find");
 
 
 			int loops=3;

@@ -60,7 +60,7 @@ public class SqlInsertCommandTest extends TestCase {
 	}
 
 	public void testSpeediness() {
-		JDBCTestUtils.assertIsSpeedy(10, new Runnable() {
+		new JDBCTestUtils().assertIsSpeedy(10, new Runnable() {
 			public void run() {
 				try {
 					new SqlCommand("INSERT INTO myTableWithTheLongName (123, 234, 345, 456, 567, 678, 789, 890, qwe, wer, ert, rty, tyu, yui, uio, iop, asd, sdf, dfg, fgh, ghj, hjk, jkl, zxc, xcv, cvb, vbn, bnm) VALUes (123, 234, 345, 456, 567, 678, 789, 890, 'qwe', 'wer', 'ert','rty','tyu','yui','uio','iop','asd','sdf','dfg','fgh','ghj','hjk','jkl','zxc','xcv','cvb','vbn','bnm')");

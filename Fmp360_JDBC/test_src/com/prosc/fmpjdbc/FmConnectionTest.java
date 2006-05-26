@@ -11,15 +11,17 @@ import java.net.MalformedURLException;
 import java.sql.*;
 
 public class FmConnectionTest extends TestCase {
+	private JDBCTestUtils jdbc;
 
 	protected void setUp() {
+		jdbc = new JDBCTestUtils();
 		// initialization code goes here
 	}
 
 	public void testDatabaseSpecified() throws Exception {
 		// you should be able to specify a database name in the URL.
 		// all queries will point to specific tables within the database.
-		FmConnection fmConnection = new FmConnection(JDBCTestUtils.getJdbcUrl("Contacts"), new Properties());// contacts.fp7
+		FmConnection fmConnection = new FmConnection(jdbc.getJdbcUrl("Contacts"), new Properties());// contacts.fp7
 		Statement statement = fmConnection.createStatement();
 		ResultSet resultSet = statement.executeQuery("select * from portrait");
 		assertTrue(resultSet.next());
@@ -35,7 +37,7 @@ public class FmConnectionTest extends TestCase {
 	}
 
 	public void testDatabaseUnspecified() throws Exception {
-		FmConnection fmConnection = new FmConnection(JDBCTestUtils.getJdbcUrl(null), new Properties());// contacts.fp7
+		FmConnection fmConnection = new FmConnection(jdbc.getJdbcUrl(null), new Properties());// contacts.fp7
 		Statement statement = fmConnection.createStatement();
 		ResultSet resultSet = statement.executeQuery("select * from contacts.portrait");
 		assertTrue(resultSet.next());
@@ -61,7 +63,7 @@ public class FmConnectionTest extends TestCase {
 	}
 
 	public void testMetaData() throws Exception {
-		FmConnection connection = new FmConnection(JDBCTestUtils.getJdbcUrl(null), new Properties());// contacts.fp7
+		FmConnection connection = new FmConnection(jdbc.getJdbcUrl(null), new Properties());// contacts.fp7
 		DatabaseMetaData metaData = connection.getMetaData();
 		assertTrue(metaData.getDatabaseMajorVersion() > 5);
 		assertTrue(metaData.getDatabaseProductName().toLowerCase().indexOf("filemaker") >= 0);

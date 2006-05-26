@@ -17,9 +17,9 @@ public class FmBlobTest extends TestCase {
 	private FmBlob blob;
 
 	public void setUp() throws Exception {
-		Statement statement = JDBCTestUtils.getConnection().createStatement();
+		Statement statement = new JDBCTestUtils().getConnection().createStatement();
 		ResultSet resultSet = statement.executeQuery("SELECT portrait FROM Portrait WHERE contactID=1");
-		assertTrue( resultSet.next() );
+		assertTrue( resultSet.next() ); //FIX!! Something somewhere is deleting our test record, so this fails
 		blob = (FmBlob) resultSet.getBlob(1);
 	}
 
