@@ -228,9 +228,12 @@ public class FmRecord {
 			fieldList.wasNull = true;
 			return new BigDecimal(0d);
 		} else fieldList.wasNull = false;
-		//Strip all non-numeric characters
-		String strippedValue = NumberUtils.removeNonNumericChars(rawValue);
-		return new BigDecimal ( strippedValue );
+		try {
+			return new BigDecimal(rawValue);
+		} catch(NumberFormatException e) { //Strip all non-numeric characters and try again
+			String strippedValue = NumberUtils.removeNonNumericChars(rawValue);
+			return new BigDecimal ( strippedValue );
+		}
 	}
 
 	public static ThreadLocal dateFormat = new ThreadLocal() {
