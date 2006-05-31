@@ -7,6 +7,9 @@ package com.prosc.fmpjdbc;
 import junit.framework.*;
 
 import java.util.Properties;
+import java.util.Vector;
+import java.util.List;
+import java.util.Iterator;
 import java.net.MalformedURLException;
 import java.sql.*;
 
@@ -67,5 +70,29 @@ public class FmConnectionTest extends TestCase {
 		DatabaseMetaData metaData = connection.getMetaData();
 		assertTrue(metaData.getDatabaseMajorVersion() > 5);
 		assertTrue(metaData.getDatabaseProductName().toLowerCase().indexOf("filemaker") >= 0);
+	}
+
+	public void testGetCatalogs() throws Exception {
+		FmConnection connection = new FmConnection(jdbc.getJdbcUrl(null), new Properties());// contacts.fp7
+		DatabaseMetaData metaData = connection.getMetaData();
+		ResultSet catalogs = metaData.getCatalogs();
+
+		List catalogNames = new Vector();
+
+		while (catalogs.next()) {
+			String catalogName = catalogs.getString("TABLE_CAT");
+			catalogNames.add(catalogName);
+		}
+
+		System.out.println("Catalogs:");
+		for (Iterator i = catalogNames.iterator(); i.hasNext();) {
+			Object catalog = i.next();
+			System.out.println("     " + catalog);
+		}
+
+		System.out.println("Done.");
+
+
+		assertTrue(catalogNames.size() > 0);
 	}
 }
