@@ -44,7 +44,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * Date: Apr 17, 2005
  * Time: 2:22:20 PM
  */
-public class FmXmlRequest {
+public class FmXmlRequest extends FmRequest {
 	private static final int SERVER_STREAM_BUFFERSIZE = 16384;
 	private URL theUrl;
 	private InputStream serverStream;

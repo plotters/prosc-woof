@@ -284,13 +284,17 @@ public class FmMetaData implements DatabaseMetaData {
 			logger.log(Level.FINE, "getColumns(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + columnNamePattern + ")");
 		}
 
-		//FmXmlRequest handler = connection.getXmlRequestHandler();
-		FmResultSetRequest handler = null;
-		try {
-			handler = new FmResultSetRequest(connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml",
-			                                 connection.getPort(), connection.getUsername(), connection.getPassword());
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
+//		FmResultSetRequest handler = null;
+		FmRequest handler;
+		if( connection.getFmVersion() >= 7 ) {
+			try {
+				handler = new FmResultSetRequest(connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml",
+				                                 connection.getPort(), connection.getUsername(), connection.getPassword());
+			} catch (MalformedURLException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			handler = connection.getXmlRequestHandler();
 		}
 		FmFieldList rawFields;
 		try {
@@ -508,7 +512,42 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getCatalogs() throws SQLException {
-		throw new AbstractMethodError( "getCatalogs is not implemented yet." ); //FIX!!! Broken placeholder
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "getCatalogs()");
+		}
+
+		FmXmlRequest request = connection.getXmlRequestHandler(); //FIX!! Just create a new instance
+		String postArgs;
+		List databases = new LinkedList();
+		postArgs = "-dbnames";
+
+		FmFieldList format = new FmFieldList();
+		FmTable dummyTable = new FmTable("fmp_jdbc_table_data");
+
+		format.add(new FmField(dummyTable, "TABLE_CAT",null, FmFieldType.TEXT, true));
+
+		try {
+			request.doRequest(postArgs);
+
+			for (Iterator it = request.getRecordIterator(); it.hasNext();) {
+				FmRecord rawRecord = (FmRecord) it.next();
+				String databaseName = rawRecord.getRawValue(0);
+				FmRecord processRecord = new FmRecord(format, null, null);
+				processRecord.setRawValue(databaseName, 0);
+				databases.add(processRecord);
+			}
+		}
+		catch (IOException e) {
+			SQLException sqlException = new SQLException(e.toString());
+			sqlException.initCause(e);
+			throw sqlException;
+		}
+		finally {
+			request.closeRequest();
+		}
+
+		ResultSet result = new FmResultSet(databases.iterator(), format, connection );
+		return result;
 	}
 
 

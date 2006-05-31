@@ -44,7 +44,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * Time: 10:04:36 AM
  * To change this template use File | Settings | File Templates.
  */
-public class FmResultSetRequest {
+public class FmResultSetRequest extends FmRequest {
 	private static final int SERVER_STREAM_BUFFERSIZE = 16384;
 	private URL theUrl;
 	private InputStream serverStream;
