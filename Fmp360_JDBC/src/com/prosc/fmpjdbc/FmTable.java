@@ -29,6 +29,7 @@ public class FmTable {
 	private String name;
 	private String alias;
 	private String databaseName;
+	private String originalName;
 
 	/**
 	 * Create a new table object.
@@ -38,6 +39,7 @@ public class FmTable {
 	 * <code>SELECT t0.firstName f0, t0.lastName f1 FROM staff.person t0</code>
 	 */
 	public FmTable(String name) {
+		this.originalName = name;
 		int index = name.indexOf('.');
 		if (index == -1) {
 			index = name.indexOf('|');
@@ -63,6 +65,11 @@ public class FmTable {
 	/** Returns the name of the table. */
 	public String getName() {
 		return name;
+	}
+
+	/** Returns the name exactly as it appears in the SQL without processing '.' or '|' characters. */
+	public String getOriginalName() {
+		return originalName;
 	}
 
 	/** This is a placeholder for planned support for table aliasing using JOIN queries. Currently always returns the name of the table. */
