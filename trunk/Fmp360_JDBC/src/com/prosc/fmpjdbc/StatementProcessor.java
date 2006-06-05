@@ -73,7 +73,9 @@ public class StatementProcessor {
 		try {
 			String dbLayoutString;
 			if( ( (FmConnection)statement.getConnection() ).getFmVersion() < 7 ) {
-				dbLayoutString = "-db=" + getDatabaseName() + "&-lay=" + getLayoutName(); //FIX! These seem identical? Need to test with FM6. Maybe missing the -format tag. --jsb
+				dbLayoutString = "-db=" + getDatabaseName();
+				if( getLayoutName() != null ) dbLayoutString += "&-lay=" + getLayoutName();
+				else logger.info( "Executing an SQL query without a layout name can be slow. Specify a layout name for best efficiency." );
 			} else {
 				dbLayoutString = "-db=" + getDatabaseName() + "&-lay=" + getLayoutName();
 			}
@@ -399,7 +401,15 @@ public class StatementProcessor {
 	}
 
 	private String getLayoutName() {
-		return command.getTable().getName();
+		String layoutName = command.getTable().getOriginalName();
+		int mark = layoutName.indexOf( '|' );
+		try {
+			if( mark > -1 ) layoutName = layoutName.substring( mark+1 );
+			else if( statement.getConnection().getCatalog() == null ) layoutName = null; //This is the table name, not the layout name
+			return layoutName;
+		} catch(SQLException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/** Gets the databasename for the sqlCommand being executed.
@@ -410,6 +420,11 @@ public class StatementProcessor {
 		if (result == null) {
 			try {
 				result = statement.getConnection().getCatalog(); //FIX!! What do we do if no catalog is specified?
+				if( result == null ) result = command.getTable().getName();
+				int mark = result.indexOf( '|' );
+				if( mark > -1 ) {
+					result = result.substring( 0, mark );
+				}
 			} catch( SQLException e ) {
 				throw new RuntimeException( e );
 			}

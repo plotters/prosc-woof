@@ -320,6 +320,11 @@ SELECT * FROM contacts.address where contactID = 1;
 			<b>
 				A</b>: Add the field in question to the layout. WooF uses the table name in an SQL query as the layout name in a filemaker database. The actual name of the table in Filemaker is inconsequential.
 		</p>
+		<p>
+			<b>Q</b>: I'm getting a 'javax.net.ssl.SSLHandshakeException: Remote host closed connection during handshake' message.
+			<br />
+			<b>A</b>: The FileMaker XML publishing is not running with SSL enabled. Make sure that you are running through Apache, and that you have SSL enabled in Apache, and that you are using the correct port for SSL in your JDBC URL. You may also solve this problem by removing the 'ssl=true' parameter in the URL to disable SSL encryption.
+		</p>
 		</div>
 	</body>
 </html>
