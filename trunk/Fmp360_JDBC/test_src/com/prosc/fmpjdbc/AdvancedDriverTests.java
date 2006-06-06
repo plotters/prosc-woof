@@ -263,29 +263,6 @@ public class AdvancedDriverTests extends TestCase {
 
 	//Test for FileMaker mod count
 
-	/** This tests the amount of time it takes to do a select across a large number of columns (315) with a small number of records (6).
-	 * I established a threshold of 2000ms as a minimal acceptable time to complete this. The XML interface delivers the result in about 1000ms,
-	 * and the ddtek driver fails this test because it takes about 5000ms.
-	 *
-	 * Note that this is a different problem than the original critical speed issue that I reported, which affected all UPDATE and INSERT
-	 * operations into large tables, regardless of how many fields were actually being inserted or updated. This speed issue is much less
-	 * important, because it's much less severe than it was before (when it was taking 20-30 seconds to do this), and because it can be
-	 * avoided by only selecting the fields needed, which was not the case in the other bug.
-	 * @throws SQLException
-	 */
-	public void testManyColumnsSpeed() throws SQLException {
-		System.out.println("Starting testLargeTableSpeed()");
-		String tableName = jdbc.fmVersion >= 7 ? "ManyTextFields" : "ManyTextFields.Layout #2"; //Need to include the db & layout name if using 6, right?
-		for( int n=0; n<5; n++ ) {
-			java.util.Date then = new java.util.Date();
-			ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\"" );
-			assertTrue( "There should be at least 300 fields on this layout", resultSet.getMetaData().getColumnCount() >= 300 );
-			long elapsedTime = new java.util.Date().getTime() - then.getTime();
-			System.out.println( "elapsed time: " + elapsedTime + "ms" );
-			assertTrue( "Test took " + elapsedTime + "ms to execute, should not be more than 2000ms", elapsedTime <= 2000 ); //ddtek driver fails for me; this takes 3,672 on my dual-processor 2.5GHz G5
-		}
-	}
-
 	/** This test passes. */
 	public void testPreparedStatementBindings() throws SQLException {
 		statement.executeUpdate("DELETE FROM Portrait WHERE \"Floating point\" is NULL" );
@@ -509,4 +486,46 @@ public class AdvancedDriverTests extends TestCase {
 	//FIX!! Write tests for ORDER BY clause
 
 	//FIX!! Write tests for LIMIT clause
+
+	/** This tests the amount of time it takes to do a select across a large number of columns (315) with a small number of records (6).
+	 * I established a threshold of 2000ms as a minimal acceptable time to complete this. The XML interface delivers the result in about 1000ms,
+	 * and the ddtek driver fails this test because it takes about 5000ms.
+	 *
+	 * Note that this is a different problem than the original critical speed issue that I reported, which affected all UPDATE and INSERT
+	 * operations into large tables, regardless of how many fields were actually being inserted or updated. This speed issue is much less
+	 * important, because it's much less severe than it was before (when it was taking 20-30 seconds to do this), and because it can be
+	 * avoided by only selecting the fields needed, which was not the case in the other bug.
+	 * @throws SQLException
+	 */
+	public void testManyColumnsSpeed() throws SQLException {
+		System.out.println("Starting testLargeTableSpeed()");
+		String tableName = jdbc.fmVersion >= 7 ? "ManyTextFields" : "ManyTextFields.Layout #2"; //Need to include the db & layout name if using 6, right?
+		for( int n=0; n<5; n++ ) {
+			java.util.Date then = new java.util.Date();
+			ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\"" );
+			assertTrue( "There should be at least 300 fields on this layout", resultSet.getMetaData().getColumnCount() >= 300 );
+			long elapsedTime = new java.util.Date().getTime() - then.getTime();
+			System.out.println( "elapsed time: " + elapsedTime + "ms" );
+			assertTrue( "Test took " + elapsedTime + "ms to execute, should not be more than 2000ms", elapsedTime <= 2000 ); //ddtek driver fails for me; this takes 3,672 on my dual-processor 2.5GHz G5
+		}
+	}
+
+	/** Tests a download of 500,000 records. You can try setting the -Xmx8m JVM param to set the max size to 8 megs, to ensure
+	 * that this runs out of memory. The point of this test is to make sure that the results are being streamed instead of
+	 * downloaded at one pass.
+	 * @throws Exception
+	 */
+	public void testLargeResultSet() throws Exception {
+
+		FmConnection fmConnection = new FmConnection(jdbc.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
+		Statement statement = fmConnection.createStatement();
+
+		String tableName = "Many records";
+		//A single record: ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" where counter=1" );
+		ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" where counter=1" );
+		int rowCount = 0;
+		while( resultSet.next() ) {
+			rowCount++;
+		}
+	}
 }
