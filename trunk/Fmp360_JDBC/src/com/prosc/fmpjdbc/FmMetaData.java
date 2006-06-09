@@ -47,7 +47,8 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public FmMetaData(FmConnection connection) throws IOException, FileMakerException {
 		this.connection = connection;
-		FmXmlRequest requestHandler = connection.getXmlRequestHandler();
+		FmXmlRequest requestHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 		logger.log(Level.FINER, "Creating FmMetaData");
 		requestHandler.doRequest("-max=0&-dbnames");
 		//databaseNames = iterator2List( requestHandler.getRecordIterator() );
@@ -104,7 +105,8 @@ public class FmMetaData implements DatabaseMetaData {
 		if (logger.isLoggable(Level.FINE)) {
 			logger.log(Level.FINE, "getProcedures(" + catalog + ", " + schemaPattern + ", " + procedureNamePattern + ")");
 		}
-		FmXmlRequest handler = connection.getXmlRequestHandler();
+		FmXmlRequest handler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());  // connection.getXmlRequestHandler(); // FIX!!! Just create a new instance
 		String dbName = schemaPattern;
 		if( dbName == null ) dbName = catalog;
 		if( dbName == null ) dbName = connection.getCatalog();
@@ -154,8 +156,8 @@ public class FmMetaData implements DatabaseMetaData {
 			sqle.initCause(e);
 			throw sqle;
 		} finally {
-			handler.closeRequest();
-		}
+			handler.closeRequest(); // The parsing thread should take care of this... but just in case it's taking too long
+    }
 	}
 
 	public ResultSet getProcedureColumns( String s, String s1, String s2, String s3 ) throws SQLException {
@@ -167,7 +169,8 @@ public class FmMetaData implements DatabaseMetaData {
 			List fieldTypeList = Arrays.asList(fieldTypes);
 			logger.log(Level.FINE, "getTables(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + fieldTypeList + ")");
 		}
-		FmXmlRequest request = connection.getXmlRequestHandler(); //FIX!! Just create a new instance
+		FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 		String postArgs;
 		String tableName;
 		String databaseName;
@@ -191,7 +194,7 @@ public class FmMetaData implements DatabaseMetaData {
 				sqlException.initCause(e);
 				throw sqlException;
 			} finally {
-				request.closeRequest();
+				request.closeRequest(); // The parsing thread should take care of this, but just in case it's taking too long
 			}
 		}
 		FmFieldList tableFormat = new FmFieldList();
@@ -263,7 +266,7 @@ public class FmMetaData implements DatabaseMetaData {
 				sqle.initCause(e);
 				throw sqle;
 			} finally {
-				request.closeRequest();
+				request.closeRequest(); // the resultSet/parsing thread should take care of this, but just in case it's taking too long
 			}
 		}
 		ResultSet result = new FmResultSet( tables.iterator(), tableFormat, connection );
@@ -294,7 +297,8 @@ public class FmMetaData implements DatabaseMetaData {
 				throw new RuntimeException(e);
 			}
 		} else {
-			handler = connection.getXmlRequestHandler();
+			handler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 		}
 		FmFieldList rawFields;
 		try {
@@ -516,7 +520,8 @@ public class FmMetaData implements DatabaseMetaData {
 			logger.log(Level.FINE, "getCatalogs()");
 		}
 
-		FmXmlRequest request = connection.getXmlRequestHandler(); //FIX!! Just create a new instance
+		FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 		String postArgs;
 		List databases = new LinkedList();
 		postArgs = "-dbnames";
@@ -543,7 +548,7 @@ public class FmMetaData implements DatabaseMetaData {
 			throw sqlException;
 		}
 		finally {
-			request.closeRequest();
+			request.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 		}
 
 		ResultSet result = new FmResultSet(databases.iterator(), format, connection );

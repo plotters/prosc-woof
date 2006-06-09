@@ -53,24 +53,32 @@ public class FmXmlRequest extends FmRequest {
 	private String postPrefix = "";
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 
-	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password) throws MalformedURLException {
-		this.theUrl = new URL(protocol, host, portNumber, url);
-		if (username != null || password != null) {
-			String tempString = username + ":" + password;
-			authString = new BASE64Encoder().encode(tempString.getBytes());
-		}
-		try {
-			xParser = javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser();
-			setFeature( "http://xml.org/sax/features/validation", false );
-			setFeature( "http://xml.org/sax/features/namespaces", false );
-			setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-			log.finer( "Created an XML parser; class is: " + xParser.getClass() );
-		} catch( ParserConfigurationException e ) {
-			throw new RuntimeException( e );
-		} catch ( SAXException e) {
-			throw new RuntimeException(e);
-		}
-	}
+  public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion)  {
+    try {
+      this.theUrl = new URL(protocol, host, portNumber, url);
+    } catch (MalformedURLException murle) {
+      log.severe("Trying to create the url " + protocol + host + ":" + portNumber + "/" + url + " threw this exception" + murle);
+      throw new RuntimeException(murle);
+    }
+    if (username != null || password != null) {
+      String tempString = username + ":" + password;
+      authString = new BASE64Encoder().encode(tempString.getBytes());
+    }
+    if (fmVersion >= 5 && fmVersion < 7) {
+      this.setPostPrefix("-format=-fmp_xml&");
+    }
+    try {
+      xParser = javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser();
+      setFeature( "http://xml.org/sax/features/validation", false );
+      setFeature( "http://xml.org/sax/features/namespaces", false );
+      setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+      log.finer( "Created an XML parser; class is: " + xParser.getClass() );
+    } catch( ParserConfigurationException e ) {
+      throw new RuntimeException( e );
+    } catch ( SAXException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
 	private void setFeature( String feature, boolean enabled ) {
 		try {
@@ -105,7 +113,7 @@ public class FmXmlRequest extends FmRequest {
 			int httpStatusCode = theConnection.getResponseCode();
 			if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage() );
 			if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
-			serverStream = new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
+			serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
 		} catch( IOException e ) {
 			if( e.getCause() instanceof FileNotFoundException ) {
 				String message = "Remote URL " + e.getCause().getMessage() + " could not be located.";
@@ -149,40 +157,112 @@ public class FmXmlRequest extends FmRequest {
 		super.finalize();
 	}
 
-	private void readResult() throws IOException, SAXException {
-		InputStream streamToParse;
-		streamToParse = serverStream;
-		InputSource input = new InputSource(streamToParse);
-		input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort());
-		xParser.parse( input, xmlHandler );
+  private void readResult() throws IOException, SAXException {
+    Thread myThread = new Thread("Parsing Thread") {
+      public void run() {
+        InputStream streamToParse;
+        streamToParse = serverStream;
+        InputSource input = new InputSource(streamToParse);
+        input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort());
+        try {
+          xParser.parse( input, xmlHandler ); // FIX!!! need some real exception handling here
+          closeRequest();
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+    myThread.start();
+
+  }
+
+	public synchronized String getProductVersion() {
+     while (!productVersionIsSet) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return productVersion;
 	}
 
-	public String getProductVersion() {
-		return productVersion;
+  private synchronized void setProductVersion(String pv) {
+    // some thread stuff
+    productVersion = pv;
+    productVersionIsSet = true;
+    notifyAll();
+  }
+
+  public synchronized String getDatabaseName() {
+     while (!databaseNameIsSet) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return databaseName;
 	}
 
-	public String getDatabaseName() {
-		return databaseName;
+  private synchronized void setDatabaseName(String dbName) {
+    // some thread stuff
+    databaseName = dbName;
+    databaseNameIsSet = true;
+    notifyAll();
+  }
+
+  public synchronized int getFoundCount() {
+     while (!foundCountIsSet) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return foundCount;
 	}
 
-	public int getFoundCount() {
-		return foundCount;
+  private synchronized void setFoundCount(int i) {
+    // some thread stuff
+    foundCount = i;
+    foundCountIsSet = true;
+    notifyAll();
+  }
+
+  //public synchronized FmRecord getLastRecord() {
+	////	return currentRow;
+	//}
+
+  //private synchronized void setLastRecord(FmRecord r) {
+    // some thread stuff
+  //  currentRow = r;
+  //}
+
+  public synchronized Iterator getRecordIterator() {
+    return recordIterator; //-- BRITTANY
+    //return records.iterator(); //FIX!! Do this on a row-by-row basis instead of storing the whole list in memory
 	}
 
-	public FmRecord getLastRecord() {
-		return currentRow;
+  private synchronized void setRecordIterator(ResultQueue i) {
+    // some thread stuff
+    recordIterator = i;
+  }
+
+  public synchronized FmFieldList getFieldDefinitions() {
+    while (!fieldDefinitionsListIsSet) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return fieldDefinitions;
 	}
 
-	public Iterator getRecordIterator() {
-		return records.iterator(); //FIX!! Do this on a row-by-row basis instead of storing the whole list in memory
-	}
-
-	public FmFieldList getFieldDefinitions() {
-		return fieldDefinitions;
-	}
 
 
-	/*
+  /*
 	In this class we have a reference to FmFieldList called fieldDefinitions (see below). In all the uses of this class,
 	the state of this reference falls into 3 categories. Either it is set by the setSelectFields() method below,
 	in which case it has one or more FmFields or it might just contain 1 FmField which contains an asterisk '*" for 'select *'.
@@ -190,7 +270,7 @@ public class FmXmlRequest extends FmRequest {
 	i.e  for updates and inserts etc.
 	*/
 
-	private FmFieldList fieldDefinitions;
+	private volatile FmFieldList fieldDefinitions;
 	private FmTable fmTable;
 	private boolean useSelectFields = false;
 
@@ -198,7 +278,8 @@ public class FmXmlRequest extends FmRequest {
 	private String databaseName;
 	private int foundCount = -1;
 	private FmRecord currentRow;
-	private List records = new LinkedList(); //FIX!! Temporary for development - get rid of in final version
+  private ResultQueue recordIterator; //= new ResultQueue(8192, 2048);  //--BRITTANY
+  //private List records = new LinkedList(); //FIX!! Temporary for development - get rid of in final version
 	private transient StringBuffer currentData = new StringBuffer(255);
 	private transient int insertionIndex;
 
@@ -211,150 +292,171 @@ public class FmXmlRequest extends FmRequest {
 	private List allFieldNames = new ArrayList(); // a list of Strings.  All the Field names inside the METADATA tag.
 
 
-	// ---XML parsing SAX implementation ---
-	private DefaultHandler xmlHandler = new org.xml.sax.helpers.DefaultHandler() {
-		private Integer currentNode = null;
-		private int columnIndex;
-		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
+  private volatile boolean fieldDefinitionsListIsSet = false;
+  private volatile boolean productVersionIsSet = false;
+  private volatile boolean databaseNameIsSet = false;
+  private volatile boolean foundCountIsSet = false;
 
-		public void fatalError(SAXParseException e) throws SAXException {
-			log.log(Level.SEVERE, String.valueOf(e));
-			super.fatalError(e);
-		}
+  // ---XML parsing SAX implementation ---
+  private DefaultHandler xmlHandler = new org.xml.sax.helpers.DefaultHandler() {
+    private Integer currentNode = null;
+    private int columnIndex;
+    private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
+    private int sizeEstimate;
 
-		/** This is necessary to work around a bug in the Crimson XML parser, which is used in the 1.4 JDK. Crimson
-		 * cannot handle relative HTTP URL's, which is what FileMaker uses for it's DTDs: "/fmi/xml/FMPXMLRESULT.dtd"
-		 * By returning an empty value here, we short-circuit the DTD lookup process.
-		 */
-		public InputSource resolveEntity( String publicId, String systemId ) {
-			return emptyInput;
-		}
+    public void fatalError(SAXParseException e) throws SAXException {
+      log.log(Level.SEVERE, String.valueOf(e));
+      super.fatalError(e);
+    }
 
-		public void warning( SAXParseException e ) throws SAXException {
-			super.warning( e );	//To change body of overridden methods use File | Settings | File Templates.
-		}
+    /** This is necessary to work around a bug in the Crimson XML parser, which is used in the 1.4 JDK. Crimson
+     * cannot handle relative HTTP URL's, which is what FileMaker uses for it's DTDs: "/fmi/xml/FMPXMLRESULT.dtd"
+     * By returning an empty value here, we short-circuit the DTD lookup process.
+     */
+    public InputSource resolveEntity( String publicId, String systemId ) {
+      return emptyInput;
+    }
 
-		public void error( SAXParseException e ) throws SAXException {
-			super.error( e );	//To change body of overridden methods use File | Settings | File Templates.
-		}
+    public void warning( SAXParseException e ) throws SAXException {
+      super.warning( e );	//To change body of overridden methods use File | Settings | File Templates.
+    }
 
-		public void startDocument() {
-			log.log(Level.FINEST, "Start parsing response");
-			records = new LinkedList();
-			currentNode = null;
-		}
+    public void error( SAXParseException e ) throws SAXException {
+      super.error( e );	//To change body of overridden methods use File | Settings | File Templates.
+    }
 
-		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) {
-			// Frequently repeated nodes
-			if ("DATA".equals(qName)) { //FIX! What if we have multiple DATA nodes per COL, ie. repeating fields? Our insertionIndex won't change? --jsb
-				currentNode = (insertionIndex>-1) ? DATA_NODE : IGNORE_NODE;
-				//currentData.delete( 0, currentData.length() );
-				currentData = new StringBuffer( 255 );
-			} else if ("COL".equals(qName)) {
-				columnIndex++;
-				insertionIndex = usedFieldArray[columnIndex];
-			} else if ("ROW".equals(qName)) {
-				//dt.markTime("  Starting row");
+    public void startDocument() {
+      log.log(Level.FINEST, "Start parsing response");
+      recordIterator = new ResultQueue(512, 64); //-- BRITTANY
+      //records = new LinkedList();
+      currentNode = null;
+    }
 
-				currentRow = new FmRecord(fieldDefinitions, Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
-				columnIndex = -1;
-			}
-			// One-shot nodes
-			else if ("FIELD".equals(qName)) {
-				String fieldName = attributes.getValue("NAME");
+    public void startElement(String uri, String xlocalName, String qName, Attributes attributes) {
+      // Frequently repeated nodes
+      if ("DATA".equals(qName)) { //FIX! What if we have multiple DATA nodes per COL, ie. repeating fields? Our insertionIndex won't change? --jsb
+        currentNode = (insertionIndex>-1) ? DATA_NODE : IGNORE_NODE;
+        //currentData.delete( 0, currentData.length() );
+        currentData = new StringBuffer( 255 );
+      } else if ("COL".equals(qName)) {
+        columnIndex++;
+        insertionIndex = usedFieldArray[columnIndex];
+      } else if ("ROW".equals(qName)) {
+        //dt.markTime("  Starting row");
 
-				String fieldType = attributes.getValue("TYPE");
-				FmFieldType theType = (FmFieldType)FmFieldType.typesByName.get(fieldType);
-				boolean allowsNulls = "YES".equals(attributes.getValue("EMPTYOK"));
+        currentRow = new FmRecord(fieldDefinitions, Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
+        columnIndex = -1;
+      }
+      // One-shot nodes
+      else if ("FIELD".equals(qName)) {
+        String fieldName = attributes.getValue("NAME");
 
-				allFieldNames.add(fieldName); // allFieldNames is used in endElement() together with fieldDefinitions to construct the usedFieldArray
+        String fieldType = attributes.getValue("TYPE");
+        FmFieldType theType = (FmFieldType)FmFieldType.typesByName.get(fieldType);
+        boolean allowsNulls = "YES".equals(attributes.getValue("EMPTYOK"));
 
-				if (useSelectFields) {
+        allFieldNames.add(fieldName); // allFieldNames is used in endElement() together with fieldDefinitions to construct the usedFieldArray
 
-					int columnIndex;
-					if ((columnIndex = fieldDefinitions.indexOfFieldWithColumnName(fieldName)) > -1) { // set the type and nullable if this is a field in the field definitions
+        if (useSelectFields) {
 
-						FmField fmField = fieldDefinitions.get(columnIndex);
-						fmField.setType(theType);
-						fmField.setNullable(allowsNulls);
-					}
+          int columnIndex;
+          if ((columnIndex = fieldDefinitions.indexOfFieldWithColumnName(fieldName)) > -1) { // set the type and nullable if this is a field in the field definitions
 
-				} else {
-					FmField fmField = new FmField(fmTable, fieldName, fieldName, theType, allowsNulls);
-					fieldDefinitions.add(fmField);
-				}
+            FmField fmField = fieldDefinitions.get(columnIndex);
+            fmField.setType(theType);
+            fmField.setNullable(allowsNulls);
+          }
 
-			} else if ("RESULTSET".equals(qName)) {
-				foundCount = Integer.valueOf(attributes.getValue("FOUND")).intValue();
-				if (log.isLoggable(Level.FINE)) {
-					log.log(Level.FINE, "Resultset size: " + foundCount);
-				}
-			} else if ("PRODUCT".equals(qName)) {
-				databaseName = attributes.getValue("NAME");
-				productVersion = attributes.getValue("VERSION");
-			} else if ("DATABASE".equals(qName)) {
-				fmTable =  new FmTable( attributes.getValue("NAME") );
+        } else {
+          FmField fmField = new FmField(fmTable, fieldName, fieldName, theType, allowsNulls);
+          fieldDefinitions.add(fmField);
+        }
 
-				if (fieldDefinitions == null) {
-					fieldDefinitions = new FmFieldList();
-				}
+      } else if ("RESULTSET".equals(qName)) {
+        setFoundCount(Integer.valueOf(attributes.getValue("FOUND")).intValue()); //foundCount = Integer.valueOf(attributes.getValue("FOUND")).intValue();
+        if (log.isLoggable(Level.FINE)) {
+          log.log(Level.FINE, "Resultset size: " + foundCount);
+        }
+      } else if ("PRODUCT".equals(qName)) {
+        setDatabaseName(attributes.getValue("NAME")); // databaseName = attributes.getValue("NAME");
+        setProductVersion(attributes.getValue("VERSION")); // productVersion = attributes.getValue("VERSION");
+      } else if ("DATABASE".equals(qName)) {
+        fmTable =  new FmTable( attributes.getValue("NAME") );
+
+        if (fieldDefinitions == null) {
+          fieldDefinitions = new FmFieldList();
+        }
 
 
-			} else if ("ERRORCODE".equals(qName)) {
-				currentNode = ERROR_NODE;
-			}
-		}
+      } else if ("ERRORCODE".equals(qName)) {
+        currentNode = ERROR_NODE;
+      }
+    }
 
-		public void endElement(String uri, String localName, String qName) {
-			if( "DATA".equals(qName) ) {
-				if ( currentNode == DATA_NODE ) {
-					currentRow.setRawValue(currentData.toString(), insertionIndex);
-				}
-			}
-			if ("ROW".equals(qName)) {
-				records.add(currentRow);
-				//if( FmConnection.getDebugLevel() >= 3 ) System.out.println("Finished record: " + ++currentRowIndex);
-			}
-			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
-				usedFieldArray = new int[allFieldNames.size()];
+    public void endDocument() throws SAXException {
+      recordIterator.setFinished();
+    }
 
-				int i = 0;
-				Iterator it = allFieldNames.iterator();
+    public void endElement(String uri, String localName, String qName) {
+      if( "DATA".equals(qName) ) {
+        if ( currentNode == DATA_NODE ) {
+          currentRow.setRawValue(currentData.toString(), insertionIndex);
+        }
+      }
+      if ("ROW".equals(qName)) {
+        recordIterator.add(currentRow, (long) sizeEstimate); //-- BRITTANY
+        sizeEstimate = 0; // set it to 0 and start estimating again
+        //records.add(currentRow);
+        //if( FmConnection.getDebugLevel() >= 3 ) System.out.println("Finished record: " + ++currentRowIndex);
+      }
+      if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
+        // when i come to the metadata tag, i know all of the fields that are going to be in the table, so
+        // I can let people get the fieldDefinitions
 
-				while ( it.hasNext() ) {
-					String aFieldName = (String)it.next();
+        synchronized (FmXmlRequest.this) { // this is different from the other attributes in the xml, since this one is being built on the fly and the variable is not just being "set" once we're finished reading it
+          fieldDefinitionsListIsSet = true;
+          FmXmlRequest.this.notifyAll();
+        }
+        usedFieldArray = new int[allFieldNames.size()];
 
-					int columnIndex;
+        int i = 0;
+        Iterator it = allFieldNames.iterator();
 
-					if ( (columnIndex = fieldDefinitions.indexOfFieldWithColumnName(aFieldName)) > -1) {
-						// Get the index of the fieldName w.r.t fieldDefinitions, and put that value into the usedFieldArray
-						usedFieldArray[i] = columnIndex;
-					} else {
-						usedFieldArray[i] = -1; // This field columnName will not be used.
-					}
-					i++;
-				}
-			}
-		}
+        while ( it.hasNext() ) {
+          String aFieldName = (String)it.next();
 
-		public void characters(char ch[], int start, int length) {
-			if (currentNode == DATA_NODE) {
-				currentData.append( ch, start, length );
-			} else if (currentNode == ERROR_NODE) {
-				if (length == 1 && ch[start] == '0'); //Error code is zero, proceed
-				else {
-					String errorCode = new String(ch, start, length);
-					if( "401".equals( errorCode) ) {
-						//Ignore, this means no results
-					} else {
-						FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( Integer.valueOf(errorCode) );
-						log.log(Level.WARNING, fileMakerException.toString());
-						throw new RuntimeException( fileMakerException );
-					}
-				}
-			}
-		}
-	};
+          int columnIndex;
+
+          if ( (columnIndex = fieldDefinitions.indexOfFieldWithColumnName(aFieldName)) > -1) {
+            // Get the index of the fieldName w.r.t fieldDefinitions, and put that value into the usedFieldArray
+            usedFieldArray[i] = columnIndex;
+          } else {
+            usedFieldArray[i] = -1; // This field columnName will not be used.
+          }
+          i++;
+        }
+      }
+    }
+
+    public void characters(char ch[], int start, int length) {
+      sizeEstimate += length;
+      if (currentNode == DATA_NODE) {
+        currentData.append( ch, start, length );
+      } else if (currentNode == ERROR_NODE) {
+        if (length == 1 && ch[start] == '0'); //Error code is zero, proceed
+        else {
+          String errorCode = new String(ch, start, length);
+          if( "401".equals( errorCode) ) {
+            //Ignore, this means no results
+          } else {
+            FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( Integer.valueOf(errorCode) );
+            log.log(Level.WARNING, fileMakerException.toString());
+            throw new RuntimeException( fileMakerException );
+          }
+        }
+      }
+    }
+  };
 
 
 	/*
@@ -386,7 +488,7 @@ public class FmXmlRequest extends FmRequest {
 		//FmXmlRequest fmXmlRequest = new FmXmlRequest("http", "fmp.360works.com", "/FMPro?-db=Insertions&-lay=AMSLogic&-format=-fmp_xml&-findall", 4000, "exchange", "waffle");
 		//FmXmlRequest fmXmlRequest = new FmXmlRequest("http", "localhost", "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts&-lay=Contacts&-findall", 3000, null, null);
 
-		request = new FmXmlRequest("http", "orion.360works.com", "/fmi/xml/FMPXMLRESULT.xml", 80, null, null);
+		request = new FmXmlRequest("http", "orion.360works.com", "/fmi/xml/FMPXMLRESULT.xml", 80, null, null, 5);
 		for (int n = 1; n <= 10; n++) {
 			try {
 				request.doRequest("-db=Contacts&-lay=Calc Test&-max=100&-findany");

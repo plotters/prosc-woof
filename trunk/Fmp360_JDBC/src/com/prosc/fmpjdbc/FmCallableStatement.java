@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Calendar;
 import java.net.URL;
+import java.net.MalformedURLException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.IOException;
@@ -40,9 +41,10 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 	private String postArgs = "-db=<database>&-lay=<layout>&-max=0&-script=<script>&-findany";
 
 	public FmCallableStatement( FmConnection connection ) {
-		super( connection );
-		request = connection.getXmlRequestHandler();
-	}
+    super( connection );
+    request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion()); //connection.getXmlRequestHandler();
+  }
 
 	public void setScriptName(String scriptName) {
 		if( scriptName.startsWith(woPrefix) ) {
@@ -67,9 +69,9 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 			SQLException sqle = new SQLException(ioe.toString());
 			sqle.initCause(ioe);
 			throw sqle;
-		} finally {
-            request.closeRequest();
-        }
+    } finally {
+      request.closeRequest();
+    }
 
 		return true;
 	}
