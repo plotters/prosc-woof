@@ -106,7 +106,11 @@ public class FmResultSet implements ResultSet {
 		metaData = null;
 		currentRecord = null;
 		fieldDefinitions = null;
-	}
+    //try {
+      // need to close the FmXmlResult here!!!
+//      actionHandler = ( (FmConnection)statement.getConnection() ).getXmlRequestHandler();
+    //}
+  }
 
 
 	public String getString( int i ) throws SQLException {

@@ -44,7 +44,7 @@ public class FmConnection implements Connection {
 	private Properties properties;
 	private URL xmlUrl;
 	//private String databaseName;
-	private FmXmlRequest requestHandler;
+	//private FmXmlRequest requestHandler;
 	private FmXmlRequest recIdHandler;
 	private FmMetaData metaData;
 	private float fmVersion;
@@ -73,17 +73,25 @@ public class FmConnection implements Connection {
 		}
 		fmVersion = Float.valueOf( properties.getProperty("fmversion", "7") ).floatValue();
 		if( fmVersion >= 7 ) {
-			requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
-			recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
+			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
+			recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword(), fmVersion );
 		} else if( fmVersion >= 5 ) {
-			requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword() );
-			requestHandler.setPostPrefix("-format=-fmp_xml&");
-			recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword() );
-			recIdHandler.setPostPrefix("-format=-fmp_xml&");
+			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword() );
+			//requestHandler.setPostPrefix("-format=-fmp_xml&");
+			recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword(), fmVersion );
+			//recIdHandler.setPostPrefix("-format=-fmp_xml&");
 		} else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker versions 5 and higher are supported.");
 	}
 
-	public String getProtocol() {
+  public String getFMVersionUrl() {
+    if (fmVersion >= 7) {
+      return "/fmi/xml/FMPXMLRESULT.xml";
+    } else if (fmVersion >= 5) {
+      return "/FMPro";
+    } else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker version 5 and higher are supported.");
+  }
+
+  public String getProtocol() {
 		return xmlUrl.getProtocol();
 	}
 
@@ -139,7 +147,7 @@ public class FmConnection implements Connection {
 		return properties.getProperty("password");
 	}
 
-	FmXmlRequest getXmlRequestHandler() { return requestHandler; }
+	//FmXmlRequest getXmlRequestHandler() { return requestHandler; }
 
 	FmXmlRequest getRecIdHandler() { return recIdHandler; }
 
@@ -171,14 +179,14 @@ public class FmConnection implements Connection {
 	}
 
 	public void close() throws SQLException {
-		requestHandler.closeRequest();
-		requestHandler = null;
+		//requestHandler.closeRequest();
+		//requestHandler = null;
 		recIdHandler.closeRequest();
 		recIdHandler = null;
 	}
 
 	public boolean isClosed() throws SQLException {
-		return requestHandler == null;
+		return recIdHandler == null;
 	}
 
 	public PreparedStatement prepareStatement( String s ) throws SQLException {

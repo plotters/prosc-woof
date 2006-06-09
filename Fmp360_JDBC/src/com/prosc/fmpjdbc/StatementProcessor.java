@@ -180,8 +180,10 @@ public class StatementProcessor {
 				}
 			}
 
-			recIdHandler = ( (FmConnection)statement.getConnection() ).getRecIdHandler();
-			actionHandler = ( (FmConnection)statement.getConnection() ).getXmlRequestHandler();
+      FmConnection connection = (FmConnection) statement.getConnection();
+      recIdHandler = connection.getRecIdHandler();
+			actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			Integer recordId;
 
 			switch( command.getOperation() ) {
@@ -208,11 +210,9 @@ public class StatementProcessor {
 
 					actionHandler.setSelectFields(command.getFields()); // Set the fields that are used in the select statement
 					actionHandler.doRequest( dbLayoutString + postArgs );
-					if( actionHandler.getLastRecord() == null )
-						results = new FmResultSet( null, new FmFieldList(), (FmConnection)statement.getConnection() );
-					else
-						results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getLastRecord().getFieldList(), (FmConnection)statement.getConnection() );
-					break;
+
+          results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getFieldDefinitions(), (FmConnection)statement.getConnection() );
+          break;
 
 
 				case SqlCommand.UPDATE:
@@ -221,9 +221,9 @@ public class StatementProcessor {
 						recordId = ( (FmRecord)it.next() ).getRecordId();
 						try {
 							actionHandler.doRequest( dbLayoutString + updateClause + "&-recid=" + recordId + "&-edit" );
-							actionHandler.closeRequest();
+							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 						} catch (RuntimeException e) {
-							actionHandler.closeRequest();
+							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 							updateRowCount = 0;
 							throw e;
 						}
@@ -237,9 +237,9 @@ public class StatementProcessor {
 						recordId = ( (FmRecord)it.next() ).getRecordId();
 						try {
 							actionHandler.doRequest( dbLayoutString + "&-recid=" + recordId + "&-delete" );
-							actionHandler.closeRequest();
+							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 						} catch (RuntimeException e) {
-							actionHandler.closeRequest();
+							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 							throw e;
 						}
 					}
@@ -253,7 +253,7 @@ public class StatementProcessor {
 						throw e;
 					}
 					updateRowCount = actionHandler.getFoundCount();
-					insertedRecord = actionHandler.getLastRecord();
+					insertedRecord = (FmRecord) actionHandler.getRecordIterator().next(); // inserts can only insert a single record, so we'll assume that the first record is the one that we want
 					break;
 			}
 		} catch( IOException e ) {
@@ -265,8 +265,8 @@ public class StatementProcessor {
 			throw e;
 		} finally {
 			try {
-				if( actionHandler != null ) actionHandler.closeRequest();
-				if( recIdHandler != null ) recIdHandler.closeRequest();
+				//if( actionHandler != null ) actionHandler.closeRequest(); // BRITTANY -- the parsing thread should take care of this...
+				//if( recIdHandler != null ) recIdHandler.closeRequest();
 			} catch (Exception e) {
 				throw new RuntimeException("Exception occurred in finally clause", e);
 			}
