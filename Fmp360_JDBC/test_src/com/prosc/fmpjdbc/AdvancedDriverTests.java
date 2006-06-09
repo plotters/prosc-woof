@@ -522,10 +522,13 @@ public class AdvancedDriverTests extends TestCase {
 
 		String tableName = "Many records";
 		//A single record: ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" where counter=1" );
-		ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" where counter=1" );
-		int rowCount = 0;
+		ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" " );
+    System.out.println("Done with the query");
+    int rowCount = 0;
 		while( resultSet.next() ) {
-			rowCount++;
-		}
-	}
+      System.out.println("Just called next on the " + rowCount);
+      rowCount++;
+    }
+    System.out.println("HERE IS THE ROW COUNT: " + rowCount);
+  }
 }
