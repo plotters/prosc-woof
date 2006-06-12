@@ -127,11 +127,13 @@ public class FmXmlRequest extends FmRequest {
 			readResult();
 			//System.out.println(IOUtils.inputStreamAsString(serverStream));
 			//throw new SAXException("Just testing");
-		} catch (SAXException e) {
-			throw new RuntimeException(e); //FIX!! Better error handling than just rethrowing?
+/*		} catch (SAXException e) {
+      onErrorSetAllVariables();
+      throw new RuntimeException(e); //FIX!! Better error handling than just rethrowing?*/
 		} catch( RuntimeException e ) {
 			Throwable t = e.getCause();
-			if( t instanceof FileMakerException ) throw (FileMakerException)t;
+      onErrorSetAllVariables();
+      if( t instanceof FileMakerException ) throw (FileMakerException)t;
 			else throw e;
 		}
 	}
@@ -157,7 +159,7 @@ public class FmXmlRequest extends FmRequest {
 		super.finalize();
 	}
 
-  private void readResult() throws IOException, SAXException {
+  private void readResult()  throws FileMakerException {
     Thread myThread = new Thread("Parsing Thread") {
       public void run() {
         InputStream streamToParse;
@@ -166,22 +168,27 @@ public class FmXmlRequest extends FmRequest {
         input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort());
         try {
           xParser.parse( input, xmlHandler ); // FIX!!! need some real exception handling here
-          closeRequest();
         } catch (IOException ioe) {
           if (ioe.getMessage().equals("stream is closed")) {
-            System.out.println("I was in the middle of parsing stuff from FM but someone closed my stream");
+            log.finest("The parsing thread was in the middle of parsing data from FM but someone closed the stream");
           } else {
             System.out.println("There was an error, so i'm setting all of the variables and continuing");
             onErrorSetAllVariables();
-            //throw new RuntimeException(ioe);
+            throw new RuntimeException(ioe);
           }
         } catch (SAXException e) {
-          System.out.println("There was an error, so i'm setting all of the variables and continuing");
+          log.fine("There was SAXException: " + e.getMessage() + ", so the parsing thread is setting all of the threading variables to true and notifying all threads.");
           onErrorSetAllVariables();
-          //throw new RuntimeException(e);
-        } catch (Exception e) {
-          System.out.println("There was an error, so i'm setting all of the variables and continuing");
+          throw new RuntimeException(e);
+        } catch (RuntimeException e) {
+          log.finer("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading "
+             + "variables to true and notifying all threads.");
           onErrorSetAllVariables();
+          throw new RuntimeException(e);
+
+        } finally {
+          closeRequest();
+
         }
       }
 
@@ -196,7 +203,8 @@ public class FmXmlRequest extends FmRequest {
     databaseNameIsSet = true;
     foundCountIsSet = true;
     recordIteratorIsSet = true;
-    recordIterator = null;
+    recordIterator.setFinished();
+    //recordIterator = null;
     fieldDefinitionsListIsSet = true;
     fieldDefinitions = null;
     notifyAll();
