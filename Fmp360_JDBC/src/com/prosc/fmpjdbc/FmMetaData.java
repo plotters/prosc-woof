@@ -70,7 +70,8 @@ public class FmMetaData implements DatabaseMetaData {
 			e.printStackTrace();
 		} finally {
 			requestHandler.closeRequest();
-		}
+      requestHandler = null;
+    }
 	}
 
 //	private List iterator2List(Iterator it) {

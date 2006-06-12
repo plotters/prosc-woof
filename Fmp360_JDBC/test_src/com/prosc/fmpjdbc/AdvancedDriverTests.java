@@ -85,7 +85,8 @@ public class AdvancedDriverTests extends TestCase {
 
         if (jdbc.fmVersion < 7){connection.setCatalog("Contacts");} //Need to set the db if using 6, right?
         connection.prepareCall("capitalizeLastNames").execute();
-		rs = statement.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
+    //rs.close();
+    rs = statement.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
 		rs.next();
 		assertEquals( "FLINTSTONE", rs.getString("lastName") );
 	}
@@ -516,7 +517,8 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws Exception
 	 */
 	public void testLargeResultSet() throws Exception {
-
+throw new AbstractMethodError();
+/*
 		FmConnection fmConnection = new FmConnection(jdbc.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
 		Statement statement = fmConnection.createStatement();
 
@@ -530,5 +532,6 @@ public class AdvancedDriverTests extends TestCase {
       rowCount++;
     }
     System.out.println("HERE IS THE ROW COUNT: " + rowCount);
+*/
   }
 }

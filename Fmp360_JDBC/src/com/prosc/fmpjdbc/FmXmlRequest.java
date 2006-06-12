@@ -137,12 +137,12 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	public void closeRequest() {
-		useSelectFields = false;
-		fieldDefinitions = null;
-		usedFieldArray = null;
-		allFieldNames = new ArrayList();
-		fmTable = null;
-        foundCount = 0;
+		//useSelectFields = false;
+		//fieldDefinitions = null;
+		//usedFieldArray = null;
+		//allFieldNames = new ArrayList();
+		//fmTable = null;
+    //    foundCount = 0;
 		if (serverStream != null)
 			try {
 				serverStream.close();
@@ -167,16 +167,42 @@ public class FmXmlRequest extends FmRequest {
         try {
           xParser.parse( input, xmlHandler ); // FIX!!! need some real exception handling here
           closeRequest();
+        } catch (IOException ioe) {
+          if (ioe.getMessage().equals("stream is closed")) {
+            System.out.println("I was in the middle of parsing stuff from FM but someone closed my stream");
+          } else {
+            System.out.println("There was an error, so i'm setting all of the variables and continuing");
+            onErrorSetAllVariables();
+            //throw new RuntimeException(ioe);
+          }
+        } catch (SAXException e) {
+          System.out.println("There was an error, so i'm setting all of the variables and continuing");
+          onErrorSetAllVariables();
+          //throw new RuntimeException(e);
         } catch (Exception e) {
-          throw new RuntimeException(e);
+          System.out.println("There was an error, so i'm setting all of the variables and continuing");
+          onErrorSetAllVariables();
         }
       }
+
+
     };
     myThread.start();
 
   }
 
-	public synchronized String getProductVersion() {
+  private synchronized void onErrorSetAllVariables() {
+    productVersionIsSet = true;
+    databaseNameIsSet = true;
+    foundCountIsSet = true;
+    recordIteratorIsSet = true;
+    recordIterator = null;
+    fieldDefinitionsListIsSet = true;
+    fieldDefinitions = null;
+    notifyAll();
+  }
+
+  public synchronized String getProductVersion() {
      while (!productVersionIsSet) {
       try {
         wait();
@@ -240,6 +266,14 @@ public class FmXmlRequest extends FmRequest {
   //}
 
   public synchronized Iterator getRecordIterator() {
+    while (!recordIteratorIsSet) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+
+      }
+    }
+
     return recordIterator; //-- BRITTANY
     //return records.iterator(); //FIX!! Do this on a row-by-row basis instead of storing the whole list in memory
 	}
@@ -247,6 +281,8 @@ public class FmXmlRequest extends FmRequest {
   private synchronized void setRecordIterator(ResultQueue i) {
     // some thread stuff
     recordIterator = i;
+    recordIteratorIsSet = true;
+    notifyAll();
   }
 
   public synchronized FmFieldList getFieldDefinitions() {
@@ -274,11 +310,11 @@ public class FmXmlRequest extends FmRequest {
 	private FmTable fmTable;
 	private boolean useSelectFields = false;
 
-	private String productVersion;
-	private String databaseName;
-	private int foundCount = -1;
+	private volatile String productVersion;
+	private volatile String databaseName;
+	private volatile int foundCount = -1;
 	private FmRecord currentRow;
-  private ResultQueue recordIterator; //= new ResultQueue(8192, 2048);  //--BRITTANY
+  private volatile ResultQueue recordIterator; //= new ResultQueue(8192, 2048);  //--BRITTANY
   //private List records = new LinkedList(); //FIX!! Temporary for development - get rid of in final version
 	private transient StringBuffer currentData = new StringBuffer(255);
 	private transient int insertionIndex;
@@ -296,6 +332,7 @@ public class FmXmlRequest extends FmRequest {
   private volatile boolean productVersionIsSet = false;
   private volatile boolean databaseNameIsSet = false;
   private volatile boolean foundCountIsSet = false;
+  private volatile boolean recordIteratorIsSet = false;
 
   // ---XML parsing SAX implementation ---
   private DefaultHandler xmlHandler = new org.xml.sax.helpers.DefaultHandler() {
@@ -327,13 +364,15 @@ public class FmXmlRequest extends FmRequest {
 
     public void startDocument() {
       log.log(Level.FINEST, "Start parsing response");
-      recordIterator = new ResultQueue(512, 64); //-- BRITTANY
+      setRecordIterator(new ResultQueue(512, 64));
+//      recordIterator = new ResultQueue(512, 64); //-- BRITTANY
       //records = new LinkedList();
       currentNode = null;
     }
 
     public void startElement(String uri, String xlocalName, String qName, Attributes attributes) {
       // Frequently repeated nodes
+      log.fine("Starting element qName = " + qName + " for " + this);
       if ("DATA".equals(qName)) { //FIX! What if we have multiple DATA nodes per COL, ie. repeating fields? Our insertionIndex won't change? --jsb
         currentNode = (insertionIndex>-1) ? DATA_NODE : IGNORE_NODE;
         //currentData.delete( 0, currentData.length() );
@@ -344,7 +383,7 @@ public class FmXmlRequest extends FmRequest {
       } else if ("ROW".equals(qName)) {
         //dt.markTime("  Starting row");
 
-        currentRow = new FmRecord(fieldDefinitions, Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
+        currentRow = new FmRecord(getFieldDefinitions(), Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
         columnIndex = -1;
       }
       // One-shot nodes

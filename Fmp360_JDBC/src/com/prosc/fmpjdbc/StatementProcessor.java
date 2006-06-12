@@ -181,7 +181,8 @@ public class StatementProcessor {
 			}
 
       FmConnection connection = (FmConnection) statement.getConnection();
-      recIdHandler = connection.getRecIdHandler();
+      recIdHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
             connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			Integer recordId;
@@ -212,6 +213,7 @@ public class StatementProcessor {
 					actionHandler.doRequest( dbLayoutString + postArgs );
 
           results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getFieldDefinitions(), (FmConnection)statement.getConnection() );
+          // DO NOT CLOSE the request since the result set needs to stream the records
           break;
 
 
@@ -229,7 +231,8 @@ public class StatementProcessor {
 						}
 					}
 					updateRowCount = recIdHandler.getFoundCount();
-					break;
+          recIdHandler.closeRequest();
+          break;
 
 				case SqlCommand.DELETE:
 					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=all&-find" );
@@ -244,7 +247,8 @@ public class StatementProcessor {
 						}
 					}
 					updateRowCount = recIdHandler.getFoundCount();
-					break;
+          recIdHandler.closeRequest();
+          break;
 
 				case SqlCommand.INSERT:
 					try {
@@ -253,7 +257,8 @@ public class StatementProcessor {
 						throw e;
 					}
 					updateRowCount = actionHandler.getFoundCount();
-					insertedRecord = (FmRecord) actionHandler.getRecordIterator().next(); // inserts can only insert a single record, so we'll assume that the first record is the one that we want
+					insertedRecord = (FmRecord) actionHandler.getRecordIterator().next();
+          actionHandler.closeRequest();// inserts can only insert a single record, so we'll assume that the first record is the one that we want
 					break;
 			}
 		} catch( IOException e ) {
@@ -265,7 +270,8 @@ public class StatementProcessor {
 			throw e;
 		} finally {
 			try {
-				//if( actionHandler != null ) actionHandler.closeRequest(); // BRITTANY -- the parsing thread should take care of this...
+        // the requests should be closed in their respective case block
+        //if( actionHandler != null ) actionHandler.closeRequest(); // BRITTANY -- the parsing thread should take care of this...
 				//if( recIdHandler != null ) recIdHandler.closeRequest();
 			} catch (Exception e) {
 				throw new RuntimeException("Exception occurred in finally clause", e);

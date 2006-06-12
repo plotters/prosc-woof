@@ -45,43 +45,45 @@ public class FmConnection implements Connection {
 	private URL xmlUrl;
 	//private String databaseName;
 	//private FmXmlRequest requestHandler;
-	private FmXmlRequest recIdHandler;
+	//private FmXmlRequest recIdHandler;
 	private FmMetaData metaData;
 	private float fmVersion;
 	private String catalog;
 	Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
+  private boolean isClosed;
 
-	/** Creates a connection to the ddtekDriver and keeps a private variable so that we can forward
-	 * unsupported calls to the other driver.
-	 * Also verifies that we are able to connect to the FileMaker Server, and does all one-shot preparation,
-	 * such as parsing DTDs.
-	 * @param url
-	 * @param properties
-	 */
-	public FmConnection( String url, Properties properties ) throws MalformedURLException {
-		this.url = url;
-		this.properties = properties;
-		extractUrlProperties();
-		String logLevel =  properties.getProperty("loglevel", "INFO" ); // default log level is INFO
-		logger.setLevel(Level.parse(logLevel));
-		if (logger.isLoggable(Level.FINE)) {
-			Logger.getLogger( "com.prosc.fmpjdbc").setLevel( logger.getLevel() );
+  /** Creates a connection to the ddtekDriver and keeps a private variable so that we can forward
+   * unsupported calls to the other driver.
+   * Also verifies that we are able to connect to the FileMaker Server, and does all one-shot preparation,
+   * such as parsing DTDs.
+   * @param url
+   * @param properties
+   */
+  public FmConnection( String url, Properties properties ) throws MalformedURLException {
+    this.url = url;
+    isClosed = false;
+    this.properties = properties;
+    extractUrlProperties();
+    String logLevel =  properties.getProperty("loglevel", "INFO" ); // default log level is INFO
+    logger.setLevel(Level.parse(logLevel));
+    if (logger.isLoggable(Level.FINE)) {
+      Logger.getLogger( "com.prosc.fmpjdbc").setLevel( logger.getLevel() );
 //			Logger.getLogger("").getHandlers()[0].setLevel(logger.getLevel());
-		}
-		if (logger.isLoggable(Level.CONFIG)) {
-			logger.log(Level.CONFIG, "Connecting to " + url + " with properties " + properties);
-		}
-		fmVersion = Float.valueOf( properties.getProperty("fmversion", "7") ).floatValue();
-		if( fmVersion >= 7 ) {
-			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
-			recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword(), fmVersion );
-		} else if( fmVersion >= 5 ) {
-			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword() );
-			//requestHandler.setPostPrefix("-format=-fmp_xml&");
-			recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword(), fmVersion );
-			//recIdHandler.setPostPrefix("-format=-fmp_xml&");
-		} else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker versions 5 and higher are supported.");
-	}
+    }
+    if (logger.isLoggable(Level.CONFIG)) {
+      logger.log(Level.CONFIG, "Connecting to " + url + " with properties " + properties);
+    }
+    fmVersion = Float.valueOf( properties.getProperty("fmversion", "7") ).floatValue();
+    if( fmVersion >= 7 ) {
+      //requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
+      //recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword(), fmVersion );
+    } else if( fmVersion >= 5 ) {
+      //requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword() );
+      //requestHandler.setPostPrefix("-format=-fmp_xml&");
+      //recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword(), fmVersion );
+      //recIdHandler.setPostPrefix("-format=-fmp_xml&");
+    } else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker versions 5 and higher are supported.");
+  }
 
   public String getFMVersionUrl() {
     if (fmVersion >= 7) {
@@ -149,7 +151,7 @@ public class FmConnection implements Connection {
 
 	//FmXmlRequest getXmlRequestHandler() { return requestHandler; }
 
-	FmXmlRequest getRecIdHandler() { return recIdHandler; }
+	//FmXmlRequest getRecIdHandler() { return recIdHandler; }
 
 
 	// --- These methods must be implemented ---
@@ -181,12 +183,13 @@ public class FmConnection implements Connection {
 	public void close() throws SQLException {
 		//requestHandler.closeRequest();
 		//requestHandler = null;
-		recIdHandler.closeRequest();
-		recIdHandler = null;
+    isClosed = true;
+    //recIdHandler.closeRequest();
+		//recIdHandler = null;
 	}
 
 	public boolean isClosed() throws SQLException {
-		return recIdHandler == null;
+		return isClosed;
 	}
 
 	public PreparedStatement prepareStatement( String s ) throws SQLException {

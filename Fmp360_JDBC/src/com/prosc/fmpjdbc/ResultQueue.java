@@ -96,6 +96,7 @@ public class ResultQueue implements Iterator {
 
   public synchronized void setFinished() {
     finished = true;
+    notifyAll();
   }
 
   /**
