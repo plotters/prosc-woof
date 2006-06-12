@@ -271,8 +271,7 @@ public class StatementProcessor {
 		} finally {
 			try {
         // the requests should be closed in their respective case block
-        //if( actionHandler != null ) actionHandler.closeRequest(); // BRITTANY -- the parsing thread should take care of this...
-				//if( recIdHandler != null ) recIdHandler.closeRequest();
+        
 			} catch (Exception e) {
 				throw new RuntimeException("Exception occurred in finally clause", e);
 			}
