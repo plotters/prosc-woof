@@ -21,7 +21,6 @@ public class ResultQueue implements Iterator {
 
 
   public ResultQueue(long msize, long rsize) {
-    System.out.println("Creating a new resultQueue");
     maxSize = msize; // so they can't change the size in the middle of processing
     resumeSize = rsize;
     currentSize = 0;
@@ -54,7 +53,6 @@ public class ResultQueue implements Iterator {
       }
     } // now it's ok to add something to the queue
     } else {
-      System.out.println("Need to adjust max size-----------------------------------");
       // increase the current size because i'm trying to add the first object to the queue, and it's
       // bigger than the max size
       maxSize = size;
@@ -66,7 +64,6 @@ public class ResultQueue implements Iterator {
     objects.addLast(toAdd);
     sizes.addLast(new Long(size));
     currentSize += size;
-    System.out.println("Done adding object of size: " + size + " at position " + objects.size() + " and current size is " + currentSize);
     notifyAll(); // just in case someone's waiting to get something out of the queue
   }
 
@@ -85,10 +82,8 @@ public class ResultQueue implements Iterator {
     } // end of while, ready to decide
 
     if (objects.size() > 0) {
-     //System.out.println("I have one do give");
       return true;
     } else {
-      //System.out.println("I DO NOT HAVE ANY MORE TO GIVE........");
       return false; // finished putting stuff in the queue
     }
   }
@@ -107,9 +102,7 @@ public class ResultQueue implements Iterator {
   public synchronized Object next() {
     Object toReturn = null;
     Object toReturnSize = null;
-    System.out.println("Getting Next");
     while (objects.size() == 0) { // objects and sizes should always have the same # of elements
-      System.out.println("Trying to get next");
       // just in case i'm taking them out faster than i can put them in
       if (finished) {
         // somebody forgot to check for hasNext before calling next!!!!
