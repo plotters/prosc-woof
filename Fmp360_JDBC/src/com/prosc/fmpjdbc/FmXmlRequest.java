@@ -125,11 +125,6 @@ public class FmXmlRequest extends FmRequest {
 		}
 		try {
 			readResult();
-			//System.out.println(IOUtils.inputStreamAsString(serverStream));
-			//throw new SAXException("Just testing");
-/*		} catch (SAXException e) {
-      onErrorSetAllVariables();
-      throw new RuntimeException(e); //FIX!! Better error handling than just rethrowing?*/
 		} catch( RuntimeException e ) {
 			Throwable t = e.getCause();
       onErrorSetAllVariables();
@@ -181,7 +176,7 @@ public class FmXmlRequest extends FmRequest {
           onErrorSetAllVariables();
           throw new RuntimeException(e);
         } catch (RuntimeException e) {
-          log.finer("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading "
+          log.fine("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading "
              + "variables to true and notifying all threads.");
           onErrorSetAllVariables();
           throw new RuntimeException(e);
@@ -195,6 +190,11 @@ public class FmXmlRequest extends FmRequest {
 
     };
     myThread.start();
+    if(anError()) {
+      FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( Integer.valueOf(errorCode) );
+      log.log(Level.WARNING, fileMakerException.toString());
+      throw fileMakerException;
+    }
 
   }
 
@@ -264,14 +264,6 @@ public class FmXmlRequest extends FmRequest {
     notifyAll();
   }
 
-  //public synchronized FmRecord getLastRecord() {
-	////	return currentRow;
-	//}
-
-  //private synchronized void setLastRecord(FmRecord r) {
-    // some thread stuff
-  //  currentRow = r;
-  //}
 
   public synchronized Iterator getRecordIterator() {
     while (!recordIteratorIsSet) {
@@ -282,8 +274,7 @@ public class FmXmlRequest extends FmRequest {
       }
     }
 
-    return recordIterator; //-- BRITTANY
-    //return records.iterator(); //FIX!! Do this on a row-by-row basis instead of storing the whole list in memory
+    return recordIterator;
 	}
 
   private synchronized void setRecordIterator(ResultQueue i) {
@@ -302,8 +293,38 @@ public class FmXmlRequest extends FmRequest {
       }
     }
     return fieldDefinitions;
-	}
+  }
 
+  private synchronized void setErrorCode(int code) {
+    // 0 is ok
+    // 401 is no results
+    errorCode = code;
+    errorCodeIsSet = true;
+    notifyAll();
+
+  }
+
+  public synchronized int getErrorCode() {
+    while(!errorCodeIsSet) {
+      try {
+        wait();
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return errorCode;
+  }
+
+  public boolean anError() {
+    // 0 is ok
+    // 401 is no results
+    int error = getErrorCode();
+    if (error == 0 || error == 401) {
+      return false;
+    } else {
+      return true;
+    }
+  }
 
 
   /*
@@ -322,12 +343,12 @@ public class FmXmlRequest extends FmRequest {
 	private volatile String databaseName;
 	private volatile int foundCount = -1;
 	private FmRecord currentRow;
-  private volatile ResultQueue recordIterator; //= new ResultQueue(8192, 2048);  //--BRITTANY
-  //private List records = new LinkedList(); //FIX!! Temporary for development - get rid of in final version
+  private volatile ResultQueue recordIterator;
 	private transient StringBuffer currentData = new StringBuffer(255);
 	private transient int insertionIndex;
+  private volatile int errorCode;
 
-	private static transient int code = 0;
+  private static transient int code = 0;
 	private static Integer IGNORE_NODE = new Integer(code++);
 	private static Integer DATA_NODE = new Integer(code++);
 	private static Integer ERROR_NODE = new Integer(code++);
@@ -336,11 +357,12 @@ public class FmXmlRequest extends FmRequest {
 	private List allFieldNames = new ArrayList(); // a list of Strings.  All the Field names inside the METADATA tag.
 
 
-  private volatile boolean fieldDefinitionsListIsSet = false;
-  private volatile boolean productVersionIsSet = false;
-  private volatile boolean databaseNameIsSet = false;
-  private volatile boolean foundCountIsSet = false;
-  private volatile boolean recordIteratorIsSet = false;
+  private boolean fieldDefinitionsListIsSet = false;
+  private boolean productVersionIsSet = false;
+  private boolean databaseNameIsSet = false;
+  private boolean foundCountIsSet = false;
+  private boolean recordIteratorIsSet = false;
+  private boolean errorCodeIsSet = false;
 
   // ---XML parsing SAX implementation ---
   private DefaultHandler xmlHandler = new org.xml.sax.helpers.DefaultHandler() {
@@ -372,9 +394,7 @@ public class FmXmlRequest extends FmRequest {
 
     public void startDocument() {
       log.log(Level.FINEST, "Start parsing response");
-      setRecordIterator(new ResultQueue(512, 64));
-//      recordIterator = new ResultQueue(512, 64); //-- BRITTANY
-      //records = new LinkedList();
+      setRecordIterator(new ResultQueue(16384, 8192));  // is this a good size? -britt
       currentNode = null;
     }
 
@@ -451,7 +471,7 @@ public class FmXmlRequest extends FmRequest {
         }
       }
       if ("ROW".equals(qName)) {
-        recordIterator.add(currentRow, (long) sizeEstimate); //-- BRITTANY
+        recordIterator.add(currentRow, (long) sizeEstimate); 
         sizeEstimate = 0; // set it to 0 and start estimating again
         //records.add(currentRow);
         //if( FmConnection.getDebugLevel() >= 3 ) System.out.println("Finished record: " + ++currentRowIndex);
@@ -490,19 +510,13 @@ public class FmXmlRequest extends FmRequest {
       if (currentNode == DATA_NODE) {
         currentData.append( ch, start, length );
       } else if (currentNode == ERROR_NODE) {
-        if (length == 1 && ch[start] == '0'); //Error code is zero, proceed
-        else {
-          String errorCode = new String(ch, start, length);
-          if( "401".equals( errorCode) ) {
-            //Ignore, this means no results
-          } else {
-            FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( Integer.valueOf(errorCode) );
-            log.log(Level.WARNING, fileMakerException.toString());
-            throw new RuntimeException( fileMakerException );
-          }
-        }
+        String error = new String(ch, start, length);
+        // all of the error code handling has been moved to readResult method -britt
+        setErrorCode(Integer.valueOf(error).intValue());
       }
-    }
+    } // end of characters
+
+
   };
 
 
