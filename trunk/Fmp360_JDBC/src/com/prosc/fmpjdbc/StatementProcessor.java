@@ -74,7 +74,8 @@ public class StatementProcessor {
 			String dbLayoutString;
 			if( ( (FmConnection)statement.getConnection() ).getFmVersion() < 7 ) {
 				dbLayoutString = "-db=" + getDatabaseName();
-				if( getLayoutName() != null ) dbLayoutString += "&-lay=" + getLayoutName();
+        String layoutName = getLayoutName();
+        if( layoutName != null ) dbLayoutString += "&-lay=" + layoutName;
 				else logger.info( "Executing an SQL query without a layout name can be slow. Specify a layout name for best efficiency." );
 			} else {
 				dbLayoutString = "-db=" + getDatabaseName() + "&-lay=" + getLayoutName();
@@ -168,7 +169,7 @@ public class StatementProcessor {
 				}
 
 				whereSegments.put( fieldName, eachTermSegments );
-			}
+      } // end of for loop is = command.getSearchTerms.getIterator()
 			if( whereClause == null ) {
 				whereClause = new StringBuffer();
 				Object[] segments;
@@ -271,7 +272,7 @@ public class StatementProcessor {
 		} finally {
 			try {
         // the requests should be closed in their respective case block
-        
+
 			} catch (Exception e) {
 				throw new RuntimeException("Exception occurred in finally clause", e);
 			}
@@ -405,34 +406,37 @@ public class StatementProcessor {
 		}
 	}
 
-	private String getLayoutName() {
-		String layoutName = command.getTable().getOriginalName();
-		int mark = layoutName.indexOf( '|' );
-		try {
-			if( mark > -1 ) layoutName = layoutName.substring( mark+1 );
-			else if( statement.getConnection().getCatalog() == null ) layoutName = null; //This is the table name, not the layout name
-			return layoutName;
-		} catch(SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	private String getLayoutName() throws SQLException {
+    String layoutName = command.getTable().getName();
+    if (((FmConnection) statement.getConnection()).getFmVersion() < 7) {
+      // this could be the dbName, we need to make sure the catalog and dbName in the FmTable are empty
+      if (statement.getConnection().getCatalog() == null && command.getTable().getDatabaseName() == null) {
+        return null; // this is the dbName, NOT the layout name
+      } else {
+        return layoutName;
+      }
+    } else { // FM version >= 7
+      //getDatabaseName should have already caught if there was no db name given, so this name should be
+      // the layout name
+      return layoutName;
+    }
+  }
 
 	/** Gets the databasename for the sqlCommand being executed.
 	 * If no database is specified in the SQL, the database if the JDBC URL is used.
 	 * @see FmTable#FmTable(String)  */
-	private String getDatabaseName() {
-		String result =command.getTable().getDatabaseName();
+	private String getDatabaseName() throws SQLException{
+		String result =command.getTable().getDatabaseName(); // gives priority to dbName.layout over the catalog setting
 		if (result == null) {
-			try {
-				result = statement.getConnection().getCatalog(); //FIX!! What do we do if no catalog is specified?
-				if( result == null ) result = command.getTable().getName();
-				int mark = result.indexOf( '|' );
-				if( mark > -1 ) {
-					result = result.substring( 0, mark );
-				}
-			} catch( SQLException e ) {
-				throw new RuntimeException( e );
-			}
+      result = statement.getConnection().getCatalog(); //FIX!! What do we do if no catalog is specified?
+      // if there is nothing in the databaseName, and nothing in the catalog, then ONLY if FmVersion is < 7
+      // should we assume that the dbname the name provided to FmTable
+      if (((FmConnection) statement.getConnection()).getFmVersion() < 7 && result == null) {
+        result = command.getTable().getName();
+      } else if (((FmConnection) statement.getConnection()).getFmVersion() >= 7 && result == null) {
+        // then there is no db specified, and it MUST be specified either as dbName.layout, or as the catalog for FM >=7
+        throw new SQLException("You must specify a database name either when creating the connection, or in the sql statement for FileMaker version 7+");
+      }
 		}
 		return result;
 	}
