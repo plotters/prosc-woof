@@ -56,7 +56,157 @@ public class FmConnectionTest extends TestCase {
 		}
 	}
 
-	public void testUrlParsing() throws Exception {
+  public void testSQLParsingFM6() throws Exception {
+    JDBCTestUtils testUtils = new JDBCTestUtils();
+    FmConnection c;
+    Statement statement;
+    ResultSet resultSet;
+
+
+    // catalog = null
+    testUtils.fmVersion = 6;
+    testUtils.xmlServer = "forge.360works.com";
+    testUtils.port = 4000;
+    testUtils.dbName = null;
+
+    c = (FmConnection) testUtils.getConnection();
+    statement = c.createStatement();
+    try {
+      resultSet = statement.executeQuery("select * from contacts.portrait"); // db=contacts and lay=portrait
+      fail("Contacts.portrait db and layout don't exist");
+    } catch (FileMakerException e) {
+      // this layout doesn't exist
+    }
+
+    resultSet = statement.executeQuery("select * from contacts"); // db=contacts
+    assertTrue(resultSet.next());
+
+
+
+    resultSet = statement.executeQuery("select * from portrait"); // db=portrait
+    assertTrue(resultSet.next());
+
+
+    try {
+      resultSet = statement.executeQuery("select * from abc.portrait"); // db=abc and lay=portrait
+      fail("abc.portrait doesn't exist");
+    } catch (FileMakerException e) {
+      // this db doesn't exist
+    }
+
+
+    // catalog = "Portrait" (the fm5 db has multiple layouts)
+    testUtils = new JDBCTestUtils();
+    testUtils.fmVersion = 6;
+    testUtils.xmlServer = "forge.360works.com";
+    testUtils.port = 4000;
+    testUtils.dbName = "Portrait";
+
+
+    c = (FmConnection) testUtils.getConnection();
+    statement = c.createStatement();
+
+
+    try {
+      resultSet = statement.executeQuery("select * from contacts"); // db=Portrait and lay=contacts
+      fail("Portrait.contacts doesn't exits");
+    } catch (FileMakerException e) {
+      // this layout doesn't exist passes
+    }
+
+
+    resultSet = statement.executeQuery("select * from portrait"); // db=Portrait and lay=portrait
+    assertTrue(resultSet.next());
+
+    try {
+      resultSet = statement.executeQuery("select * from abc.portrait"); // db=abc and lay=portrait
+      fail("abc.portrait doesn't exist");
+    } catch (FileMakerException e) {
+      // this db doesn't exist -- passes
+    }
+
+
+  }
+
+  public void testSQLParsingFM7() throws Exception {
+    JDBCTestUtils testUtils = new JDBCTestUtils();
+    FmConnection c;
+    Statement statement;
+    ResultSet resultSet;
+
+
+    // catalog = null
+    testUtils.dbName = null;
+
+    c = (FmConnection) testUtils.getConnection();
+    statement = c.createStatement();
+    resultSet = statement.executeQuery("select * from contacts.portrait"); // db=contacts and lay=portrait
+    assertTrue(resultSet.next());
+
+    try {
+      resultSet = statement.executeQuery("select * from contacts"); // db=contacts -->throw SQLException
+      fail("You must specify a database name in either the connection or the sql statement for FM7+");
+    } catch(SQLException sqle) {
+      System.out.println("Number 1 passed");// passes
+    }
+
+    try {
+      resultSet = statement.executeQuery("select * from portrait"); // db=portrait -->throw SQLException
+      fail("You must specify a database name in either the connection or the sql statement for FM7+");
+    } catch (SQLException sqle) {
+      System.out.println("Number 2 passed");// passes
+    }
+
+    try {
+      resultSet = statement.executeQuery("select * from contacts.noLayout"); // db=contacts lay=noLayout
+      fail("contacts.noLayout doesn't exits");
+    } catch (FileMakerException fme) {
+      // this layout doesn't exist
+    }
+
+    try {
+      resultSet = statement.executeQuery("select * from abc.portrait"); // db=abc and lay=portrait
+      fail("abc.portrait doesn't exist");
+    } catch (FileMakerException fme) {
+      // this db doesn't exist -- passes
+    }
+
+
+    // catalog = "Contacts"
+    testUtils = new JDBCTestUtils();
+
+    c = (FmConnection) testUtils.getConnection();
+    statement = c.createStatement();
+
+    resultSet = statement.executeQuery("select * from contacts.portrait"); // db=contacts and lay=portrait
+    assertTrue(resultSet.next());
+
+
+    resultSet = statement.executeQuery("select * from contacts"); // db=Contacts and lay=contacts
+    assertTrue(resultSet.next());
+
+
+    resultSet = statement.executeQuery("select * from portrait"); // db=Contacts and lay=portrait
+    assertTrue(resultSet.next());
+
+    try {
+      resultSet = statement.executeQuery("select * from noLayout"); // db=Contacts and lay=noLayout
+      fail("Contacts.noLayout doesn't exist");
+    } catch (FileMakerException fme) {
+      // this layout doesn't exist -- passes
+    }
+
+    try {
+      resultSet = statement.executeQuery("select * from abc.portrait"); // db=abc and lay=portrait
+      fail("abc.portrait doesn't exist");
+    } catch (FileMakerException fme) {
+      // this db doesn't exist -- passes
+    }
+
+
+  }
+
+  public void testUrlParsing() throws Exception {
 		try {
 			new FmConnection("jdbc:fmp360://fms7.360works.com", new Properties());
 			fail("Should throw MalformedURLException due to missing DB name");
