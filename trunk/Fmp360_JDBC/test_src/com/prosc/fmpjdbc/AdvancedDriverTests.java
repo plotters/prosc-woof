@@ -513,25 +513,33 @@ public class AdvancedDriverTests extends TestCase {
 
 	/** Tests a download of 500,000 records. You can try setting the -Xmx8m JVM param to set the max size to 8 megs, to ensure
 	 * that this runs out of memory. The point of this test is to make sure that the results are being streamed instead of
-	 * downloaded at one pass.
+	 * downloaded at one pass. The current test stops after reading 1000 rows; you could take off this max to really stress-test
+	 * the memory handling.
 	 * @throws Exception
 	 */
 	public void testLargeResultSet() throws Exception {
-throw new AbstractMethodError();
-/*
 		FmConnection fmConnection = new FmConnection(jdbc.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
 		Statement statement = fmConnection.createStatement();
 
 		String tableName = "Many records";
+		long startTime = System.currentTimeMillis();
 		//A single record: ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" where counter=1" );
 		ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" " );
-    System.out.println("Done with the query");
-    int rowCount = 0;
-		while( resultSet.next() ) {
-      System.out.println("Just called next on the " + rowCount);
-      rowCount++;
-    }
-    System.out.println("HERE IS THE ROW COUNT: " + rowCount);
-*/
-  }
+		assertTrue("Query should complete in less than 3 seconds", System.currentTimeMillis() - startTime < 3000 );
+		System.out.println("Done with the query");
+		int rowCount = 0;
+		while( resultSet.next() && rowCount < 1000 ) { //Get the first 1000 rows
+			rowCount++;
+			System.out.println( rowCount + ": " + resultSet.getObject(1) + " / " + resultSet.getObject(2) + " / " + resultSet.getObject(3) + " / " + resultSet.getObject(4) );
+		}
+		assertTrue("Should be able to get 1000 records in less than ten seconds", System.currentTimeMillis() - startTime < 13000 );
+		resultSet.close();
+		System.out.println( "Took " + (System.currentTimeMillis() - startTime) + " ms to complete query and get 1000 items." );
+		try {
+			resultSet.next();
+			fail("Should throw an exception if we try to get more items after closing the ResultSet." );
+		} catch(IllegalStateException ex) {
+			System.out.println( "Expected this exception: " + ex );
+		}
+	}
 }

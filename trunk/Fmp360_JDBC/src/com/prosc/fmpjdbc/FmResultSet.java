@@ -42,6 +42,7 @@ public class FmResultSet implements ResultSet {
 	private FmFieldList fieldDefinitions;
 	private FmConnection connection;
 
+	private boolean isOpen = true;
 	private boolean isBeforeFirst = true;
 	private boolean isFirst = false;
 	private boolean isAfterLast = false;
@@ -74,6 +75,7 @@ public class FmResultSet implements ResultSet {
 
 	//---These methods must be implemented---
 	public boolean next() throws SQLException {
+		if( ! isOpen ) throw new IllegalStateException("The ResultSet has been closed; you cannot read any more records from it." );
 		if( fmRecords.hasNext() ) {
 			currentRecord = (FmRecord) fmRecords.next();
 			// The first time through isBeforeFirst is still true, because we haven't set
@@ -106,7 +108,8 @@ public class FmResultSet implements ResultSet {
 		metaData = null;
 		currentRecord = null;
 		fieldDefinitions = null;
-    //try {
+		isOpen = false;
+	//try {
       // need to close the FmXmlResult here!!!
 //      actionHandler = ( (FmConnection)statement.getConnection() ).getXmlRequestHandler();
     //}

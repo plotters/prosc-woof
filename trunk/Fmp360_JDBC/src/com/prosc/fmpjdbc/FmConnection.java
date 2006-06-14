@@ -65,7 +65,7 @@ public class FmConnection implements Connection {
     this.properties = properties;
     extractUrlProperties();
     String logLevel =  properties.getProperty("loglevel", "INFO" ); // default log level is INFO
-    logger.setLevel(Level.parse(logLevel));
+    logger.setLevel(Level.parse(logLevel)); 
     if (logger.isLoggable(Level.FINE)) {
       Logger.getLogger( "com.prosc.fmpjdbc").setLevel( logger.getLevel() );
 //			Logger.getLogger("").getHandlers()[0].setLevel(logger.getLevel());
