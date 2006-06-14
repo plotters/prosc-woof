@@ -137,7 +137,7 @@ public class FmXmlRequest extends FmRequest {
 		if (serverStream != null)
 			try {
 				serverStream.close();
-				serverStream = null;
+				//serverStream = null;
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
