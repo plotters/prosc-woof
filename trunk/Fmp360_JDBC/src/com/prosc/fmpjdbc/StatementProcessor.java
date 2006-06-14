@@ -222,7 +222,9 @@ public class StatementProcessor {
 					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=all&-find" );
 					for( Iterator it = recIdHandler.getRecordIterator(); it.hasNext(); ) {
 						recordId = ( (FmRecord)it.next() ).getRecordId();
-						try {
+            actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+            try {
 							actionHandler.doRequest( dbLayoutString + updateClause + "&-recid=" + recordId + "&-edit" );
 							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 						} catch (RuntimeException e) {
@@ -239,7 +241,9 @@ public class StatementProcessor {
 					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=all&-find" );
 					for( Iterator it = recIdHandler.getRecordIterator(); it.hasNext(); ) {
 						recordId = ( (FmRecord)it.next() ).getRecordId();
-						try {
+            actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+            try {
 							actionHandler.doRequest( dbLayoutString + "&-recid=" + recordId + "&-delete" );
 							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 						} catch (RuntimeException e) {
