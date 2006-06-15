@@ -36,7 +36,6 @@ import org.xml.sax.helpers.DefaultHandler;
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-//FIX!! It's probably not a good idea, architecturally, to share instances of this class. You could certainly do other JDBC operations while in the middle of a result set, and that would hose everything. --jsb
 /**
  * Created by IntelliJ IDEA.
  * User: jesse
