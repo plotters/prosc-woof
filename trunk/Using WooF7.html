@@ -257,7 +257,7 @@ SELECT * FROM contacts.address where contactID = 1;
 				loglevel
 			</dt>
 			<dd>
-				the amount of detail to use for logging. This can be an integer between 0 (no logging) and 1000 (all logging), or one of the reserved java.util.logging.Level keywords (<code>ALL, SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST, OFF</code>). INFO is the default, which will only log errors. 
+				the amount of detail to use for logging. This can be one of the reserved java.util.logging.Level keywords (<code>ALL, SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST, OFF</code>). INFO is the default, which will only log errors. 
 				<code>
 					FINE
 				</code>
@@ -276,7 +276,7 @@ SELECT * FROM contacts.address where contactID = 1;
 			An example JDBC url with custom properties:
 			<br />
 		</p>
-<pre class="real">jdbc:fmp360://host/database?user=Admin&amp;password=1234&amp;loglevel=1000&amp;fmversion=7&amp;ssl=true
+<pre class="real">jdbc:fmp360://host/database?user=Admin&amp;password=1234&amp;loglevel=INFO&amp;fmversion=7&amp;ssl=false
 </pre>
 		<h3>
 			Troubleshooting
