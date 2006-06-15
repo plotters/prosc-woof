@@ -37,8 +37,9 @@ public class JDBCTestUtils {
 		fmServer= System.getProperty("fmServer", "orion.360works.com");
 		xmlServer = System.getProperty("xmlServer", "orion.360works.com" );
 		dbName = System.getProperty( "dbName", "Contacts" );
+    port = Integer.valueOf(System.getProperty("portNumber", "80")).intValue();
 
-		if( fmVersion < 7 ) {
+    if( fmVersion < 7 ) {
 			xmlServer="forge.360works.com";
 			port = 4000;
 			dbName = "";
