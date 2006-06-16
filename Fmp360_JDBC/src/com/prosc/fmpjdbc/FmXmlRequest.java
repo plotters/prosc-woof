@@ -376,8 +376,18 @@ public class FmXmlRequest extends FmRequest {
 		}
 
 		public void fatalError(SAXParseException e) throws SAXException {
-			log.log(Level.SEVERE, String.valueOf(e));
+			log.log(Level.SEVERE, e.toString(), e );
 			super.fatalError(e);
+		}
+
+		public void warning( SAXParseException e ) throws SAXException {
+			log.warning( e.toString() );
+			super.warning( e );	//To change body of overridden methods use File | Settings | File Templates.
+		}
+
+		public void error( SAXParseException e ) throws SAXException {
+			log.warning( e.toString() );
+			super.error( e );	//To change body of overridden methods use File | Settings | File Templates.
 		}
 
 		/** This is necessary to work around a bug in the Crimson XML parser, which is used in the 1.4 JDK. Crimson
@@ -386,14 +396,6 @@ public class FmXmlRequest extends FmRequest {
 		 */
 		public InputSource resolveEntity( String publicId, String systemId ) {
 			return emptyInput;
-		}
-
-		public void warning( SAXParseException e ) throws SAXException {
-			super.warning( e );	//To change body of overridden methods use File | Settings | File Templates.
-		}
-
-		public void error( SAXParseException e ) throws SAXException {
-			super.error( e );	//To change body of overridden methods use File | Settings | File Templates.
 		}
 
 		public void startDocument() {

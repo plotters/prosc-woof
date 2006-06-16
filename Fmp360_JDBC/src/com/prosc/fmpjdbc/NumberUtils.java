@@ -34,6 +34,7 @@ public class NumberUtils {
 					break;
 			}
 		}
+		if( extracted.length() == 0 ) return "0"; //This way we won't get a NumberFormatException
 		return extracted.toString();
 	}
 

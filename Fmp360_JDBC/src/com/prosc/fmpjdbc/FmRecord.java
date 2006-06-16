@@ -182,7 +182,11 @@ public class FmRecord {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
-		return Short.valueOf( rawValue ).shortValue();
+		try {
+			return Short.valueOf( rawValue ).shortValue();
+		} catch( NumberFormatException e ) {
+			return Short.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).shortValue();
+		}
 	}
 
 	public int getInt(int i) throws NumberFormatException {
@@ -191,7 +195,11 @@ public class FmRecord {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
-		return Integer.valueOf( rawValue ).intValue();
+		try {
+			return Integer.valueOf( rawValue ).intValue();
+		} catch(NumberFormatException e) {
+			return Integer.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).intValue();
+		}
 	}
 
 	public long getLong(int i) throws NumberFormatException {
@@ -200,7 +208,11 @@ public class FmRecord {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
-		return Long.valueOf( rawValue ).longValue();
+		try {
+			return Long.valueOf( rawValue ).longValue();
+		} catch( NumberFormatException e ) {
+			return Long.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).longValue();
+		}
 	}
 
 	public float getFloat(int i) throws NumberFormatException {
@@ -209,7 +221,11 @@ public class FmRecord {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
-		return Float.valueOf( rawValue ).floatValue();
+		try {
+			return Float.valueOf( rawValue ).floatValue();
+		} catch( NumberFormatException e ) {
+			return Float.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).floatValue();
+		}
 	}
 
 	public double getDouble(int i) throws NumberFormatException {
@@ -218,7 +234,11 @@ public class FmRecord {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
-		return Double.valueOf( rawValue ).doubleValue();
+		try {
+			return Double.valueOf( rawValue ).doubleValue();
+		} catch( NumberFormatException e ) {
+			return Double.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).doubleValue();
+		}
 	}
 
 
@@ -231,8 +251,7 @@ public class FmRecord {
 		try {
 			return new BigDecimal(rawValue);
 		} catch(NumberFormatException e) { //Strip all non-numeric characters and try again
-			String strippedValue = NumberUtils.removeNonNumericChars(rawValue);
-			return new BigDecimal ( strippedValue );
+			return new BigDecimal( NumberUtils.removeNonNumericChars( rawValue ) );
 		}
 	}
 

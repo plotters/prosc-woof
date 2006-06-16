@@ -15,6 +15,8 @@ import junit.framework.TestCase;
 
 import java.util.Enumeration;
 import java.util.TimeZone;
+import java.io.File;
+import java.net.MalformedURLException;
 
 /**
  * Created by IntelliJ IDEA. User: jesse Date: Apr 21, 2005 Time: 8:01:04 AM
@@ -47,6 +49,18 @@ public class EOFTests extends TestCase {
 		channel = context.createAdaptorChannel();
 		channel.openChannel();
 	}
+
+	/*public void testForSherry() throws MalformedURLException {
+		EOModel model = new EOModel( new File("/Users/jesse/Desktop/mediaSales.eomodeld").toURL() );
+		EOModelGroup.defaultGroup().addModel( model );
+		String whichEntity;
+//		whichEntity = "AVLItemI";
+		whichEntity = "AVOrders";
+		EOFetchSpecification fetchSpec = new EOFetchSpecification( whichEntity, null, null );
+		fetchSpec.setFetchLimit( 50 );
+		fetchSpec.setRawRowKeyPaths( NSArray.EmptyArray );
+		NSArray items = new EOEditingContext().objectsWithFetchSpecification( fetchSpec );
+	}*/
 
 	/*public void testDuplicateLayoutNames() {
 		//channelSetup
