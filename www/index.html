@@ -38,6 +38,7 @@
 </h3>
 <p>
 <ul>
+<li>Revision 41: Substantial architecture change to do multi-threaded parsing. This allows returning an unlimited number of items in the ResultSet without running out of memory, since the stream is parsed on demand, and it also means that results will be returned immediately instead of having to parse the entire result first.</li>
 <li>Revision 11: Fixed a problem in the ant task; it was not overwriting the old files during installation. Better error checking and reporting if the wrong version of FileMaker was specified in the URL.</li>
 </ul>
 </p>
