@@ -22,15 +22,14 @@ import java.net.MalformedURLException;
  * Created by IntelliJ IDEA. User: jesse Date: Apr 21, 2005 Time: 8:01:04 AM
  */
 public class EOFTests extends TestCase {
-	private static JDBCTestUtils jdbc;
 	private static EOAdaptorChannel channel;
 	private static EOModel model;
 	private static NSArray tableNames;
 	private static EOEntity contactEntity;
 	private static EOEntity portraitEntity;
+	private JDBCTestUtils jdbcTestUtils;
 
 	protected void setUp() throws Exception {
-		jdbc = new JDBCTestUtils();
 		Class.forName( "com.prosc.fmpjdbc.Driver" );
 	}
 
@@ -38,12 +37,13 @@ public class EOFTests extends TestCase {
 		//EOModel amsLogic = new EOModel("/Users/jesse/VersionControl/AMSLogic/trunk/Resources/AMSLogic.eomodeld");
 		EOAdaptor adaptor = EOAdaptor.adaptorWithName( "JDBC" );
 		NSMutableDictionary connectionDict = new NSMutableDictionary();
-		String jdbcUrl = jdbc.getJdbcUrl( jdbc.dbName );
+		jdbcTestUtils = new JDBCTestUtils();
+		String jdbcUrl = jdbcTestUtils.getJdbcUrl( jdbcTestUtils.dbName );
 		connectionDict.setObjectForKey( jdbcUrl, "URL" );
-		connectionDict.setObjectForKey( jdbc.driverClassName, "driver");
+		connectionDict.setObjectForKey( jdbcTestUtils.driverClassName, "driver");
 		//The ddtek driveer seems to need these, even though they are already embedded in the URL
-		connectionDict.setObjectForKey( jdbc.dbUsername, "username" );
-		connectionDict.setObjectForKey( jdbc.dbPassword, "password" );
+		connectionDict.setObjectForKey( jdbcTestUtils.dbUsername, "username" );
+		connectionDict.setObjectForKey( jdbcTestUtils.dbPassword, "password" );
 		adaptor.setConnectionDictionary( connectionDict );
 		JDBCContext context = new JDBCContext( adaptor );
 		channel = context.createAdaptorChannel();
@@ -112,7 +112,7 @@ public class EOFTests extends TestCase {
 		tableNames = channel.describeTableNames();
 		System.out.println( tableNames );
 		String expectedTableName = "Contacts";
-		if( jdbc.use360driver ) expectedTableName = "Contacts" + "|" + expectedTableName;
+		if( jdbcTestUtils.use360driver ) expectedTableName = "Contacts" + "|" + expectedTableName;
 		assertTrue( tableNames.containsObject(expectedTableName) );
 		assertTrue( "There are at least 3 tables in the test database.", tableNames.count() >= 3 );
 	}
@@ -145,10 +145,10 @@ public class EOFTests extends TestCase {
 		//this means we have to close the channel and reopen it with a new connection dictionary
 		//then when we are done with this test put it back to the way it was
 		NSMutableDictionary Saveddict = new NSMutableDictionary();
-		if( jdbc.fmVersion < 7 ){
+		if( jdbcTestUtils.fmVersion < 7 ){
 		Saveddict = channel.adaptorContext().adaptor().connectionDictionary().mutableClone();
 		NSMutableDictionary dict = channel.adaptorContext().adaptor().connectionDictionary().mutableClone();
-		dict.setObjectForKey( jdbc.getJdbcUrl( "Contacts" ), "URL");
+		dict.setObjectForKey( jdbcTestUtils.getJdbcUrl( "Contacts" ), "URL");
 		channel.closeChannel();
 		channel.adaptorContext().adaptor().setConnectionDictionary(dict);
 		channel.openChannel();
@@ -164,7 +164,7 @@ public class EOFTests extends TestCase {
 		}
 		System.out.println( scripts );
 
-		if( jdbc.fmVersion < 7 ){
+		if( jdbcTestUtils.fmVersion < 7 ){
 			//restore channel to it's original state - only do for FM 6
 			channel.closeChannel();
 			channel.adaptorContext().adaptor().setConnectionDictionary(Saveddict);

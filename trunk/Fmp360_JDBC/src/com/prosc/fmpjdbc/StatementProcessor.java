@@ -41,8 +41,8 @@ public class StatementProcessor {
 	private FmRecord insertedRecord;
 	private FmResultSet results;
 	private Vector params;
-	private static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
-	private static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
+	static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
+	static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
 
 	private static final String ESCAPE_C = "\\"; // escaped backslash.  Note, this should NOT be unicode encoded!
 	//private FieldPosition sharedFieldPosition = new FieldPosition(0);
@@ -373,10 +373,11 @@ public class StatementProcessor {
 		//FM7 or higher just the wildcard is escaped with a backslash
 
 		if( input == null ) {
-			toAppendTo.append('=');
+			toAppendTo.append('='); // null searches in FMP are represented by an equals sign
 			//return "="; //FIX! Integrate better with code below
 		} else {
 			String incoming = input.toString();
+			if (incoming.length() == 0) return;
 			if (( (FmConnection)statement.getConnection() ).getFmVersion() < 7) {
 				_escapeFMWildCards6(incoming, toAppendTo, wildcardsToEscape);
 			} else {
