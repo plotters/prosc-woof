@@ -163,7 +163,7 @@ public class SimpleJdbcTest extends TestCase {
 		java.util.Date now = new java.util.Date();
 		assertEquals( 1, updatedRowCount );
 		long milliseconds = now.getTime() - then.getTime();
-		long maxTime = 2000;
+		long maxTime = 2500;
 		System.out.println("textManyFieldsEdit: " + milliseconds + " ms");
 		assertTrue( "Statement took " + milliseconds + " to execute; should be less than " + maxTime, milliseconds < maxTime );
 	}

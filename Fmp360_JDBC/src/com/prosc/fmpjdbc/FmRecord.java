@@ -247,8 +247,11 @@ public class FmRecord {
 		if( rawValue == null || rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
 			return new BigDecimal(0d);
-		} else fieldList.wasNull = false;
+		} else {
+			fieldList.wasNull = false;
+		}
 		try {
+			//System.out.println("testing");
 			return new BigDecimal(rawValue);
 		} catch(NumberFormatException e) { //Strip all non-numeric characters and try again
 			return new BigDecimal( NumberUtils.removeNonNumericChars( rawValue ) );
