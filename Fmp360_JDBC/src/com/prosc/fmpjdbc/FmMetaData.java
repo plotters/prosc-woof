@@ -218,6 +218,8 @@ public class FmMetaData implements DatabaseMetaData {
 			databaseName = (String)dbIterator.next();
 			postArgs = "-db=" + databaseName + "&-layoutnames"; //fixed hard-coded test value -bje
 			try {
+				request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+						connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 				request.doRequest( postArgs );
 				for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
 					FmRecord rawRecord = (FmRecord)it.next();
