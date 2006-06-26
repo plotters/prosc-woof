@@ -59,13 +59,13 @@ public class FmConnection implements Connection {
    * @param url
    * @param properties
    */
-  public FmConnection( String url, Properties properties ) throws MalformedURLException {
+  public FmConnection( String url, Properties properties ) throws MalformedURLException, SQLException {
     this.url = url;
     isClosed = false;
     this.properties = properties;
     extractUrlProperties();
     String logLevel =  properties.getProperty("loglevel", "INFO" ); // default log level is INFO
-    logger.setLevel(Level.parse(logLevel)); 
+    logger.setLevel(Level.parse(logLevel));
     if (logger.isLoggable(Level.FINE)) {
       Logger.getLogger( "com.prosc.fmpjdbc").setLevel( logger.getLevel() );
 //			Logger.getLogger("").getHandlers()[0].setLevel(logger.getLevel());
@@ -83,6 +83,11 @@ public class FmConnection implements Connection {
       //recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword(), fmVersion );
       //recIdHandler.setPostPrefix("-format=-fmp_xml&");
     } else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker versions 5 and higher are supported.");
+
+	  // lastly, check the username/pwd are valid by trying to access the db
+	  if (catalog != null) {
+		  ((FmMetaData) getMetaData()).testUsernamePassword(); // this will throw a new SQLException(FmXmlRequest.HttpAuthenticationException)
+	  }
   }
 
   public String getFMVersionUrl() {
