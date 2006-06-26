@@ -80,6 +80,13 @@ public class FmMetaData implements DatabaseMetaData {
 //		return result;
 //	}
 
+	public void testUsernamePassword() throws SQLException {
+		// if no exception gets thrown, then we're ok
+		ResultSet rs =  getTables(connection.getCatalog(), null, null, new String[] {"TEXT"}, true);
+		rs.close();
+	}
+
+
 	public String getAnyTableName() throws SQLException {
 		if (anyTableName == null) {
 			ResultSet tableNames = getTables(null, null, null, new String[] {"TEXT"});
@@ -166,6 +173,10 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getTables( String catalog, String schemaPattern, String tableNamePattern, String[] fieldTypes ) throws SQLException {
+		return getTables(catalog, schemaPattern, tableNamePattern, fieldTypes, false);
+	}
+
+	private ResultSet getTables( String catalog, String schemaPattern, String tableNamePattern, String[] fieldTypes, boolean testingConnection ) throws SQLException {
 		if (logger.isLoggable(Level.FINE)) {
 			List fieldTypeList = Arrays.asList(fieldTypes);
 			logger.log(Level.FINE, "getTables(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + fieldTypeList + ")");
@@ -263,7 +274,14 @@ public class FmMetaData implements DatabaseMetaData {
 					}
 				}
 			} catch( FmXmlRequest.HttpAuthenticationException e) {
-				//Ignore this database, we can't get to it with our username and password
+				if (testingConnection) {
+					// then i'm trying to see if i CAN access this db...
+					SQLException sqle = new SQLException(e.toString());
+					sqle.initCause(e);
+					throw sqle;
+				} else {
+					//Ignore this database, we can't get to it with our username and password
+				}
 			} catch (IOException e) {
 				SQLException sqle = new SQLException(e.toString());
 				sqle.initCause(e);

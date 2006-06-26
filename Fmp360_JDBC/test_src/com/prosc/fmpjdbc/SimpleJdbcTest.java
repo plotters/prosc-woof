@@ -34,8 +34,13 @@ public class SimpleJdbcTest extends TestCase {
 	}
 
 	/** This test passes. */
-	public void testConnectWithoutPassword() {
-		jdbc.getConnection( jdbc.dbName, "nopassword", "" );
+	public void testConnectWithoutPassword() throws SQLException {
+		try {
+			jdbc.getConnection( jdbc.dbName, "nopassword", "" );
+			// good
+		} catch (SQLException sqle) {
+			fail("This is a valid username/password combination for the db: " + jdbc.dbName);
+		}
 	}
 
 	/** This test does not apply to the ddtek driver. */

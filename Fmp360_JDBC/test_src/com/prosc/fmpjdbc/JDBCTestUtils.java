@@ -87,7 +87,7 @@ public class JDBCTestUtils {
 		System.out.println("Avg execution time for " + runnable + ": " + avg + "ms");
 	}
 
-	public Connection getConnection() {
+	/*public Connection getConnection() {
 		return getConnection(dbName, dbUsername, dbPassword);
 	}
 
@@ -99,6 +99,33 @@ public class JDBCTestUtils {
 			return result;
 		} catch( Exception e ) {
 			throw new RuntimeException( "Could not connect to JDBC URL: " + jdbcUrl, e );
+		}
+	}*/
+
+	public Connection getConnectionNoExceptions() {
+		return getConnectionNoExceptions(dbName, dbUsername, dbPassword);
+	}
+
+	public Connection getConnection() throws SQLException {
+		return getConnection(dbName, dbUsername, dbPassword);
+	}
+
+
+	public Connection getConnection(String whichDatabaseName, String username, String password) throws SQLException {
+		String jdbcUrl = getJdbcUrl(whichDatabaseName);
+		try {
+			Class.forName( driverClassName );
+			Connection result = DriverManager.getConnection( jdbcUrl, username, password );
+			return result;
+		} catch (ClassNotFoundException cnfe) {
+			throw new RuntimeException("Couldn't find the class: " + driverClassName);
+		}
+	}
+	public Connection getConnectionNoExceptions(String whichDatabaseName, String username, String password) {
+		try {
+			return getConnection(whichDatabaseName, username, password);
+		} catch( Exception e ) {
+			throw new RuntimeException( "Could not connect to JDBC URL: " + getJdbcUrl(whichDatabaseName), e );
 		}
 	}
 }

@@ -37,8 +37,16 @@ public class ExceptionTests extends TestCase {
 	}
 
 	public void testMissingDatabase() throws SQLException {
-		Connection connection = jdbc.getConnection( "NoSuchDatabase", "user", "password" );
 		try {
+			Connection connection = jdbc.getConnection( "NoSuchDatabase", "user", "password" );
+			fail("You should be able to get a connection to a non-existant database");
+		} catch (SQLException sqle) {
+			// GOOD
+		}
+
+		try {
+			Connection connection = jdbc.getConnection(null, null, null);
+			// i should be able to connect to a null db, with no username/pwd
 			connection.createStatement().executeQuery( "SELECT * FROM NoSuchTable" );
 			fail("Should have gotten an FMException");
 		} catch (SQLException e) {
