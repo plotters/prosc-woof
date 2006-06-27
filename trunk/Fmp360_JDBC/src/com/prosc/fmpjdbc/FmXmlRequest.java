@@ -533,7 +533,7 @@ public class FmXmlRequest extends FmRequest {
 		} // end of characters
 
 
-	};
+	}
 
 
 	/*
