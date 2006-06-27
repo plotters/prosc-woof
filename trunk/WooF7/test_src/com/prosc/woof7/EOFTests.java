@@ -1,15 +1,10 @@
 package com.prosc.woof7;
 
 import com.prosc.fmpjdbc.JDBCTestUtils;
+import com.prosc.fmpjdbc.StatementProcessor;
 import com.webobjects.eoaccess.*;
-import com.webobjects.eocontrol.EOEditingContext;
-import com.webobjects.eocontrol.EOFetchSpecification;
-import com.webobjects.eocontrol.EOQualifier;
-import com.webobjects.eocontrol.EOSortOrdering;
-import com.webobjects.foundation.NSArray;
-import com.webobjects.foundation.NSMutableArray;
-import com.webobjects.foundation.NSMutableDictionary;
-import com.webobjects.foundation.NSTimestamp;
+import com.webobjects.eocontrol.*;
+import com.webobjects.foundation.*;
 import com.webobjects.jdbcadaptor.JDBCContext;
 import junit.framework.TestCase;
 
@@ -49,6 +44,29 @@ public class EOFTests extends TestCase {
 		channel = context.createAdaptorChannel();
 		channel.openChannel();
 	}
+
+	/*public void testForSherry2() throws MalformedURLException {
+		EOModel model = new EOModel( new File("/Users/brittany/Desktop/mediaSales.eomodeld").toURL() );
+		EOModelGroup.defaultGroup().addModel( model );
+		EOEditingContext eoEditingContext = new EOEditingContext();
+		EOEnterpriseObject eo =  EOUtilities.createAndInsertInstance(eoEditingContext, "AVOrders");
+
+		eo.takeValueForKey("Web", "contactType");
+		eo.takeValueForKey(new NSTimestamp(), "dateCreated");
+		eo.takeValueForKey("Yes", "paidWithCreditCard");
+		eo.takeValueForKey("No", "taxIndicator");
+
+		eoEditingContext.saveChanges();
+		eoEditingContext.invalidateAllObjects();
+
+		NSDictionary pk = EOUtilities.primaryKeyForObject(eoEditingContext, eo);
+		EOEditingContext getBackEditingContext = new EOEditingContext();
+		EOEnterpriseObject returnObject = EOUtilities.objectWithPrimaryKey(getBackEditingContext, "AVOrders", pk);
+		NSTimestamp dateCreated = (NSTimestamp) returnObject.valueForKey("dateCreated");
+		System.out.println("Date Created: " + dateCreated);
+
+	}*/
+
 
 	/*public void testForSherry() throws MalformedURLException {
 		EOModel model = new EOModel( new File("/Users/jesse/Desktop/mediaSales.eomodeld").toURL() );
