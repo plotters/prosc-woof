@@ -260,7 +260,7 @@ public class FmRecord {
 
 	public static ThreadLocal dateFormat = new ThreadLocal() {
 		protected Object initialValue() {
-			return DateFormat.getDateInstance( DateFormat.SHORT );
+			return new SimpleDateFormat("MM/dd/yyyy");
 		}
 	};
 
