@@ -8,6 +8,7 @@ import java.net.URLConnection;
 import java.io.InputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.logging.Logger;
 
 import com.prosc.shared.IOUtils;
 import com.prosc.shared.DebugTimer;
@@ -18,6 +19,8 @@ import com.prosc.shared.DebugTimer;
  * in the directory containing the build.xml file.
  */
 public class SimpleJdbcTest extends TestCase {
+	private static final Logger log = Logger.getLogger( SimpleJdbcTest.class.getName() );
+
 	private Connection connection;
 	private Statement statement;
 	private JDBCTestUtils jdbc;
@@ -267,16 +270,18 @@ public class SimpleJdbcTest extends TestCase {
 	}
 
 
-
+	/** Test various bad number formats */
 	public void testNumberParsing() throws SQLException {
 		String tableName = jdbc.fmVersion >= 7 ? "WeirdTextFields" : "WeirdTextFields.WeirdTextFields"; //Need to include the db & layout name if using 6, right?
 		ResultSet rs = statement.executeQuery("SELECT * from " + tableName);
-		Object eachValue;
+		Object eachValueNumber;
 		while( rs.next() ) {
-			eachValue =  rs.getObject(1);
-			if (eachValue != null) assertEquals( BigDecimal.class, eachValue.getClass() ); //Should FileMaker number return a Double or a BigDecimal? ddtek returns a Double, our driver returns a BigDecimal.
-			eachValue = rs.getObject(2);
-			if (eachValue != null) assertEquals( BigDecimal.class, eachValue.getClass() );
+			eachValueNumber =  rs.getObject(1);
+			if (eachValueNumber != null) assertEquals( BigDecimal.class, eachValueNumber.getClass() ); //Should FileMaker number return a Double or a BigDecimal? ddtek returns a Double, our driver returns a BigDecimal.
+			String eachValueString = rs.getString(1);
+			String comment = rs.getString(2);
+			log.info( comment + ": (" + eachValueString + ") is read as (" + eachValueNumber + ")" );
+			if (eachValueNumber != null) assertEquals( BigDecimal.class, eachValueNumber.getClass() );
 		}
 	}
 
