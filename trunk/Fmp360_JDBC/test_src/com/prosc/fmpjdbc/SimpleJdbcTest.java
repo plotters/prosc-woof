@@ -274,14 +274,16 @@ public class SimpleJdbcTest extends TestCase {
 	public void testNumberParsing() throws SQLException {
 		String tableName = jdbc.fmVersion >= 7 ? "WeirdTextFields" : "WeirdTextFields.WeirdTextFields"; //Need to include the db & layout name if using 6, right?
 		ResultSet rs = statement.executeQuery("SELECT * from " + tableName);
-		Object eachValueNumber;
+		Number eachValueNumber;
 		while( rs.next() ) {
-			eachValueNumber =  rs.getObject(1);
+			eachValueNumber =  (Number)rs.getObject(1);
 			if (eachValueNumber != null) assertEquals( BigDecimal.class, eachValueNumber.getClass() ); //Should FileMaker number return a Double or a BigDecimal? ddtek returns a Double, our driver returns a BigDecimal.
 			String eachValueString = rs.getString(1);
-			String comment = rs.getString(2);
+			Number eachValueExpected = rs.getBigDecimal(2);
+			String comment = rs.getString(3);
 			log.info( comment + ": (" + eachValueString + ") is read as (" + eachValueNumber + ")" );
 			if (eachValueNumber != null) assertEquals( BigDecimal.class, eachValueNumber.getClass() );
+			assertEquals( eachValueExpected.toString(), eachValueNumber.toString() );
 		}
 	}
 
