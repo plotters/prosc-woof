@@ -17,7 +17,7 @@ public class NumberUtils {
 	* @see #removeNonIntegerChars
 	*/
 	static public String removeNonNumericChars(String text) {
-		char[] chars = text.toCharArray();
+		char[] chars = text.trim().toCharArray();
 		StringBuffer extracted = new StringBuffer(chars.length);
 		boolean foundDecimal = false;
 		for (int i=0; i< chars.length; i++) {
@@ -27,7 +27,8 @@ public class NumberUtils {
 					extracted.append(chars[i]);
 					break;
 				case '.':
-					if (foundDecimal==true) break; // only keep the first decimal point
+					if (foundDecimal) break; // only keep the first decimal point
+					if( extracted.length() == 0 ) extracted.append( '0' ); //Make sure there is a leading 0 before the decimal place
 					foundDecimal = true;
 				case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
 					extracted.append(chars[i]);
