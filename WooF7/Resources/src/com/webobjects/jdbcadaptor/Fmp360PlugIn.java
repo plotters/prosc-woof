@@ -52,12 +52,6 @@ public class Fmp360PlugIn extends com.webobjects.jdbcadaptor.JDBCPlugIn {
 	 */
 	private JDBCAdaptor _storedAdaptor = null;
 
-	/**
-	 * The password from the connectionURL or adaptor password.
-	 */
-	//private String serverPassword;
-	//private String filemakerServerURL;
-
 
 	public Fmp360PlugIn(JDBCAdaptor adaptor) {
 		super(adaptor);

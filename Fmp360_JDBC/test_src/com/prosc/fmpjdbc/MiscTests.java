@@ -1,7 +1,5 @@
 package com.prosc.fmpjdbc;
 
-import junit.framework.TestCase;
-
 /**
  * Created by IntelliJ IDEA.
  * User: jesse
