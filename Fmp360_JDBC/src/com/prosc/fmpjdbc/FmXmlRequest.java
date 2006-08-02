@@ -8,11 +8,10 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.HttpURLConnection;
-import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.sql.SQLException;
 
 import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
@@ -51,6 +50,7 @@ public class FmXmlRequest extends FmRequest {
 	private String postPrefix = "";
 	private String postArgs;
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
+	private Set missingFields;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion)  {
 		try {
@@ -282,13 +282,21 @@ public class FmXmlRequest extends FmRequest {
 		notifyAll();
 	}
 
-	public synchronized FmFieldList getFieldDefinitions() {
+	public synchronized FmFieldList getFieldDefinitions() throws SQLException {
 		while (!fieldDefinitionsListIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
+		}
+		if( getErrorCode() == 0 && missingFields != null && missingFields.size() > 0 ) {
+			List missingFieldNames = new LinkedList();
+			for( Iterator it = missingFields.iterator(); it.hasNext(); ) {
+				missingFieldNames.add( ((FmField)it.next()).getColumnName() );
+			}
+			closeRequest();
+			throw new SQLException("The requested fields are not on the layout: " + missingFieldNames );
 		}
 		return fieldDefinitions;
 	}
@@ -365,7 +373,7 @@ public class FmXmlRequest extends FmRequest {
 	// ---XML parsing SAX implementation ---
 	private class FmXmlHandler extends org.xml.sax.helpers.DefaultHandler {
 		private StringBuffer requestContent = new StringBuffer();
-		private static final boolean debugMode = true; //If true, then the content of the XML will be stored in requestContent
+		private static final boolean debugMode = false; //If true, then the content of the XML will be stored in requestContent
 		private Integer currentNode = null;
 		private int columnIndex;
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
@@ -424,8 +432,8 @@ public class FmXmlRequest extends FmRequest {
 				insertionIndex = usedFieldArray[columnIndex];
 			} else if ("ROW".equals(qName)) {
 				//dt.markTime("  Starting row");
-
-				currentRow = new FmRecord(getFieldDefinitions(), Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
+				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
+				currentRow = new FmRecord(fieldDefinitions, Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
 				columnIndex = -1;
 			}
 			// One-shot nodes
@@ -492,14 +500,8 @@ public class FmXmlRequest extends FmRequest {
 				//if( FmConnection.getDebugLevel() >= 3 ) System.out.println("Finished record: " + ++currentRowIndex);
 			}
 			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
-				// when i come to the metadata tag, i know all of the fields that are going to be in the table, so
-				// I can let people get the fieldDefinitions
-
-				synchronized (FmXmlRequest.this) { // this is different from the other attributes in the xml, since this one is being built on the fly and the variable is not just being "set" once we're finished reading it
-					fieldDefinitionsListIsSet = true;
-					FmXmlRequest.this.notifyAll();
-				}
 				usedFieldArray = new int[allFieldNames.size()];
+				missingFields = new LinkedHashSet( fieldDefinitions.getFields() );
 
 				int i = 0;
 				Iterator it = allFieldNames.iterator();
@@ -512,10 +514,18 @@ public class FmXmlRequest extends FmRequest {
 					if ( (columnIndex = fieldDefinitions.indexOfFieldWithColumnName(aFieldName)) > -1) {
 						// Get the index of the fieldName w.r.t fieldDefinitions, and put that value into the usedFieldArray
 						usedFieldArray[i] = columnIndex;
+						missingFields.remove( fieldDefinitions.get( columnIndex ) );
 					} else {
 						usedFieldArray[i] = -1; // This field columnName will not be used.
 					}
 					i++;
+				}
+				// when i come to the metadata tag, i know all of the fields that are going to be in the table, so
+				// I can let people get the fieldDefinitions
+
+				synchronized (FmXmlRequest.this) { // this is different from the other attributes in the xml, since this one is being built on the fly and the variable is not just being "set" once we're finished reading it
+					fieldDefinitionsListIsSet = true;
+					FmXmlRequest.this.notifyAll();
 				}
 			}
 		}

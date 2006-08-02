@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 public class FmStatement implements Statement {
 	private FmConnection connection;
 	private StatementProcessor processor;
-	private Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
+	private Logger log = Logger.getLogger("com.prosc.fmpjdbc");
 
 	public FmStatement( FmConnection connection ) {
 		this.connection = connection;
@@ -43,7 +43,6 @@ public class FmStatement implements Statement {
 
 	//---These methods must be implemented---
 	public ResultSet executeQuery( String s ) throws SQLException {
-		logger.log(Level.FINE, s);
 		SqlCommand command = new SqlCommand(s);
 		processor = new StatementProcessor(this, command);
 		processor.execute();
@@ -51,7 +50,6 @@ public class FmStatement implements Statement {
 	}
 
 	public int executeUpdate( String s ) throws SQLException {
-		logger.log(Level.FINE, s);
 		SqlCommand command = new SqlCommand(s);
 		processor = new StatementProcessor(this, command);
 		processor.execute();
@@ -59,7 +57,6 @@ public class FmStatement implements Statement {
 	}
 
 	public boolean execute( String s ) throws SQLException {
-		logger.log(Level.FINE, s);
 		SqlCommand command = new SqlCommand(s);
 		processor = new StatementProcessor(this, command);
 		processor.execute();

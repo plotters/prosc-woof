@@ -1,6 +1,7 @@
 package com.prosc.fmpjdbc;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -11,7 +12,7 @@ import java.io.IOException;
  */
 public abstract class FmRequest {
 
-	public abstract FmFieldList getFieldDefinitions() throws IOException;
+	public abstract FmFieldList getFieldDefinitions() throws IOException, SQLException;
 
 	public abstract void closeRequest();
 

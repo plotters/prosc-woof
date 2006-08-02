@@ -58,6 +58,10 @@ public class StatementProcessor {
 	 * -process -script -view
 	 */
 	public void execute() throws SQLException {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, command.getSql());
+		}
+
 /*		if (params !=null) {
 		for( int i = 0; i < params.size(); i++ ) {
 			Object o = (Object)params.elementAt( i );
@@ -74,8 +78,8 @@ public class StatementProcessor {
 			String dbLayoutString;
 			if( ( (FmConnection)statement.getConnection() ).getFmVersion() < 7 ) {
 				dbLayoutString = "-db=" + getDatabaseName();
-        String layoutName = getLayoutName();
-        if( layoutName != null ) dbLayoutString += "&-lay=" + layoutName;
+				String layoutName = getLayoutName();
+				if( layoutName != null ) dbLayoutString += "&-lay=" + layoutName;
 				else logger.info( "Executing an SQL query without a layout name can be slow. Specify a layout name for best efficiency." );
 			} else {
 				dbLayoutString = "-db=" + getDatabaseName() + "&-lay=" + getLayoutName();
@@ -169,7 +173,7 @@ public class StatementProcessor {
 				}
 
 				whereSegments.put( fieldName, eachTermSegments );
-      } // end of for loop is = command.getSearchTerms.getIterator()
+			} // end of for loop is = command.getSearchTerms.getIterator()
 			if( whereClause == null ) {
 				whereClause = new StringBuffer();
 				Object[] segments;
@@ -181,11 +185,11 @@ public class StatementProcessor {
 				}
 			}
 
-      FmConnection connection = (FmConnection) statement.getConnection();
-      recIdHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+			FmConnection connection = (FmConnection) statement.getConnection();
+			recIdHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			Integer recordId;
 
 			switch( command.getOperation() ) {
@@ -213,18 +217,18 @@ public class StatementProcessor {
 					actionHandler.setSelectFields(command.getFields()); // Set the fields that are used in the select statement
 					actionHandler.doRequest( dbLayoutString + postArgs );
 
-          results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getFieldDefinitions(), (FmConnection)statement.getConnection() );
-          // DO NOT CLOSE the request since the result set needs to stream the records
-          break;
+					results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getFieldDefinitions(), (FmConnection)statement.getConnection() );
+					// DO NOT CLOSE the request since the result set needs to stream the records
+					break;
 
 
 				case SqlCommand.UPDATE:
 					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=all&-find" );
 					for( Iterator it = recIdHandler.getRecordIterator(); it.hasNext(); ) {
 						recordId = ( (FmRecord)it.next() ).getRecordId();
-            actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-            try {
+						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+						try {
 							actionHandler.doRequest( dbLayoutString + updateClause + "&-recid=" + recordId + "&-edit" );
 							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 						} catch (RuntimeException e) {
@@ -234,16 +238,16 @@ public class StatementProcessor {
 						}
 					}
 					updateRowCount = recIdHandler.getFoundCount();
-          recIdHandler.closeRequest();
-          break;
+					recIdHandler.closeRequest();
+					break;
 
 				case SqlCommand.DELETE:
 					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=all&-find" );
 					for( Iterator it = recIdHandler.getRecordIterator(); it.hasNext(); ) {
 						recordId = ( (FmRecord)it.next() ).getRecordId();
-            actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-            try {
+						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+						try {
 							actionHandler.doRequest( dbLayoutString + "&-recid=" + recordId + "&-delete" );
 							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 						} catch (RuntimeException e) {
@@ -252,8 +256,8 @@ public class StatementProcessor {
 						}
 					}
 					updateRowCount = recIdHandler.getFoundCount();
-          recIdHandler.closeRequest();
-          break;
+					recIdHandler.closeRequest();
+					break;
 
 				case SqlCommand.INSERT:
 					try {
@@ -263,7 +267,7 @@ public class StatementProcessor {
 					}
 					updateRowCount = actionHandler.getFoundCount();
 					insertedRecord = (FmRecord) actionHandler.getRecordIterator().next();
-          actionHandler.closeRequest();// inserts can only insert a single record, so we'll assume that the first record is the one that we want
+					actionHandler.closeRequest();// inserts can only insert a single record, so we'll assume that the first record is the one that we want
 					break;
 			}
 		} catch( IOException e ) {
@@ -275,7 +279,7 @@ public class StatementProcessor {
 			throw e;
 		} finally {
 			try {
-        // the requests should be closed in their respective case block
+				// the requests should be closed in their respective case block
 
 			} catch (Exception e) {
 				throw new RuntimeException("Exception occurred in finally clause", e);
@@ -412,20 +416,20 @@ public class StatementProcessor {
 	}
 
 	private String getLayoutName() throws SQLException {
-    String layoutName = command.getTable().getName();
-    if (((FmConnection) statement.getConnection()).getFmVersion() < 7) {
-      // this could be the dbName, we need to make sure the catalog and dbName in the FmTable are empty
-      if (statement.getConnection().getCatalog() == null && command.getTable().getDatabaseName() == null) {
-        return null; // this is the dbName, NOT the layout name
-      } else {
-        return layoutName;
-      }
-    } else { // FM version >= 7
-      //getDatabaseName should have already caught if there was no db name given, so this name should be
-      // the layout name
-      return layoutName;
-    }
-  }
+		String layoutName = command.getTable().getName();
+		if (((FmConnection) statement.getConnection()).getFmVersion() < 7) {
+			// this could be the dbName, we need to make sure the catalog and dbName in the FmTable are empty
+			if (statement.getConnection().getCatalog() == null && command.getTable().getDatabaseName() == null) {
+				return null; // this is the dbName, NOT the layout name
+			} else {
+				return layoutName;
+			}
+		} else { // FM version >= 7
+			//getDatabaseName should have already caught if there was no db name given, so this name should be
+			// the layout name
+			return layoutName;
+		}
+	}
 
 	/** Gets the databasename for the sqlCommand being executed.
 	 * If no database is specified in the SQL, the database if the JDBC URL is used.
@@ -433,15 +437,15 @@ public class StatementProcessor {
 	private String getDatabaseName() throws SQLException{
 		String result =command.getTable().getDatabaseName(); // gives priority to dbName.layout over the catalog setting
 		if (result == null) {
-      result = statement.getConnection().getCatalog(); //FIX!! What do we do if no catalog is specified?
-      // if there is nothing in the databaseName, and nothing in the catalog, then ONLY if FmVersion is < 7
-      // should we assume that the dbname the name provided to FmTable
-      if (((FmConnection) statement.getConnection()).getFmVersion() < 7 && result == null) {
-        result = command.getTable().getName();
-      } else if (((FmConnection) statement.getConnection()).getFmVersion() >= 7 && result == null) {
-        // then there is no db specified, and it MUST be specified either as dbName.layout, or as the catalog for FM >=7
-        throw new SQLException("You must specify a database name either when creating the connection, or in the sql statement for FileMaker version 7+");
-      }
+			result = statement.getConnection().getCatalog(); //FIX!! What do we do if no catalog is specified?
+			// if there is nothing in the databaseName, and nothing in the catalog, then ONLY if FmVersion is < 7
+			// should we assume that the dbname the name provided to FmTable
+			if (((FmConnection) statement.getConnection()).getFmVersion() < 7 && result == null) {
+				result = command.getTable().getName();
+			} else if (((FmConnection) statement.getConnection()).getFmVersion() >= 7 && result == null) {
+				// then there is no db specified, and it MUST be specified either as dbName.layout, or as the catalog for FM >=7
+				throw new SQLException("You must specify a database name either when creating the connection, or in the sql statement for FileMaker version 7+");
+			}
 		}
 		return result;
 	}

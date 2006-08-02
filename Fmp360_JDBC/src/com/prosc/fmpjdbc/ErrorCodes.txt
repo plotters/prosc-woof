@@ -10,6 +10,11 @@
 504 "Value in field is not unique as required in validation entry options"
 509 "Field requires a valid value" - Often happens when a new record is inserted, but not all required values are supplied in the INSERT statement.
 802	"Unable to open file" - Check to make sure that you are including a valid database name in the JDBC URL or SQL statement. Also check to make sure that 'fmxml' extended privilege is enabled for your privilege set, and that the database is published in the FileMaker Server Advanced web console.
+# 954-958 are all web-specific error codes
+954 "Unsupported XML Grammar"
+955 "No database name"
+956 "Maximum number of database sessions exceeded"
+957 "Conflicting commands"
 958 "Parameter missing in query"
 
 *see FileMaker Server 7 Advanced Custom Web Publishing Guide p.89 for all error codes
