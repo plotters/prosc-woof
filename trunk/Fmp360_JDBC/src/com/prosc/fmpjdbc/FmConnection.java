@@ -1,12 +1,13 @@
 package com.prosc.fmpjdbc;
 
+import com.prosc.shared.MBeanUtils;
+
 import java.sql.*;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import java.util.logging.Filter;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.io.IOException;
@@ -39,7 +40,9 @@ import java.io.IOException;
  * fmversion: A decimal number indicating the version of FileMaker. Versions 5 and higher are supported. The default is 7.
  * catalogseparator: A string that is used for combining the databasename and table name. For example, if this is set to "|", then "Contacts|detail" would refer to the detail layout of the Contacts database. If unspecified, this defaults to ".". This is necessary for use with EOF, because EOF will complain when creating a new EOModel if any of the layout names are the same.
  */
-public class FmConnection implements Connection {
+public class FmConnection implements Connection, FmConnectionMBean {
+	private static final Logger log = Logger.getLogger("com.prosc.fmpjdbc");
+	private String mBeanName = FmConnection.class.getName() + ":instance=" + System.identityHashCode( this );
 	private String url;
 	private Properties properties;
 	private URL xmlUrl;
@@ -49,56 +52,70 @@ public class FmConnection implements Connection {
 	private FmMetaData metaData;
 	private float fmVersion;
 	private String catalog;
-	Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
-  private boolean isClosed;
+	private boolean isClosed;
 
-  /** Creates a connection to the ddtekDriver and keeps a private variable so that we can forward
-   * unsupported calls to the other driver.
-   * Also verifies that we are able to connect to the FileMaker Server, and does all one-shot preparation,
-   * such as parsing DTDs.
-   * @param url
-   * @param properties
-   */
-  public FmConnection( String url, Properties properties ) throws MalformedURLException, SQLException {
-    this.url = url;
-    isClosed = false;
-    this.properties = properties;
-    extractUrlProperties();
-    String logLevel =  properties.getProperty("loglevel", "INFO" ); // default log level is INFO
-    logger.setLevel(Level.parse(logLevel));
-    if (logger.isLoggable(Level.FINE)) {
-      Logger.getLogger( "com.prosc.fmpjdbc").setLevel( logger.getLevel() );
+
+	/** Creates a connection to the ddtekDriver and keeps a private variable so that we can forward
+	 * unsupported calls to the other driver.
+	 * Also verifies that we are able to connect to the FileMaker Server, and does all one-shot preparation,
+	 * such as parsing DTDs.
+	 * @param url
+	 * @param properties
+	 */
+	public FmConnection( String url, Properties properties ) throws MalformedURLException, SQLException {
+		this.url = url;
+		isClosed = false;
+		this.properties = properties;
+		extractUrlProperties();
+		String logLevel =  properties.getProperty("loglevel", "INFO" ); // default log level is INFO
+		log.setLevel(Level.parse(logLevel));
+		if (log.isLoggable(Level.FINE)) {
+			Logger.getLogger( "com.prosc.fmpjdbc").setLevel( log.getLevel() );
 //			Logger.getLogger("").getHandlers()[0].setLevel(logger.getLevel());
-    }
-    if (logger.isLoggable(Level.CONFIG)) {
-      logger.log(Level.CONFIG, "Connecting to " + url + " with properties " + properties);
-    }
-    fmVersion = Float.valueOf( properties.getProperty("fmversion", "7") ).floatValue();
-    if( fmVersion >= 7 ) {
-      //requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
-      //recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword(), fmVersion );
-    } else if( fmVersion >= 5 ) {
-      //requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword() );
-      //requestHandler.setPostPrefix("-format=-fmp_xml&");
-      //recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword(), fmVersion );
-      //recIdHandler.setPostPrefix("-format=-fmp_xml&");
-    } else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker versions 5 and higher are supported.");
+		}
+		if (log.isLoggable(Level.CONFIG)) {
+			log.log(Level.CONFIG, "Connecting to " + url + " with properties " + properties);
+		}
+		fmVersion = Float.valueOf( properties.getProperty("fmversion", "7") ).floatValue();
+		if( fmVersion >= 7 ) {
+			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
+			//recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword(), fmVersion );
+		} else if( fmVersion >= 5 ) {
+			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword() );
+			//requestHandler.setPostPrefix("-format=-fmp_xml&");
+			//recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/FMPro", getPort(), getUsername(), getPassword(), fmVersion );
+			//recIdHandler.setPostPrefix("-format=-fmp_xml&");
+		} else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker versions 5 and higher are supported.");
 
-	  // lastly, check the username/pwd are valid by trying to access the db
-	  if (catalog != null) {
-		  ((FmMetaData) getMetaData()).testUsernamePassword(); // this will throw a new SQLException(FmXmlRequest.HttpAuthenticationException)
-	  }
-  }
+		// lastly, check the username/pwd are valid by trying to access the db
+		if (catalog != null) {
+			((FmMetaData) getMetaData()).testUsernamePassword(); // this will throw a new SQLException(FmXmlRequest.HttpAuthenticationException)
+		}
+		// Commented out until we switched to JDK 1.5: MBeanUtils.registerMBean( mBeanName, this );
+	}
 
-  public String getFMVersionUrl() {
-    if (fmVersion >= 7) {
-      return "/fmi/xml/FMPXMLRESULT.xml";
-    } else if (fmVersion >= 5) {
-      return "/FMPro";
-    } else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker version 5 and higher are supported.");
-  }
+	private volatile int resultSetCount = 0;
+	void notifyNewResultSet( FmResultSet set ) {
+		resultSetCount++;
+	}
 
-  public String getProtocol() {
+	void notifyClosedResultSet( FmResultSet set ) {
+		resultSetCount--;
+	}
+
+	public int getResultSetCount() {
+		return resultSetCount;
+	}
+
+	public String getFMVersionUrl() {
+		if (fmVersion >= 7) {
+			return "/fmi/xml/FMPXMLRESULT.xml";
+		} else if (fmVersion >= 5) {
+			return "/FMPro";
+		} else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker version 5 and higher are supported.");
+	}
+
+	public String getProtocol() {
 		return xmlUrl.getProtocol();
 	}
 
@@ -188,9 +205,10 @@ public class FmConnection implements Connection {
 	public void close() throws SQLException {
 		//requestHandler.closeRequest();
 		//requestHandler = null;
-    isClosed = true;
-    //recIdHandler.closeRequest();
+		isClosed = true;
+		//recIdHandler.closeRequest();
 		//recIdHandler = null;
+		// Commented out until we switched to JDK 1.5: MBeanUtils.deregisterMBean( mBeanName );
 	}
 
 	public boolean isClosed() throws SQLException {

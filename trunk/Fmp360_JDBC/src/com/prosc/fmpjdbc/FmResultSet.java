@@ -56,6 +56,7 @@ public class FmResultSet implements ResultSet {
 		else this.fmRecords = fmRecordsIterator;
 		this.metaData = new FmResultSetMetaData( fieldDefinitions );
 		this.fieldDefinitions = fieldDefinitions;
+		connection.notifyNewResultSet(this);
 	}
 
 	//OPTIMIZE make all methods final
@@ -109,6 +110,7 @@ public class FmResultSet implements ResultSet {
 		currentRecord = null;
 		fieldDefinitions = null;
 		isOpen = false;
+		connection.notifyClosedResultSet( this );
 	//try {
       // need to close the FmXmlResult here!!!
 //      actionHandler = ( (FmConnection)statement.getConnection() ).getXmlRequestHandler();

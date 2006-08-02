@@ -290,7 +290,7 @@ public class FmRecord {
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
-			//FIX!!! BEtter exception handling: throw e1;
+			//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
 			e1.printStackTrace();
 			return null;
 		}
@@ -308,7 +308,10 @@ public class FmRecord {
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
-			throw e1;
+			//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
+			e1.printStackTrace();
+			return null;
+			//throw e1;
 		}
 	}
 
@@ -324,7 +327,10 @@ public class FmRecord {
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
-			throw e1;
+			//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
+			e1.printStackTrace();
+			return null;
+			//throw e1;
 		}
 	}
 

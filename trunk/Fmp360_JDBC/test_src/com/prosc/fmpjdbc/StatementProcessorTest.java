@@ -14,6 +14,7 @@ import java.sql.Connection;
 
 public class StatementProcessorTest extends TestCase {
 	private Statement statement;
+	/* I disabled this - it is only for Sherry Tirko --jsb
 	public static final String SQL_LONG = "UPDATE \"AVCUSTS|webobjects\" " +
 		   "SET \"CustomerBilling Zip\" = ?, " +
 		   "\"CustomerShipping Zip\" = ?, " +
@@ -64,12 +65,13 @@ public class StatementProcessorTest extends TestCase {
 		   "AND \"taxexemptOnfile\" is NULL " +
 		   "AND \"taxexemptNumber\" = ? " +
 		   "AND \"Date Modification\" = ? " +
-		   "AND \"federalid\" is NULL)";
+		   "AND \"federalid\" is NULL)"; */
 
 	public StatementProcessorTest() throws Exception {
 		statement = new JDBCTestUtils().getConnection().createStatement();
 	}
 
+	/* I disabled this test - it only applies to Sherry Tirko; we don't host this database. --jsb
 	public void test_escapeFMWildCards6() throws Exception {
 		System.setProperty("fmVersion", "6");
 		Connection connection = new JDBCTestUtils().getConnection();
@@ -80,7 +82,7 @@ public class StatementProcessorTest extends TestCase {
 		StatementProcessor processor = stmt.processor();
 		processor.setParams(stmt.params);
 		processor.execute();
-	}
+	}*/
 
 	public void test_escapeFMWildCards7() throws Exception {
 		StringBuffer toAppendTo = new StringBuffer();

@@ -23,6 +23,7 @@ public class FmBlobTest extends TestCase {
 		blob = (FmBlob) resultSet.getBlob(1);
 	}
 
+	/** @TestFails */
 	public void testGetMimeType() throws Exception {
 		assertEquals("image/jpeg", blob.getMimeType());
 	}

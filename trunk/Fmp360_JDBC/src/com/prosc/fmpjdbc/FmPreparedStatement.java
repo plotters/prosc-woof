@@ -65,9 +65,6 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 	}
 
 	public boolean execute() throws SQLException {
-		if (logger.isLoggable(Level.FINE)) {
-			logger.log(Level.FINE, sql);
-		}
 		processor().setParams( params );
 		try {
 			processor().execute();
