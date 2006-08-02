@@ -17,6 +17,7 @@ public class NumberUtils {
 	* @see #removeNonIntegerChars
 	*/
 	static public String removeNonNumericChars(String text) {
+		boolean negative = false;
 		char[] chars = text.trim().toCharArray();
 		StringBuffer extracted = new StringBuffer(chars.length);
 		boolean foundDecimal = false;
@@ -24,7 +25,8 @@ public class NumberUtils {
 			switch(chars[i]) {
 				case '-':
 					if (extracted.length()>0) break; // only negative sign if it is 1st non-numeric char
-					extracted.append(chars[i]);
+					negative = true;
+					//extracted.append(chars[i]);
 					break;
 				case '.':
 					if (foundDecimal) break; // only keep the first decimal point
@@ -35,7 +37,8 @@ public class NumberUtils {
 					break;
 			}
 		}
-		if( extracted.length() == 0 ) return "0"; //This way we won't get a NumberFormatException
+		if( extracted.length() == 0 ) extracted.append( '0' ); //This way we won't get a NumberFormatException
+		if( negative ) extracted.insert( 0, '-' );
 		return extracted.toString();
 	}
 
