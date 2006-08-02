@@ -40,7 +40,7 @@ import java.io.IOException;
  * fmversion: A decimal number indicating the version of FileMaker. Versions 5 and higher are supported. The default is 7.
  * catalogseparator: A string that is used for combining the databasename and table name. For example, if this is set to "|", then "Contacts|detail" would refer to the detail layout of the Contacts database. If unspecified, this defaults to ".". This is necessary for use with EOF, because EOF will complain when creating a new EOModel if any of the layout names are the same.
  */
-public class FmConnection implements Connection, FmConnectionMBean {
+public class FmConnection implements Connection {
 	private static final Logger log = Logger.getLogger("com.prosc.fmpjdbc");
 	private String mBeanName = FmConnection.class.getName() + ":instance=" + System.identityHashCode( this );
 	private String url;
