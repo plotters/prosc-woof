@@ -40,7 +40,7 @@ public class Driver implements java.sql.Driver {
 		try {
 			return new FmConnection(url, properties);
 		} catch( MalformedURLException e ) {
-			SQLException sqlException = new SQLException( url + " is not a valid JDBC URL (" + e.getMessage() + "). URL's should be in the format: jdbc:fmp360://hostname:portnumber/databasename?property1=value1&property2=value2" );
+			SQLException sqlException = new SQLException( e.getMessage() );
 			sqlException.initCause(e);
 			throw sqlException;
 		}

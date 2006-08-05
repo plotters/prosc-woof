@@ -42,6 +42,7 @@ import java.io.IOException;
  */
 public class FmConnection implements Connection {
 	private static final Logger log = Logger.getLogger("com.prosc.fmpjdbc");
+	public static final String URL_EXAMPLE = " URL should be in the form 'jdbc:fmp360://hostname[:portNumber]/[DatabaseName][?key1=value1&key2=value2&...]";
 	private String mBeanName = FmConnection.class.getName() + ":instance=" + System.identityHashCode( this );
 	private String url;
 	private Properties properties;
@@ -127,23 +128,29 @@ public class FmConnection implements Connection {
 		return xmlUrl.getPort();
 	}
 	private void extractUrlProperties() throws MalformedURLException {
-		String urlTrailer = url.substring( url.indexOf("://") );
-		xmlUrl = new URL("http" + urlTrailer);
-		String path = xmlUrl.getPath();
-		if (path == null || path.length() == 0) throw new MalformedURLException("Missing database name");
-		String catalogString = path.substring(1);
-		if( catalogString != null && catalogString.length() > 1 ) setCatalog( catalogString ); //FIX!!! What do we do if there is no database name specified in the URL?
-		if( xmlUrl.getQuery() != null ) {
-			for( StringTokenizer queryParamTokens = new StringTokenizer( xmlUrl.getQuery(), "&", false ); queryParamTokens.hasMoreElements(); ) {
-				for( StringTokenizer keyValueTokens = new StringTokenizer(queryParamTokens.nextToken(), "=", false); keyValueTokens.hasMoreElements(); ) {
-					String key = keyValueTokens.nextToken();
-					String value = keyValueTokens.hasMoreTokens() ? keyValueTokens.nextToken() : "";
-					properties.setProperty( key, value );
+		int mark = url.indexOf( "://" );
+		try {
+			if( mark == - 1) throw new MalformedURLException(url + " is not a valid JDBC URL." );
+			String urlTrailer = url.substring( mark );
+			xmlUrl = new URL("http" + urlTrailer);
+			String path = xmlUrl.getPath();
+			if (path == null || path.length() == 0) throw new MalformedURLException("Missing database name.");
+			String catalogString = path.substring(1);
+			if( catalogString != null && catalogString.length() > 1 ) setCatalog( catalogString ); //FIX!!! What do we do if there is no database name specified in the URL?
+			if( xmlUrl.getQuery() != null ) {
+				for( StringTokenizer queryParamTokens = new StringTokenizer( xmlUrl.getQuery(), "&", false ); queryParamTokens.hasMoreElements(); ) {
+					for( StringTokenizer keyValueTokens = new StringTokenizer(queryParamTokens.nextToken(), "=", false); keyValueTokens.hasMoreElements(); ) {
+						String key = keyValueTokens.nextToken();
+						String value = keyValueTokens.hasMoreTokens() ? keyValueTokens.nextToken() : "";
+						properties.setProperty( key, value );
+					}
 				}
 			}
-		}
-		if( "true".equals(properties.getProperty("ssl")) ) {
-			xmlUrl = new URL("https" + urlTrailer);
+			if( "true".equals(properties.getProperty("ssl")) ) {
+				xmlUrl = new URL("https" + urlTrailer);
+			}
+		} catch( MalformedURLException e ) {
+			throw new MalformedURLException( e.getMessage() + URL_EXAMPLE );
 		}
 	}
 
