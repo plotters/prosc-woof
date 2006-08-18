@@ -1,11 +1,10 @@
 package com.prosc.fmpjdbc;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
-import java.sql.Connection;
 import java.util.Properties;
 import java.util.logging.Logger;
-import java.io.InputStream;
-import java.io.IOException;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -35,7 +34,9 @@ import java.io.IOException;
 public class FileMakerException extends SQLException {
 	private final static Logger log = Logger.getLogger( FileMakerException.class.getName() );
 	private static final Properties errorMessages = new Properties();
-	private StatementProcessor statementProcessor;
+	//private StatementProcessor statementProcessor;
+	private String jdbcUrl;
+	private String sql;
 
 	static {
 		InputStream stream = FileMakerException.class.getResourceAsStream("ErrorCodes.txt");
@@ -46,7 +47,7 @@ public class FileMakerException extends SQLException {
 			e.printStackTrace();
 		} finally {
 			try {
-				if( stream != null ) stream.close();
+				stream.close();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -62,7 +63,7 @@ public class FileMakerException extends SQLException {
 	}
 
 	public String getMessage() {
-		return super.getMessage() + " (JDBC URL: " + getJdbcUrl() + " / SQL statement: " + getSQL() + " )";
+		return super.getMessage() + " (JDBC URL: " + getJdbcUrl() + " / SQL statement: " + sql + " )";
 	}
 
 	protected static String getErrorMessage(Integer errorCode) {
@@ -71,25 +72,32 @@ public class FileMakerException extends SQLException {
 		return errorCode + ": " + message;
 	}
 
-	public StatementProcessor getStatemenProcessor() {
+	/*public StatementProcessor getStatemenProcessor() {
 		return statementProcessor;
-	}
+	}*/
 
-	public void setStatemenProcessor( StatementProcessor statemenProcessor ) {
-		this.statementProcessor = statemenProcessor;
+	public void setStatementProcessor( StatementProcessor statementProcessor ) {
+		//this.statementProcessor = statemenProcessor;
+		try {
+			jdbcUrl = ((FmConnection)statementProcessor.getStatement().getConnection()).getUrl();
+		} catch( SQLException e ) {
+			throw new RuntimeException( e );
+		}
+		sql = statementProcessor.getSQL();
 	}
 
 	public String getJdbcUrl() {
-		if( statementProcessor == null ) return null;
+		return jdbcUrl;
+		/*if( statementProcessor == null ) return null;
 		try {
 			return ((FmConnection)statementProcessor.getStatement().getConnection()).getUrl();
 		} catch( SQLException e ) {
 			return null;
-		}
+		}*/
 	}
 
-	private String getSQL() {
+	/*private String getSQL() {
 		if( statementProcessor == null ) return null;
 		return statementProcessor.getSQL();
-	}
+	}*/
 }

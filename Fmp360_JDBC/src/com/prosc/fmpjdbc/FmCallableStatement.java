@@ -36,7 +36,7 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 	private static final String woPrefix = "{ call ";
 	private static final String woSuffix = "}";
 
-	private FmXmlRequest request;
+	private FmXmlRequest request; //FIX!! Create a new instance as needed
 	private String scriptName;
 	private String postArgs = "-db=<database>&-lay=<layout>&-max=0&-script=<script>&-findany";
 
