@@ -104,6 +104,27 @@ public class SimpleJdbcTest extends TestCase {
 		assertTrue( "No results in found set", rowCount > 0 );
 	}
 
+	public void testSortedSelect() throws SQLException {
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		sortedAssertion( statement.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName" ), true );
+		sortedAssertion( statement.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName asc" ), true );
+		sortedAssertion( statement.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName desc" ), false );
+	}
+
+	private void sortedAssertion(ResultSet rs, boolean isAscending) throws SQLException {
+		String lastValue = null;
+		while( rs.next() ) {
+			String eachValue = rs.getString("firstName");
+			System.out.println( eachValue );
+			if( lastValue != null ) {
+				int comparison = lastValue.toLowerCase().compareTo( eachValue.toLowerCase() );
+				if( isAscending ) assertTrue( lastValue + " should have been before " + eachValue, comparison <= 0 );
+				else  assertTrue( lastValue + " should have been after " + eachValue, comparison >= 0 );
+			}
+			lastValue = eachValue;
+		}
+	}
+
 	/** This test passes. */
 	public void testSelectWithNamedAttributes() throws SQLException {
         String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
