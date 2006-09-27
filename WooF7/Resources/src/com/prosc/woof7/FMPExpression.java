@@ -13,7 +13,11 @@ import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
 import com.webobjects.jdbcadaptor.Fmp360PlugIn;
 
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
 public class FMPExpression extends com.webobjects.jdbcadaptor.JDBCExpression {
+	private static final Logger log = Logger.getLogger( FMPExpression.class.getName() );
 	static final String TIME_TYPE="TIME", DATE_TYPE="DATE", REPEATING_FIELD="CLOB";
 	static final String placeholder="?";
 	static final NSTimestampFormatter timeFormat=new NSTimestampFormatter("%H:%M:%S");
@@ -56,7 +60,7 @@ public class FMPExpression extends com.webobjects.jdbcadaptor.JDBCExpression {
 				try {
 					prepareUpdateExpressionWithRow(processedRow,  pkQualifier);
 				} catch (RuntimeException e) {
-					e.printStackTrace();
+					log.log( Level.SEVERE, e.toString(), e );
 					throw e;
 				}
 			}
