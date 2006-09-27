@@ -16,6 +16,15 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module" module-name="Fmp360_JDBC" />
     <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../jars_development/junit.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntryProperties />
   </component>
 </module>

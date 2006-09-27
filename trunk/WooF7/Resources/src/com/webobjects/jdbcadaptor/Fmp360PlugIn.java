@@ -31,6 +31,8 @@ import com.webobjects.foundation.*;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Enumeration;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 //FIX!! Need documentation - in progress, mostly done
 //FIX!! Need windows support
@@ -46,6 +48,7 @@ import java.util.Enumeration;
 //OPTIMIZE: Store the filemaker record ID for updates
 
 public class Fmp360PlugIn extends com.webobjects.jdbcadaptor.JDBCPlugIn {
+	private static final Logger log = Logger.getLogger( Fmp360PlugIn.class.getName() );
 
 	/**
 	 * pseudo-deprecated This can't be a static variable, each plugin instance needs its own JDBCAdaptor reference.
@@ -158,13 +161,13 @@ public class Fmp360PlugIn extends com.webobjects.jdbcadaptor.JDBCPlugIn {
 					newKeys.addObject( new NSDictionary(pkValue, pkAttributeName) );
 				}
 			} catch (SQLException e) {
-				e.printStackTrace();
+				log.log( Level.SEVERE, e.toString(), e );
 				return null;
 			} finally {
 				try {
 					if( statement != null ) statement.close();
 				} catch (SQLException e) {
-					e.printStackTrace();
+					log.log( Level.SEVERE, e.toString(), e );
 				}
 			}
 		}
