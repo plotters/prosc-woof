@@ -102,7 +102,8 @@ public class StatementProcessor {
 			}
 
 			StringBuffer whereClause = null;
-			Map whereSegments = new LinkedHashMap( command.getSearchTerms().size() );
+			/** Contains keys used in the where segment, used to identify duplicates, which is handy for doing ranged searches. */
+			Map whereSegmentKeys = new HashMap( command.getSearchTerms().size() );
 
 			for( Iterator it = command.getSearchTerms().iterator(); it.hasNext(); ) {
 				SearchTerm eachTerm = (SearchTerm)it.next();
@@ -111,7 +112,13 @@ public class StatementProcessor {
 					break;
 				}
 				String fieldName = eachTerm.getField().getColumnName(); //FIX!! use fully qualified table names for related fields
-				Object[] eachTermSegments = new Object[4];
+				/**
+				 * 0: the operator
+				 * 1: the ampersand, field name, and equals sign
+				 * 2: the value being searched for
+				 * 3: operator code, one of the SearchTerm constants
+				 */
+				Object[] eachTermSegments = new Object[4]; // FIX! document this thing -ssb 2006-09-28
 				String wildcardsToEscape;
 				eachTermSegments[0] = "";
 				final int operator = eachTerm.getOperator();
@@ -159,7 +166,7 @@ public class StatementProcessor {
 					 * They are always added in the correct order so that the first term is the lower value and the second value is the higher value.
 					 * This is necessary, since FM7 can't handle multiple operators for the same search term (FM6 could).
 					 */
-				Object[] matchingField = (Object[])whereSegments.get( fieldName );
+				Object[] matchingField = (Object[])whereSegmentKeys.get( fieldName );
 				if( matchingField != null ) { //We've already used this field earlier in the qualifier
 					eachTermSegments[0] = "";
 					int op1 = ((Integer)matchingField[3]).intValue();
@@ -167,17 +174,20 @@ public class StatementProcessor {
 						eachTermSegments[2] = matchingField[2] + "..." + eachTermSegments[2];
 					} else if( (op1 == SearchTerm.LESS_THAN || op1 == SearchTerm.LESS_THAN_OR_EQUALS) && ( operator == SearchTerm.GREATER_THAN || operator == SearchTerm.GREATER_THAN_OR_EQUALS ) ) {
 						eachTermSegments[2] = eachTermSegments[2] + "..." + matchingField[2];
+					} else if (command.getLogicalOperator() != SqlCommand.OR) {
+						throw new SqlParseException( "You cannot use the same search time twice unless they are being used with >, >=, <, or <= operators for ranges, or the logical operator is 'OR'.");
 					} else {
-						throw new SqlParseException( "You cannot use the same search time twice unless they are being used with >, >=, <, or <= operators for ranges.");
+						// this is an OR search.  copy the old term segment to a new location so it won't be overwritten by the next one.
+						whereSegmentKeys.put(new Double(Math.random()), matchingField);
 					}
 				}
 
-				whereSegments.put( fieldName, eachTermSegments );
+				whereSegmentKeys.put( fieldName, eachTermSegments );
 			} // end of for loop is = command.getSearchTerms.getIterator()
 			if( whereClause == null ) {
 				whereClause = new StringBuffer();
 				Object[] segments;
-				for( Iterator it = whereSegments.values().iterator(); it.hasNext(); ) {
+				for( Iterator it = whereSegmentKeys.values().iterator(); it.hasNext(); ) {
 					segments = (Object[])it.next();
 					whereClause.append( segments[0] );
 					whereClause.append( segments[1] );

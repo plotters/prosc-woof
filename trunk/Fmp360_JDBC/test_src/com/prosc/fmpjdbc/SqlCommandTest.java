@@ -152,6 +152,15 @@ public class SqlCommandTest extends TestCase {
 
 	public void testGetLogicalOperator() throws Exception {
 		assertEquals(SqlCommand.AND, sqlCommand.getLogicalOperator());
+		SqlCommand orCmd = new SqlCommand("SELECT * FROM FOO WHERE name='this' OR name='that' OR name='the_other'");
+		assertEquals(SqlCommand.OR, orCmd.getLogicalOperator());
+		//
+		try {
+			SqlCommand broken = new SqlCommand("SELECT * FROM FOO WHERE (name='this' AND (foo=1 OR bar=2))");
+			fail("SHouldn't be able to mix AND and OR logical operators");
+		} catch (SqlParseException e) {
+			// ok
+		}
 	}
 
 	/** Test the specification of a database in a table name. */
