@@ -174,4 +174,17 @@ public class StatementProcessorTest extends TestCase {
 		ResultSet resultSet = statement.executeQuery("SELECT ID, lastName FROM Contacts WHERE lastName='Ba�Ca'");
 		assertFalse(resultSet.next()); // should have escaped the ellipses
 	}
+
+	public void testOrLogicalOperator() throws Exception {
+		ResultSet resultSet = statement.executeQuery("SELECT ID, firstName, lastName FROM Contacts WHERE firstName='Sam' OR firstName='Benjamin' ORDER BY firstName");
+		assertTrue(resultSet.next());
+		assertEquals("benjamin", resultSet.getString(2).toLowerCase());
+		//
+		assertTrue(resultSet.next());
+		assertEquals("sam", resultSet.getString(2).toLowerCase());
+		//
+		while (resultSet.next()) {
+			assertEquals("sam", resultSet.getString(2).toLowerCase());
+		}
+	}
 }
