@@ -41,6 +41,8 @@ public class StatementProcessor {
 	private FmRecord insertedRecord;
 	private FmResultSet results;
 	private Vector params;
+	private boolean is7OrLater = true;
+	private final String encoding;
 	static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
 	static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
 
@@ -51,6 +53,8 @@ public class StatementProcessor {
 	public StatementProcessor( FmStatement statement, SqlCommand command ) {
 		this.command = command;
 		this.statement = statement;
+		is7OrLater = ((FmConnection)statement.getConnection()).getFmVersion() >= 7;
+		encoding = is7OrLater ? "UTF-8" : "ISO-8859-1";
 	}
 
 	/**
@@ -330,9 +334,9 @@ public class StatementProcessor {
 	 */
 	private String urlEncodedValue(Object value, boolean applyFormatter, String wildcardsToEscape, boolean isEqualsQualifier) throws SQLException {
 		try {
-			StringBuffer result = new StringBuffer();
+			StringBuffer buffer = new StringBuffer();
 			if (isEqualsQualifier) {
-				result.append("%3D"); // one encoded "equals" sign, signifying field content match. Used to use two, which is more precise, but horribly slow. --jsb
+				buffer.append("%3D"); // one encoded "equals" sign, signifying field content match. Used to use two, which is more precise, but horribly slow. --jsb
 			}
 			if (applyFormatter ) {
 				// all the things we were checking for subclass java.util.Date, just check once.
@@ -350,11 +354,13 @@ public class StatementProcessor {
 				//s = String.valueOf( value );
 				StringBuffer escapedValue = new StringBuffer(s==null ? 1 : s.length());
 				appendEscapedFmWildcards(s, escapedValue, wildcardsToEscape);
-				result.append(URLEncoder.encode(escapedValue.toString(), "UTF-8"));
+				buffer.append(URLEncoder.encode(escapedValue.toString(), encoding));
 			} else if (value != null) {
-				result.append(URLEncoder.encode(String.valueOf(value), "UTF-8"));
+				buffer.append(URLEncoder.encode(String.valueOf(value), encoding));
 			}
-			return result.toString();
+			String result = buffer.toString();
+			if( is7OrLater ) result = result.replaceAll( "%0A", "%0A%0D" ); //This seems to be necessary to properly insert carriage returns in FM7
+			return result;
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
@@ -492,11 +498,7 @@ public class StatementProcessor {
 				resultMap.put( field, generatedValue );
 		}
 		FmConnection connection = null;
-		try {
-			connection = (FmConnection)statement.getConnection();
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+		connection = (FmConnection)statement.getConnection();
 		if( resultMap.size() == 0 ) {
 			return new FmResultSet( null, null, connection );
 		} else {

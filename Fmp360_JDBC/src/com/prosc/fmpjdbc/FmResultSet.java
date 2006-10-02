@@ -9,7 +9,6 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.Collections;
 import java.util.logging.Level;
-import java.util.logging.Filter;
 import java.util.logging.Logger;
 import java.net.URL;
 
@@ -113,7 +112,7 @@ public class FmResultSet implements ResultSet {
 		connection.notifyClosedResultSet( this );
 	//try {
       // need to close the FmXmlResult here!!!
-//      actionHandler = ( (FmConnection)statement.getConnection() ).getXmlRequestHandler();
+//      actionHandler = ( (FmConnection)statement.getConnection7() ).getXmlRequestHandler();
     //}
   }
 

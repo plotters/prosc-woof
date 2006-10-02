@@ -78,11 +78,7 @@ public class FileMakerException extends SQLException {
 
 	public void setStatementProcessor( StatementProcessor statementProcessor ) {
 		//this.statementProcessor = statemenProcessor;
-		try {
-			jdbcUrl = ((FmConnection)statementProcessor.getStatement().getConnection()).getUrl();
-		} catch( SQLException e ) {
-			throw new RuntimeException( e );
-		}
+		jdbcUrl = ((FmConnection)statementProcessor.getStatement().getConnection()).getUrl();
 		sql = statementProcessor.getSQL();
 	}
 
@@ -90,7 +86,7 @@ public class FileMakerException extends SQLException {
 		return jdbcUrl;
 		/*if( statementProcessor == null ) return null;
 		try {
-			return ((FmConnection)statementProcessor.getStatement().getConnection()).getUrl();
+			return ((FmConnection)statementProcessor.getStatement().getConnection7()).getUrl();
 		} catch( SQLException e ) {
 			return null;
 		}*/

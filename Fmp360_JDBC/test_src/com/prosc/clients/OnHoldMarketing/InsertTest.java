@@ -2,10 +2,8 @@ package com.prosc.clients.OnHoldMarketing;
 
 import junit.framework.TestCase;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.io.*;
 
 import com.prosc.fmpjdbc.Driver;
 
