@@ -85,7 +85,7 @@ public class FmStatement implements Statement {
 		return false;
 	}
 
-	public Connection getConnection() throws SQLException {
+	public Connection getConnection() {
 		return connection;
 	}
 

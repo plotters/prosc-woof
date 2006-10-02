@@ -3,48 +3,52 @@ package com.prosc.fmpjdbc;
 import junit.framework.TestCase;
 
 import java.sql.*;
-import java.sql.Date;
 import java.util.*;
-import java.math.BigDecimal;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by IntelliJ IDEA. User: jesse Date: Apr 20, 2005 Time: 10:43:32 PM
  */
 public class AdvancedDriverTests extends TestCase {
-	private Connection connection;
-	private Statement statement;
-	private JDBCTestUtils jdbc;
+	private Connection connection7;
+	private Connection connection6;
+	private Statement statement7;
+	private JDBCTestUtils jdbc7;
 
 	protected void setUp() throws Exception {
-		jdbc = new JDBCTestUtils();
-		connection = jdbc.getConnection();
-		statement = connection.createStatement();
+		jdbc7 = new JDBCTestUtils();
+		connection7 = jdbc7.getConnection();
+		statement7 = connection7.createStatement();
+
+		JDBCTestUtils jdbc6 = new JDBCTestUtils();
+		jdbc6.setFmVersion( 6 );
+		connection6 = jdbc6.getConnection();
 	}
 
 	protected void tearDown() throws Exception {
-		statement.close();
-		connection.close();
+		statement7.close();
+		connection7.close();
 	}
 
 	/** @TestPasses */
-    public void testEscapeFMWildCards() throws SQLException {
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		statement.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
+	public void testEscapeFMWildCards() throws SQLException {
+		String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		statement7.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
 
 		//  insert record containing wildcards
-        String sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress, city) values('Wildcards', 'Test', 'wildcards@justatest.com', 'a@b*c#d?e!f=g<h>i\"j' )";
-        int rowCount = statement.executeUpdate( sql );
+		String sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress, city) values('Wildcards', 'Test', 'wildcards@justatest.com', 'a@b*c#d?e!f=g<h>i\"j' )";
+		int rowCount = statement7.executeUpdate( sql );
 		assertEquals( 1, rowCount );
 
-        //search for wildcards
-        sql = "SELECT firstName FROM "+tableName+" where city = 'a@b*c#d?e!f=g<h>i\"j'";
-		ResultSet rs = statement.executeQuery( sql );
-       assertTrue("Did not find a match when searching using special chars", rs.next());
-       assertEquals( "Wildcards", rs.getObject("firstName") );
+		//search for wildcards
+		sql = "SELECT firstName FROM "+tableName+" where city = 'a@b*c#d?e!f=g<h>i\"j'";
+		ResultSet rs = statement7.executeQuery( sql );
+		assertTrue("Did not find a match when searching using special chars", rs.next());
+		assertEquals( "Wildcards", rs.getObject("firstName") );
 
-        //Delete wild card record
-        rowCount = statement.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
+		//Delete wild card record
+		rowCount = statement7.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
 		assertTrue( "Should have found 1 row to delete, not " + rowCount, rowCount == 1 ); // FIX!! is there something wrong with the count returned from deletes? -ssb
 	}
 
@@ -60,8 +64,8 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testGetStoredProcedures() throws SQLException {
-        if (jdbc.fmVersion < 7){connection.setCatalog("Contacts");} //Need to set the db if using 6, right?
-        ResultSet procedures = connection.getMetaData().getProcedures(null, null, null); //ddtek driver does not implement this
+		if (jdbc7.fmVersion < 7){connection7.setCatalog("Contacts");} //Need to set the db if using 6, right?
+		ResultSet procedures = connection7.getMetaData().getProcedures(null, null, null); //ddtek driver does not implement this
 		int scriptCount = 0;
 		while( procedures.next() ) {
 			System.out.println("Script columnName: " + procedures.getString("PROCEDURE_NAME") );
@@ -76,17 +80,17 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testExecuteStoredProcedure() throws SQLException {
-        connection.prepareCall("capitalizeLastNames").execute();
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		statement.executeUpdate( "INSERT INTO "+tableName+" (firstName, lastName, emailAddress) values('Fred', 'flintstone', 'fred@rubble.com')");
-		ResultSet rs = statement.getGeneratedKeys();
+		connection7.prepareCall("capitalizeLastNames").execute();
+		String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		statement7.executeUpdate( "INSERT INTO "+tableName+" (firstName, lastName, emailAddress) values('Fred', 'flintstone', 'fred@rubble.com')");
+		ResultSet rs = statement7.getGeneratedKeys();
 		rs.next();
 		Object id = rs.getObject( "ID" );
 
-        if (jdbc.fmVersion < 7){connection.setCatalog("Contacts");} //Need to set the db if using 6, right?
-        connection.prepareCall("capitalizeLastNames").execute();
-    //rs.close();
-    rs = statement.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
+		if (jdbc7.fmVersion < 7){connection7.setCatalog("Contacts");} //Need to set the db if using 6, right?
+		connection7.prepareCall("capitalizeLastNames").execute();
+		//rs.close();
+		rs = statement7.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
 		rs.next();
 		assertEquals( "FLINTSTONE", rs.getString("lastName") );
 	}
@@ -105,10 +109,10 @@ public class AdvancedDriverTests extends TestCase {
 	 * @TestPasses
 	 * */
 	public void testPreparedStatement() throws SQLException {
-		String tableName = jdbc.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
-		statement.executeUpdate( "DELETE FROM " + tableName + " WHERE \"Alternate Mime Type\"='JDBC testing' "); // cleanup
+		String tableName = jdbc7.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
+		statement7.executeUpdate( "DELETE FROM " + tableName + " WHERE \"Alternate Mime Type\"='JDBC testing' "); // cleanup
 		//
-		PreparedStatement insertStatement = connection.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\") values(?,?,'JDBC testing',?,?,?)");
+		PreparedStatement insertStatement = connection7.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\") values(?,?,'JDBC testing',?,?,?)");
 		java.util.Date now = new java.util.Date();
 		insertStatement.setString( 1, "100");
 		insertStatement.setString( 2, "video/mpeg" );
@@ -128,7 +132,7 @@ public class AdvancedDriverTests extends TestCase {
 		rs.next();
 		Object id3 = rs.getString("ID");
 		//FIX!! Should we store the record ID in getGeneratedKeys()?
-		rs = statement.executeQuery( "select * from portrait where ID='" + id1 + "'");
+		rs = statement7.executeQuery( "select * from portrait where ID='" + id1 + "'");
 		assertTrue( rs.next() );
 		assertEquals( 100, rs.getInt("contactID") );
 		assertEquals( "video/mpeg", rs.getString("mimeType") );
@@ -139,7 +143,7 @@ public class AdvancedDriverTests extends TestCase {
 		long roundedTime = (time / 1000) * 1000; // trim milliseconds from time, since we're not storing that.
 		assertEquals((roundedTime), rs.getTimestamp("Picture taken").getTime() );
 		assertTrue( rs.isLast() );
-		rs = statement.executeQuery( "select * from portrait where ID='" + id3 + "'");
+		rs = statement7.executeQuery( "select * from portrait where ID='" + id3 + "'");
 		assertTrue( rs.isBeforeFirst() );
 		rs.next();
 		//assertNull( rs.getObject("mimeType") );
@@ -148,7 +152,7 @@ public class AdvancedDriverTests extends TestCase {
 		assertEquals( 102, rs.getInt("contactID") );
 		rs.next();
 		assertTrue( rs.isAfterLast() );
-		int rowCount = statement.executeUpdate( "DELETE from Portrait where \"alternate mime type\" = \"JDBC testing\" ");
+		int rowCount = statement7.executeUpdate( "DELETE from Portrait where \"alternate mime type\" = \"JDBC testing\" ");
 		assertEquals( 3, rowCount );
 	}
 
@@ -156,8 +160,8 @@ public class AdvancedDriverTests extends TestCase {
 
 	//Test containers/BLOBs
 	public Blob testContainerFields() throws SQLException, IOException {
-		String tableName = jdbc.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
-		ResultSet rs = statement.executeQuery("SELECT * from " + tableName + " where contactID != null");
+		String tableName = jdbc7.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
+		ResultSet rs = statement7.executeQuery("SELECT * from " + tableName + " where contactID != null");
 		Blob eachValue = null;
 		int successCount = 0;
 		while( rs.next() ) {
@@ -215,7 +219,7 @@ public class AdvancedDriverTests extends TestCase {
 
 	/** This test passes. */
 	public void testSingleTableAliasing() throws SQLException {
-		PreparedStatement ps = connection.prepareStatement( "SELECT t0.city,t0.emailAddress, t0.firstName, t0.ID, t0.lastName FROM Contacts t0 where t0.city=?" );
+		PreparedStatement ps = connection7.prepareStatement( "SELECT t0.city,t0.emailAddress, t0.firstName, t0.ID, t0.lastName FROM Contacts t0 where t0.city=?" );
 		ps.setString( 1, "San Francisco" );
 		ResultSet rs = ps.executeQuery();
 		rs.next();
@@ -225,17 +229,17 @@ public class AdvancedDriverTests extends TestCase {
 	/** This test does not apply to the ddtek driver.
 	 * @TestFails */
 	public void testFmpRecordIDs() throws SQLException {
-		if( jdbc.use360driver ) {
-			String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-			statement.executeUpdate( "DELETE from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Start out with an empty record set
-			int rowCount = statement.executeUpdate("INSERT INTO "+tableName+" (firstName, lastName) values('Robin', 'Williams')" );
+		if( jdbc7.use360driver ) {
+			String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+			statement7.executeUpdate( "DELETE from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Start out with an empty record set
+			int rowCount = statement7.executeUpdate("INSERT INTO "+tableName+" (firstName, lastName) values('Robin', 'Williams')" );
 			assertEquals( 1, rowCount );
 
-			ResultSet generatedKeys = statement.getGeneratedKeys();
+			ResultSet generatedKeys = statement7.getGeneratedKeys();
 			generatedKeys.next();
 			int recId = generatedKeys.getInt("recId"); //Generated keys should always include a column for "recId"; // FIX!! this fails.  Not implemented -ssb
 
-			ResultSet rs = statement.executeQuery("SELECT * from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Should not return a recId, since we do not explicitly ask for it
+			ResultSet rs = statement7.executeQuery("SELECT * from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Should not return a recId, since we do not explicitly ask for it
 			rs.next();
 			try {
 				rs.getInt("recId");
@@ -244,7 +248,7 @@ public class AdvancedDriverTests extends TestCase {
 				//This is correct - we did not specify recId as one of the search terms
 			}
 
-			rs = statement.executeQuery("SELECT firstName, lastName, recId, state, city from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Should get back a recId that matches the one from our insertion
+			rs = statement7.executeQuery("SELECT firstName, lastName, recId, state, city from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Should get back a recId that matches the one from our insertion
 			rs.next();
 			assertEquals( recId, rs.getInt(3) );
 			assertEquals( recId, rs.getInt("recId") );
@@ -255,7 +259,7 @@ public class AdvancedDriverTests extends TestCase {
 				//This is correct - get by name is case sensitive
 			}
 
-			rs = statement.executeQuery("SELECT firstName, RECID, lastName from "+tableName+" where city='San Francisco' or ReCiD=" + recId ); //Search terms are not case-sensitive
+			rs = statement7.executeQuery("SELECT firstName, RECID, lastName from "+tableName+" where city='San Francisco' or ReCiD=" + recId ); //Search terms are not case-sensitive
 			rs.next();
 			assertEquals(recId, rs.getInt("RECID") );
 			assertFalse( rs.next() ); //Shouldn't be more than one matching record
@@ -266,10 +270,10 @@ public class AdvancedDriverTests extends TestCase {
 
 	/** This test passes. */
 	public void testPreparedStatementBindings() throws SQLException {
-		statement.executeUpdate("DELETE FROM Portrait WHERE \"Floating point\" is NULL" );
-		statement.executeUpdate("INSERT INTO PORTRAIT(\"Floating point\", mimeType) values(NULL, 'image/jpg')");
-		statement.executeUpdate("INSERT INTO PORTRAIT(\"Floating point\", mimeType) values(NULL, 'image/jpg')");
-		PreparedStatement statement = connection.prepareStatement("SELECT * FROM Portrait WHERE \"Floating point\" IS NULL and mimeType=?");
+		statement7.executeUpdate("DELETE FROM Portrait WHERE \"Floating point\" is NULL" );
+		statement7.executeUpdate("INSERT INTO PORTRAIT(\"Floating point\", mimeType) values(NULL, 'image/jpg')");
+		statement7.executeUpdate("INSERT INTO PORTRAIT(\"Floating point\", mimeType) values(NULL, 'image/jpg')");
+		PreparedStatement statement = connection7.prepareStatement("SELECT * FROM Portrait WHERE \"Floating point\" IS NULL and mimeType=?");
 		statement.setString(1, "image/jpg");
 		ResultSet rs = statement.executeQuery();
 		int foundCount = 0;
@@ -288,11 +292,11 @@ public class AdvancedDriverTests extends TestCase {
 
 		java.sql.Timestamp testTimestamp = new Timestamp(1000000000000L);
 
-		statement.executeUpdate("DELETE FROM Portrait WHERE \"Date created\" = " + testDateString );
+		statement7.executeUpdate("DELETE FROM Portrait WHERE \"Date created\" = " + testDateString );
 
-		statement.executeUpdate("INSERT INTO PORTRAIT(\"Date created\") VALUES('" + testDateString + "')" ); //Create 1 record
+		statement7.executeUpdate("INSERT INTO PORTRAIT(\"Date created\") VALUES('" + testDateString + "')" ); //Create 1 record
 
-		PreparedStatement insertDates = connection.prepareStatement("INSERT INTO Portrait(\"Date created\", \"Time inserted\", \"Picture taken\") values(?,?,?)" );
+		PreparedStatement insertDates = connection7.prepareStatement("INSERT INTO Portrait(\"Date created\", \"Time inserted\", \"Picture taken\") values(?,?,?)" );
 		insertDates.setDate( 1, testDate );
 		insertDates.setTime( 2, testTime );
 		insertDates.setTimestamp( 3, testTimestamp );
@@ -300,7 +304,7 @@ public class AdvancedDriverTests extends TestCase {
 		insertDates.executeUpdate(); //Create 3 records
 
 		//Try a select with a prepared statement
-		PreparedStatement selectedDatesPS = connection.prepareStatement("SELECT * FROM Portrait WHERE \"Date created\" = ? AND \"Time inserted\" = ? AND \"Picture taken\" = ?" );
+		PreparedStatement selectedDatesPS = connection7.prepareStatement("SELECT * FROM Portrait WHERE \"Date created\" = ? AND \"Time inserted\" = ? AND \"Picture taken\" = ?" );
 		selectedDatesPS.setDate( 1, testDate );
 		selectedDatesPS.setTime( 2, testTime );
 		selectedDatesPS.setTimestamp( 3, testTimestamp );
@@ -315,13 +319,13 @@ public class AdvancedDriverTests extends TestCase {
 		assertTrue( "Should have found exactly 2 records, found " + foundCount, foundCount == 2 );
 
 		//Now try with hard-coded select
-		rs = statement.executeQuery("SELECT * FROM PORTRAIT WHERE \"Date created\" = " + testDateString );
+		rs = statement7.executeQuery("SELECT * FROM PORTRAIT WHERE \"Date created\" = " + testDateString );
 		foundCount = 0;
 		while( rs.next() ) foundCount++;
 		assertTrue( "Should have found exactly 3 records, found " + foundCount, foundCount == 3 );
 
 		//Now try with hard-coded delete
-		foundCount = statement.executeUpdate("DELETE FROM Portrait WHERE \"Date created\" = " + testDateString );
+		foundCount = statement7.executeUpdate("DELETE FROM Portrait WHERE \"Date created\" = " + testDateString );
 		assertTrue( "Should have deleted exactly 3 records, found " + foundCount, foundCount == 3 );
 	}
 
@@ -347,7 +351,7 @@ public class AdvancedDriverTests extends TestCase {
 	 * */
 	public void testBasicDataTypesNotImpl() throws SQLException {
 		Set supportedTypes = new HashSet();
-		ResultSet rs = connection.getMetaData().getTypeInfo();
+		ResultSet rs = connection7.getMetaData().getTypeInfo();
 		while( rs.next() ) {
 			supportedTypes.add( new Integer(rs.getInt("DATA_TYPE")) );
 		}
@@ -393,7 +397,7 @@ public class AdvancedDriverTests extends TestCase {
 	 */
 	public void testOptionalDataTypesNotImpl() throws SQLException {
 		Set supportedTypes = new HashSet();
-		ResultSet rs = connection.getMetaData().getTypeInfo();
+		ResultSet rs = connection7.getMetaData().getTypeInfo();
 		while( rs.next() ) {
 			supportedTypes.add( new Integer(rs.getInt("DATA_TYPE")) );
 		}
@@ -426,7 +430,7 @@ public class AdvancedDriverTests extends TestCase {
 
 	public void testRangeSearchesNotImpl() throws SQLException {
 		//Now try a date range
-		PreparedStatement ps = connection.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where gpa >= ? and gpa <= ?");
+		PreparedStatement ps = connection7.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where gpa >= ? and gpa <= ?");
 		//ps = connection.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where gpa <= ?");
 		ps.setFloat(1, 1.0f );
 		ps.setFloat(2, 3.5f );
@@ -438,14 +442,14 @@ public class AdvancedDriverTests extends TestCase {
 		Timestamp startRange = new Timestamp( new GregorianCalendar(2003,1,1).getTimeInMillis() );
 		Timestamp endRange = new Timestamp( new java.util.Date().getTime() );
 		//First try a single date criteria
-		ps = connection.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where \"Timestamp created\" > ?");
+		ps = connection7.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where \"Timestamp created\" > ?");
 		ps.setTimestamp( 1, startRange );
 		rs = ps.executeQuery();
 		resultCount = 0;
 		while (rs.next()) resultCount++;
 		assertTrue( resultCount > 100 );
 		//Now try a date range
-		ps = connection.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where \"Timestamp created\" > ? and \"Timestamp created\" < ?");
+		ps = connection7.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where \"Timestamp created\" > ? and \"Timestamp created\" < ?");
 		ps.setTimestamp( 1, startRange );
 		ps.setTimestamp( 2, endRange );
 		rs = ps.executeQuery();
@@ -455,7 +459,7 @@ public class AdvancedDriverTests extends TestCase {
 	}
 
 	public void testGetColumnNamesFm7() throws SQLException {
-		ResultSet rs = connection.getMetaData().getColumns("Contacts", null, "Calc Test", null);
+		ResultSet rs = connection7.getMetaData().getColumns("Contacts", null, "Calc Test", null);
 
 		do {
 			rs.next();
@@ -500,10 +504,10 @@ public class AdvancedDriverTests extends TestCase {
 	 */
 	public void testManyColumnsSpeed() throws SQLException {
 		System.out.println("Starting testLargeTableSpeed()");
-		String tableName = jdbc.fmVersion >= 7 ? "ManyTextFields" : "ManyTextFields.Layout #2"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc7.fmVersion >= 7 ? "ManyTextFields" : "ManyTextFields.Layout #2"; //Need to include the db & layout name if using 6, right?
 		for( int n=0; n<5; n++ ) {
 			java.util.Date then = new java.util.Date();
-			ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\"" );
+			ResultSet resultSet = statement7.executeQuery( "select * from \"" + tableName + "\"" );
 			assertTrue( "There should be at least 300 fields on this layout", resultSet.getMetaData().getColumnCount() >= 300 );
 			long elapsedTime = new java.util.Date().getTime() - then.getTime();
 			System.out.println( "elapsed time: " + elapsedTime + "ms" );
@@ -518,7 +522,7 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws Exception
 	 */
 	public void testLargeResultSet() throws Exception {
-		FmConnection fmConnection = new FmConnection(jdbc.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
+		FmConnection fmConnection = new FmConnection(jdbc7.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
 		Statement statement = fmConnection.createStatement();
 
 		String tableName = "Many records";
@@ -540,6 +544,52 @@ public class AdvancedDriverTests extends TestCase {
 			fail("Should throw an exception if we try to get more items after closing the ResultSet." );
 		} catch(IllegalStateException ex) {
 			System.out.println( "Expected this exception: " + ex );
+		}
+	}
+
+	/** This passes 10/2/2006 --jsb */
+	public void testInsertSpecialCharacters7() throws IOException, SQLException {
+		InputStream stream = getClass().getResourceAsStream( "InsertText.txt" );
+		byte[] buffer = new byte[stream.available()];
+		assertEquals( buffer.length, stream.read( buffer ) );
+		stream.close();
+		String value = new String( buffer );
+
+		{ //Test FM7
+			String sql = "INSERT INTO Contacts (firstName) values(?)";
+			PreparedStatement ps = connection7.prepareStatement( sql );
+			ps.setString( 1, value ); //This is the critical line - we pass the string to the prepared statement instead of embedding it in the SQL
+			ps.execute();
+			ResultSet rs = ps.getGeneratedKeys();
+			rs.next();
+			int pk = rs.getInt( "ID" );
+			rs = connection7.createStatement().executeQuery( "SELECT firstName FROM Contacts WHERE ID=" + pk );
+			rs.next();
+			assertEquals( value, rs.getString(1) );
+			rs.close();
+		}
+	}
+
+	/** This test fails 10/2/2006 - I can't figure out how to insert a curly quote (Õ) into FileMaker 6. --jsb */
+	public void testInsertSpecialCharacters6() throws IOException, SQLException {
+		InputStream stream = getClass().getResourceAsStream( "InsertText.txt" );
+		byte[] buffer = new byte[stream.available()];
+		assertEquals( buffer.length, stream.read( buffer ) );
+		stream.close();
+		String value = new String( buffer );
+
+		{ //Test FM6
+			String sql = "INSERT INTO Contacts.Contacts (firstName) values(?)";
+			PreparedStatement ps = connection6.prepareStatement( sql );
+			ps.setString( 1, value ); //This is the critical line - we pass the string to the prepared statement instead of embedding it in the SQL
+			ps.execute();
+			ResultSet rs = ps.getGeneratedKeys();
+			rs.next();
+			int pk = rs.getInt( "ID" );
+			rs = connection6.createStatement().executeQuery( "SELECT firstName FROM Contacts.Contacts WHERE ID=" + pk );
+			rs.next();
+			assertEquals( value, rs.getString(1) );
+			rs.close();
 		}
 	}
 }

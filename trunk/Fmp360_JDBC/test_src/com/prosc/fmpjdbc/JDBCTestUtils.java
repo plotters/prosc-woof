@@ -19,7 +19,7 @@ public class JDBCTestUtils {
 	public String fmServer;
 	public String xmlServer;
 	public String dbName;
-	public int fmVersion;
+	public int fmVersion; //FIX! Make private
 	public String debugLevel;
 
 	//Not configured via properties
@@ -37,12 +37,10 @@ public class JDBCTestUtils {
 		fmServer= System.getProperty("fmServer", "orion.360works.com");
 		xmlServer = System.getProperty("xmlServer", "orion.360works.com" );
 		dbName = System.getProperty( "dbName", "Contacts" );
-    port = Integer.valueOf(System.getProperty("portNumber", "80")).intValue();
+		port = Integer.valueOf(System.getProperty("portNumber", "80")).intValue();
 
-    if( fmVersion < 7 ) {
-			xmlServer="forge.360works.com";
-			port = 4000;
-			dbName = "";
+		if( fmVersion < 7 ) {
+			setFmVersion( 6 );
 		}
 
 		if(use360driver) {
@@ -127,5 +125,12 @@ public class JDBCTestUtils {
 		} catch( Exception e ) {
 			throw new RuntimeException( "Could not connect to JDBC URL: " + getJdbcUrl(whichDatabaseName), e );
 		}
+	}
+
+	public void setFmVersion( int i ) {
+		fmVersion = 6;
+		xmlServer="forge.360works.com";
+		port = 4000;
+		dbName = "";
 	}
 }
