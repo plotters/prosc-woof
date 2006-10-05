@@ -148,9 +148,7 @@
 </pre>
 		<p>
 			Hit continue. You should now be presented with a list of all tables within the database you specified. WooF can also reverse-engineer the script names as stored procedures. See 
-			<i>
-				“Connecting to multiple databases”
-			</i>
+			<i>"Connecting to multiple databases"</i>
 			below for more information on that topic.
 		</p>
 		<h3>
@@ -204,6 +202,11 @@
 			</code>
 			fields in Filemaker. It is recommended that you designate these as read-only attributes in your EOModel.
 		</p>
+		<p>
+			<b>
+				Repeating Fields</b>: WooF can read and write repeating fields in FileMaker.  Use a bracket with an index to indicate which repetition you want to refer to.  The indexes in the bracket are one-based, so the first repetition of a field would be typed <code>myField[1]</code>, or just <code>myField</code>.  If a <code>SELECT * FROM TABLE</code> query is used, only the first value of repeating fields will be returned.
+		</p>
+		<p>
 		<p>
 			<b>
 				Alter Table</b>: WooF cannot alter table structure, or create tables from an existing EOModel.
