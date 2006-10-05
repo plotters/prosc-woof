@@ -10,7 +10,8 @@ import com.prosc.fmpjdbc.StatementProcessor;
 import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.PreparedStatement;
-import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Calendar;
 
 public class StatementProcessorTest extends TestCase {
 	private Statement statement;
@@ -186,5 +187,80 @@ public class StatementProcessorTest extends TestCase {
 		while (resultSet.next()) {
 			assertEquals("sam", resultSet.getString(2).toLowerCase());
 		}
+	}
+
+	public void testRepeatingFields() throws Exception {
+		Calendar cal = Calendar.getInstance();
+		String today = cal.getTime().toString();
+		cal.add(Calendar.DAY_OF_MONTH, 1);
+		String tomorrow = cal.getTime().toString();
+		cal.add(Calendar.MONTH, 1);
+		String nextMonth = cal.getTime().toString();
+		//
+		statement.execute("UPDATE Contacts set repeating[1]='" + today + "', repeating[2]='" + tomorrow + "', repeating[3]='', repeating[4]=null where firstName='Repeating'");
+		ResultSet rs = statement.executeQuery("SELECT repeating[1], repeating[2], repeating[3], repeating[4], repeating[5] FROM Contacts WHERE firstName='Repeating'");
+		rs.next();
+		assertEquals(today, rs.getString(1));
+		assertEquals(tomorrow, rs.getString(2));
+		assertNull(rs.getString(3));
+		assertNull(rs.getString(4));
+		// test name-based fetching also
+		assertEquals(today, rs.getString("repeating[1]"));
+		assertEquals(tomorrow, rs.getString("repeating[2]"));
+		try {
+			assertEquals(today, rs.getString("repeating")); // this won't work, because there's no such field in the select string.
+			fail("Should have failed because 'repeating' was not in the list of selected fields.");
+		} catch (SQLException e) {
+			// ok
+		}
+		//
+		// try with prepared stmtd
+		PreparedStatement ps = statement.getConnection().prepareStatement("UPDATE Contacts set repeating[1]=?, repeating[2]=?, repeating[3]=?, repeating[4]=? where firstName=?");
+		ps.setString(1, "ASDF");
+		ps.setString(2, null);
+		ps.setString(3, tomorrow);
+		ps.setString(4, nextMonth);
+		ps.setString(5, "Repeating");
+		ps.execute();
+		//
+		rs = statement.executeQuery("SELECT repeating[1], repeating[2], repeating[3], repeating[4], repeating[5] FROM Contacts WHERE firstName='Repeating'");
+		rs.next();
+		assertEquals("ASDF", rs.getString(1));
+		assertNull(rs.getString(2));
+		assertEquals(tomorrow, rs.getString(3));
+		assertEquals(nextMonth, rs.getString(4));
+		//
+		// try fetching a repeating field without specifying a repetition index
+		rs = statement.executeQuery("SELECT repeating FROM Contacts WHERE firstName='Repeating'");
+		rs.next();
+		assertEquals("ASDF", rs.getString(1));
+		//
+		// try fetching a repeating field using the '*' operand
+		rs = statement.executeQuery("SELECT * FROM Contacts WHERE firstName='Repeating'");
+		rs.next();
+		assertEquals("Repeating", rs.getString(1)); // should be firstName, unless the column order changed for some reason -ssb
+		assertEquals("ASDF", rs.getString("repeating"));
+		try {
+			rs.getString("repeating[2]");
+			fail("You should not be able to reference repeating indices when doing a select * query");
+		} catch (SQLException e) {
+			// ok
+		}
+
+		//
+		// try referencing invalid array indices
+		try {
+			statement.executeQuery("SELECT repeating[0] FROM Contacts");
+			fail("Should not be able to reference repeating index 0");
+		} catch (SQLException e) {
+			// ok
+		}
+		try {
+			statement.executeQuery("SELECT repeating[10] FROM Contacts");
+			fail("Should not be able to reference repeating index 10");
+		} catch (SQLException e) {
+			// ok
+		}
+
 	}
 }

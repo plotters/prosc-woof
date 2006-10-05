@@ -45,7 +45,7 @@ public class FmField {
 	 * Fields created using this constructor have a type of <code>null</code> and isNullable set to <code>true</code>,
 	 * these values should be set later during parsing the XML header response from a filemaker query.
 	 * @param table The table
-	 * @param name The column name
+	 * @param name The column name, including any repetition index.
 	 * @param alias The alias, or null if no alias is used.
 	 */
 	public FmField(FmTable table, String name, String alias) {
@@ -55,27 +55,23 @@ public class FmField {
 	/**
 	 * Complete constructor for FmField.
 	 * @param table The table
-	 * @param name The column name
+	 * @param name The column name, including any repetition index.
 	 * @param alias The alias, or null
 	 * @param type The type of field
 	 * @param isNullable Whether null values are allowed.
 	 */
 	public FmField(FmTable table, String name, String alias, FmFieldType type, boolean isNullable) {
-		this.table = table;
-		this.columnName = name;
-		this.alias = alias;
-		this.type = type;
-		this.isNullable = isNullable;
+		this(table, name, alias, type, isNullable, false);
 	}
 
 	/**
 	 * Complete constructor for FmField.
-	 * @param table
-	 * @param name
-	 * @param alias
-	 * @param type
-	 * @param isNullable
-	 * @param readOnly
+	 * @param table The table
+	 * @param name The column name
+	 * @param alias The alias, or null
+	 * @param type The type of field
+	 * @param isNullable Whether null values are allowed.
+	 * @param readOnly Whether the field is readonly (calculation)
 	 */
 	public FmField(FmTable table, String name, String alias, FmFieldType type, boolean isNullable, boolean readOnly) {
 		this.table = table;

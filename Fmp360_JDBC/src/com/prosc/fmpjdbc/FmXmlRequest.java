@@ -14,7 +14,6 @@ import java.util.logging.Logger;
 import java.sql.SQLException;
 
 import org.xml.sax.*;
-import org.xml.sax.helpers.DefaultHandler;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -50,6 +49,7 @@ public class FmXmlRequest extends FmRequest {
 	private String postPrefix = "";
 	private String postArgs;
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
+	/** A set that initially contains all fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown */
 	private Set missingFields;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion)  {
@@ -359,8 +359,11 @@ public class FmXmlRequest extends FmRequest {
 	private static Integer DATA_NODE = new Integer(code++);
 	private static Integer ERROR_NODE = new Integer(code++);
 
-	private int[] usedFieldArray; // The array used by the characters() method in xmlHandler.
-	private List allFieldNames = new ArrayList(); // a list of Strings.  All the Field names inside the METADATA tag.
+	/**
+	 * Maps data indices in the XML data with data indices in the currentRow.  If a field in the XML data is not used, the value of that index will be -1.
+	 */
+	private int[] usedFieldArray = new int[32]; // The array used by the characters() method in xmlHandler.
+	//private List allFieldNames = new ArrayList(); // a list of Strings.  All the Field names inside the METADATA tag.
 
 
 	private boolean fieldDefinitionsListIsSet = false;
@@ -378,6 +381,8 @@ public class FmXmlRequest extends FmRequest {
 		private int columnIndex;
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
 		private int sizeEstimate;
+		/** Incremented as metadata fields are parsed */
+		private int currentMetaDataFieldIndex;
 
 		public FmXmlHandler() {
 			super();
@@ -409,7 +414,7 @@ public class FmXmlRequest extends FmRequest {
 		public void startDocument() {
 			if( debugMode ) requestContent.append( "Starting document\n" );
 			log.log(Level.FINEST, "Start parsing response");
-			setRecordIterator(new ResultQueue(256*1024, 64*1024));  // is this a good size? -britt
+			setRecordIterator(new ResultQueue(256*1024, 64*1024));  // FIX! is this a good size? -britt
 			currentNode = null;
 		}
 
@@ -424,12 +429,12 @@ public class FmXmlRequest extends FmRequest {
 			// Frequently repeated nodes
 			log.finest("Starting element qName = " + qName + " for " + this);
 			if ("DATA".equals(qName)) { //FIX! What if we have multiple DATA nodes per COL, ie. repeating fields? Our insertionIndex won't change? --jsb
-				currentNode = (insertionIndex>-1) ? DATA_NODE : IGNORE_NODE;
-				//currentData.delete( 0, currentData.length() );
-				currentData = new StringBuffer( 255 );
-			} else if ("COL".equals(qName)) {
 				columnIndex++;
 				insertionIndex = usedFieldArray[columnIndex];
+				currentNode = insertionIndex == -1 ? IGNORE_NODE : DATA_NODE;
+				//currentData.delete( 0, currentData.length() );
+				currentData = new StringBuffer( 255 );
+			//} else if ("COL".equals(qName)) {
 			} else if ("ROW".equals(qName)) {
 				//dt.markTime("  Starting row");
 				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
@@ -443,22 +448,18 @@ public class FmXmlRequest extends FmRequest {
 				String fieldType = attributes.getValue("TYPE");
 				FmFieldType theType = (FmFieldType)FmFieldType.typesByName.get(fieldType);
 				boolean allowsNulls = "YES".equals(attributes.getValue("EMPTYOK"));
+				int maxRepeat = Integer.parseInt(attributes.getValue("MAXREPEAT"));
 
-				allFieldNames.add(fieldName); // allFieldNames is used in endElement() together with fieldDefinitions to construct the usedFieldArray
-
-				if (useSelectFields) {
-
-					int columnIndex;
-					if ((columnIndex = fieldDefinitions.indexOfFieldWithColumnName(fieldName)) > -1) { // set the type and nullable if this is a field in the field definitions
-
-						FmField fmField = fieldDefinitions.get(columnIndex);
-						fmField.setType(theType);
-						fmField.setNullable(allowsNulls);
-					}
-
-				} else {
+				if (!useSelectFields) { // this is a select * query.  create a new non-repeating field and add it to the fieldDefinitions
 					FmField fmField = new FmField(fmTable, fieldName, fieldName, theType, allowsNulls);
 					fieldDefinitions.add(fmField);
+				}
+				if (maxRepeat > 1) { // this is a repeating field.  handle each repetition as a virtual field.
+					for (int eachRepIndex =1; eachRepIndex <= maxRepeat; eachRepIndex++) {
+						handleParsedMetaDataField(fieldName, eachRepIndex, theType, allowsNulls);
+					}
+				} else {
+					handleParsedMetaDataField(fieldName, 0, theType, allowsNulls);
 				}
 
 			} else if ("RESULTSET".equals(qName)) {
@@ -482,6 +483,41 @@ public class FmXmlRequest extends FmRequest {
 			}
 		}
 
+		/**
+		 * Handle a field which was parsed in the metadata.  This will set the usedFieldArrayIndex, remove the field from missingFields, and set some metadata on the FmField object in the fieldDefintions list.
+		 * @param fieldName
+		 * @param repetitionIndex for non-repeating fields, this should be zero.
+		 * @param theType
+		 * @param allowsNulls
+		 */
+		private void handleParsedMetaDataField(String fieldName, int repetitionIndex, FmFieldType theType, boolean allowsNulls) {
+			assert repetitionIndex >= 0;
+			// ensure that the currentMetaDataFieldIndex can hold another value
+			if (currentMetaDataFieldIndex == usedFieldArray.length) {
+				int[] tmp = new int[usedFieldArray.length * 2];
+				System.arraycopy(usedFieldArray, 0, tmp, 0, usedFieldArray.length);
+				usedFieldArray = tmp;
+			}
+			//
+			String adjustedName = repetitionIndex == 0 ? fieldName : fieldName + "[" + repetitionIndex + "]";
+			int fieldDefinitionIndex = fieldDefinitions.indexOfFieldWithColumnName(adjustedName);
+			if (fieldDefinitionIndex == -1 && repetitionIndex == 1) {
+				// this is the first repetition of a repeating field.  Look for a fieldDefinition name without the brackets
+				fieldDefinitionIndex = fieldDefinitions.indexOfFieldWithColumnName(fieldName);
+			}
+			if (fieldDefinitionIndex != -1) { // set the type and nullable if this is a field in the field definitions
+				FmField fmField = fieldDefinitions.get(fieldDefinitionIndex);
+				fmField.setType(theType);
+				fmField.setNullable(allowsNulls);
+				usedFieldArray[currentMetaDataFieldIndex++] = fieldDefinitionIndex;
+				if (missingFields != null) {
+					missingFields.remove(fmField);
+				}
+			} else {
+				usedFieldArray[currentMetaDataFieldIndex++] = -1;
+			}
+		}
+
 		public void endDocument() throws SAXException {
 			recordIterator.setFinished();
 		}
@@ -500,26 +536,26 @@ public class FmXmlRequest extends FmRequest {
 				//if( FmConnection.getDebugLevel() >= 3 ) System.out.println("Finished record: " + ++currentRowIndex);
 			}
 			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
-				usedFieldArray = new int[allFieldNames.size()];
-				missingFields = new LinkedHashSet( fieldDefinitions.getFields() );
-
-				int i = 0;
-				Iterator it = allFieldNames.iterator();
-
-				while ( it.hasNext() ) {
-					String aFieldName = (String)it.next();
-
-					int columnIndex;
-
-					if ( (columnIndex = fieldDefinitions.indexOfFieldWithColumnName(aFieldName)) > -1) {
-						// Get the index of the fieldName w.r.t fieldDefinitions, and put that value into the usedFieldArray
-						usedFieldArray[i] = columnIndex;
-						missingFields.remove( fieldDefinitions.get( columnIndex ) );
-					} else {
-						usedFieldArray[i] = -1; // This field columnName will not be used.
-					}
-					i++;
-				}
+				//usedFieldArray = new int[allFieldNames.size()];
+				//missingFields = new LinkedHashSet( fieldDefinitions.getFields() );
+				//
+				//int i = 0;
+				//Iterator it = allFieldNames.iterator();
+				//
+				//while ( it.hasNext() ) {
+				//	String aFieldName = (String)it.next();
+				//
+				//	int columnIndex;
+				//
+				//	if ( (columnIndex = fieldDefinitions.indexOfFieldWithColumnName(aFieldName)) > -1) {
+				//		// Get the index of the fieldName w.r.t fieldDefinitions, and put that value into the usedFieldArray
+				//		usedFieldArray[i] = columnIndex;
+				//		missingFields.remove( fieldDefinitions.get( columnIndex ) );
+				//	} else {
+				//		usedFieldArray[i] = -1; // This field columnName will not be used.
+				//	}
+				//	i++;
+				//}
 				// when i come to the metadata tag, i know all of the fields that are going to be in the table, so
 				// I can let people get the fieldDefinitions
 
@@ -554,10 +590,13 @@ public class FmXmlRequest extends FmRequest {
 		fieldDefinitions = selectFields;
 
 		// Code will use select fields if they exist and the first one is not an asterisk
-		if ("*".equals(fieldDefinitions.get(0).getColumnName() ))
+		if ("*".equals(fieldDefinitions.get(0).getColumnName() )) {
 			fieldDefinitions.getFields().remove(0);
-		else
+		} else {
 			useSelectFields = true;
+		}
+
+		missingFields = new LinkedHashSet( fieldDefinitions.getFields() ); // this will be trimmed down as metadata is parsed
 	}
 
 	public static class HttpAuthenticationException extends IOException {

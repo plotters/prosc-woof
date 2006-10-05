@@ -64,8 +64,13 @@ public class FmFieldList {
 		return -1;
 	}
 
-	//FIX!! This is really, really slow - we should build a hashset of all of the fields instead.
+	/**
+	 * Returns the index of the field whose column name is case-insensitive equal to to the provided <code>columnName</code>.
+	 * @param columnName The columnName to search for, with optional repetition index brackets.
+	 * @return the index of the matching field, or -1 for no match.
+	 */
 	public int indexOfFieldWithColumnName(String columnName) {
+		//FIX!! This is really, really slow - we should build a hashset of all of the fields instead.
 		int i=0;
 		for (Iterator iterator = fields.iterator(); iterator.hasNext();) {
 			FmField fmField = (FmField) iterator.next();
