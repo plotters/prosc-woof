@@ -491,7 +491,7 @@ public class FmXmlRequest extends FmRequest {
 		 * @param allowsNulls
 		 */
 		private void handleParsedMetaDataField(String fieldName, int repetitionIndex, FmFieldType theType, boolean allowsNulls) {
-			assert repetitionIndex >= 0;
+			//assert repetitionIndex >= 0;
 			// ensure that the currentMetaDataFieldIndex can hold another value
 			if (currentMetaDataFieldIndex == usedFieldArray.length) {
 				int[] tmp = new int[usedFieldArray.length * 2];

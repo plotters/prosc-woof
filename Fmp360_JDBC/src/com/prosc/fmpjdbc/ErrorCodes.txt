@@ -4,6 +4,10 @@
 105 "Layout is missing" - Make sure that the table name you have requested in the SQL query is the name of a layout in the current database.
 108 "Value list is missing"
 201 "Field cannot be modified" - You cannot change the value of calculation fields or other fields where modification is prohibited.
+300 "File is locked or in use"
+301 "Record is in use by another user"
+302 "Table is in use by another user"
+303 "Database schema is in use by another user"
 401 "No records match the request"
 500 "Date value does not meet validation entry options"
 501 "Time value does not meet validation entry options"
