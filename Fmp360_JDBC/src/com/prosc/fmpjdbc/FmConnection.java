@@ -142,7 +142,7 @@ public class FmConnection implements Connection {
 					for( StringTokenizer keyValueTokens = new StringTokenizer(queryParamTokens.nextToken(), "=", false); keyValueTokens.hasMoreElements(); ) {
 						String key = keyValueTokens.nextToken();
 						String value = keyValueTokens.hasMoreTokens() ? keyValueTokens.nextToken() : "";
-						properties.setProperty( key, value );
+						properties.setProperty( key.toLowerCase(), value );
 					}
 				}
 			}
@@ -176,6 +176,10 @@ public class FmConnection implements Connection {
 
 	public String getPassword() { //FIX! Should this be public? It's needed by FmBlob
 		return properties.getProperty("password");
+	}
+
+	public Properties getProperties() {
+		return properties;
 	}
 
 	//FmXmlRequest getXmlRequestHandler() { return requestHandler; }

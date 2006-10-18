@@ -59,6 +59,7 @@ public class JDBCTestUtils {
 			if( whichDatabase != null ) result.append( whichDatabase );
 			result.append("?loglevel=" + debugLevel );
 			result.append("&fmversion=" + fmVersion );
+			result.append("&MaXrEcords=1000000" );
 			if( catalogSeparator != null ) result.append("&catalogseparator=" + catalogSeparator );
 			return result.toString();
 		}

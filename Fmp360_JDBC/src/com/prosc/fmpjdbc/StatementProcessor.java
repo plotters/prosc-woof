@@ -1,10 +1,8 @@
 package com.prosc.fmpjdbc;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.io.IOException;
@@ -43,6 +41,7 @@ public class StatementProcessor {
 	private Vector params;
 	private boolean is7OrLater = true;
 	private final String encoding;
+	private final String maxRecords;
 	static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
 	static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
 
@@ -53,7 +52,9 @@ public class StatementProcessor {
 	public StatementProcessor( FmStatement statement, SqlCommand command ) {
 		this.command = command;
 		this.statement = statement;
-		is7OrLater = ((FmConnection)statement.getConnection()).getFmVersion() >= 7;
+		FmConnection connection = (FmConnection)statement.getConnection();
+		is7OrLater = ((FmConnection)connection ).getFmVersion() >= 7;
+		maxRecords = connection.getProperties().getProperty( "maxrecords", "all" );
 		encoding = is7OrLater ? "UTF-8" : "ISO-8859-1";
 	}
 
@@ -219,13 +220,13 @@ public class StatementProcessor {
 						sortPriority++;
 					}
 					if( whereClause.length() == 0 )
-						postArgs.append( "&-max=all&-findall" );
+						postArgs.append( "&-max=" + maxRecords + "&-findall" );
 					else {
 						if( command.getLogicalOperator() == SqlCommand.OR ) postArgs.append( "&-lop=or" );
 						postArgs.append( whereClause );
 						if( command.getMaxRows() != null ) postArgs.append( "&-max=" + command.getMaxRows().intValue() );
 						if( command.getSkipRows() != null ) postArgs.append( "&-skip=" + command.getSkipRows().intValue() );
-						postArgs.append( "&-max=all&-find" );
+						postArgs.append( "&-max=" + maxRecords + "&-find" );
 					}
 
 					actionHandler.setSelectFields(command.getFields()); // Set the fields that are used in the select statement
@@ -237,7 +238,7 @@ public class StatementProcessor {
 
 
 				case SqlCommand.UPDATE:
-					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=all&-find" );
+					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
 					for( Iterator it = recIdHandler.getRecordIterator(); it.hasNext(); ) {
 						recordId = ( (FmRecord)it.next() ).getRecordId();
 						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
@@ -256,7 +257,7 @@ public class StatementProcessor {
 					break;
 
 				case SqlCommand.DELETE:
-					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=all&-find" );
+					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
 					for( Iterator it = recIdHandler.getRecordIterator(); it.hasNext(); ) {
 						recordId = ( (FmRecord)it.next() ).getRecordId();
 						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
