@@ -274,6 +274,8 @@ SELECT * FROM contacts.address where contactID = 1;
 				</code>
 				will generate additional log messages about parsing individual record and fields.
 			</dd>
+			<dt>maxRecords</td>
+			<dd>Specify a maximum number of records to be returned from a single query.  This applies across the board.  This is also a good workaround for a FileMaker bug where certain queries cause the CPU to peg at 99% until the IWP engine is quit.</dd>
 		</dl>
 		<p>
 			An example JDBC url with custom properties:
@@ -327,6 +329,11 @@ SELECT * FROM contacts.address where contactID = 1;
 			<b>Q</b>: I'm getting a 'javax.net.ssl.SSLHandshakeException: Remote host closed connection during handshake' message.
 			<br />
 			<b>A</b>: The FileMaker XML publishing is not running with SSL enabled. Make sure that you are running through Apache, and that you have SSL enabled in Apache, and that you are using the correct port for SSL in your JDBC URL. You may also solve this problem by removing the 'ssl=true' parameter in the URL to disable SSL encryption.
+		</p>
+		<p>
+			<b>Q</b>: Some queries cause my CPU to peg at 99%!  What's happening?
+			<br />
+			<b>A</b>: This may be caused by a bug in FileMaker's web processing engine.  One fix is to always specify a maximum number of records to return in the query.  You can easily do this by setting the 'maxRecords' parameter to a high number like 9999999.
 		</p>
 		</div>
 	</body>
