@@ -39,6 +39,11 @@ public class ResultQueue implements Iterator {
 	private LinkedList sizes;
 	private volatile Throwable storedError;
 
+	private int rowsReturned = 0;
+	private int rowsReceived = 0;
+	private int errorRow = -1;
+	private String errorFieldName;
+
 
 	public ResultQueue(long msize, long rsize) {
 		maxSize = msize; // so they can't change the size in the middle of processing
@@ -49,8 +54,12 @@ public class ResultQueue implements Iterator {
 		sizes = new LinkedList();
 	}
 
-	public void setStoredError( Throwable storedError ) {
+	public synchronized void setStoredError( Throwable storedError, String field ) {
+		System.out.println( "*** Stored an error ***" );
 		this.storedError = storedError;
+		this.errorFieldName = field;
+		errorRow = rowsReceived;
+		notify();
 	}
 
 
@@ -66,13 +75,10 @@ public class ResultQueue implements Iterator {
 		// what about when the first item you try to add to the list is LARGER than the max size?
 		// INCREASE THE MAX SIZE AND ADD IT ANYWAY
 		if (!(currentSize >= maxSize && objects.size() == 0)) {
-
 			while (currentSize >= maxSize) {
 				try {
-
 					wait();
-				} catch (InterruptedException ie) {
-					// interrupted exceptions are thrown when interupt() is called
+				} catch (InterruptedException ie) { // interrupted exceptions are thrown when interupt() is called
 					throw new RuntimeException(ie);
 				}
 			} // now it's ok to add something to the queue
@@ -82,12 +88,12 @@ public class ResultQueue implements Iterator {
 			maxSize = size;
 		}
 
-
 		// when it's ok for me to add (notify will be called), add toAdd and size to
 		// respective queues, and update the current size of the queue
 		objects.addLast(toAdd);
 		sizes.addLast(new Long(size));
 		currentSize += size;
+		rowsReceived++;
 		notifyAll(); // just in case someone's waiting to get something out of the queue
 	}
 
@@ -100,6 +106,7 @@ public class ResultQueue implements Iterator {
 		while (objects.size() <= 0 && !finished) {
 			try {
 				wait();
+				if( storedError != null ) return true; //This will be thrown in the next() method
 			} catch (InterruptedException ie) {
 				throw new RuntimeException(ie);
 			}
@@ -112,7 +119,6 @@ public class ResultQueue implements Iterator {
 		}
 	}
 
-
 	public synchronized void setFinished() {
 		finished = true;
 		notifyAll();
@@ -124,13 +130,7 @@ public class ResultQueue implements Iterator {
 	 * @return the next item in the iterator
 	 */
 	public synchronized Object next() {
-		if( storedError != null ) {
-			if( storedError instanceof RuntimeException ) throw (RuntimeException)storedError;
-			else throw new RuntimeException(storedError);
-		}
-		Object toReturn = null;
-		Object toReturnSize = null;
-		while (objects.size() == 0) { // objects and sizes should always have the same # of elements
+		while (objects.size() == 0 && storedError == null ) { // objects and sizes should always have the same # of elements
 			// just in case i'm taking them out faster than i can put them in
 			if (finished) {
 				// somebody forgot to check for hasNext before calling next!!!!
@@ -144,21 +144,24 @@ public class ResultQueue implements Iterator {
 			}
 		} // now there's something in the queue
 
+		if( storedError != null && errorRow == rowsReturned ) {
+			if( storedError instanceof RuntimeException ) throw (RuntimeException)storedError;
+			else throw new RuntimeException("Error while trying to access field '" + errorFieldName + "' in zero-indexed row " + errorRow, storedError);
+		}
 
-		toReturn = objects.removeFirst();
-		toReturnSize = sizes.removeFirst();
+		Object toReturn = objects.removeFirst();
+		Object toReturnSize = sizes.removeFirst();
 
 		currentSize -= ((Long) toReturnSize).longValue();
 		if (currentSize < resumeSize) {
 			notifyAll();
 		}
 
+		rowsReturned++;
 		return toReturn;
 	}
 
 	public void remove() {
 		throw new AbstractMethodError("Not implemented");
 	}
-
-
 }

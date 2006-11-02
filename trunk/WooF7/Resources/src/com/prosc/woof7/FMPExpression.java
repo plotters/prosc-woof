@@ -11,6 +11,7 @@ import com.webobjects.eoaccess.*;
 import com.webobjects.foundation.*;
 import com.webobjects.eocontrol.EOQualifier;
 import com.webobjects.eocontrol.EOKeyValueQualifier;
+import com.webobjects.eocontrol.EOFetchSpecification;
 import com.webobjects.jdbcadaptor.Fmp360PlugIn;
 
 import java.util.logging.Logger;

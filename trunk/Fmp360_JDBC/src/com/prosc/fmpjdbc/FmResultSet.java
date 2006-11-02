@@ -35,6 +35,7 @@ import java.net.URL;
  * Created by IntelliJ IDEA. User: jesse Date: Apr 17, 2005 Time: 1:41:57 AM
  */
 public class FmResultSet implements ResultSet {
+	private static final Logger log = Logger.getLogger( FmResultSet.class.getName() );
 	private Iterator fmRecords;
 	private FmResultSetMetaData metaData;
 	private FmRecord currentRecord;
@@ -42,11 +43,12 @@ public class FmResultSet implements ResultSet {
 	private FmConnection connection;
 
 	private boolean isOpen = true;
-	private boolean isBeforeFirst = true;
-	private boolean isFirst = false;
+	//private boolean isBeforeFirst = true;
+	//private boolean isFirst = false;
 	private boolean isAfterLast = false;
-	private boolean isLast = false;
+	//private boolean isLast = false;
 	private Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
+	private int rowNum = -1;
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
 	public FmResultSet(Iterator fmRecordsIterator, FmFieldList fieldDefinitions, FmConnection connection) {
@@ -60,9 +62,14 @@ public class FmResultSet implements ResultSet {
 
 	//OPTIMIZE make all methods final
 
-	private SQLException handleFormattingException(Exception e) {
+	private SQLException handleFormattingException(Exception e, int position) {
+		String columnName = fieldDefinitions.get( position - 1 ).getColumnName();
+		return handleFormattingException(e, columnName);
+	}
+
+	private SQLException handleFormattingException(Exception e, String columnName) {
 		logger.log(Level.WARNING, e.toString());
-		SQLException sqlException = new SQLException( e.toString() );
+		SQLException sqlException = new SQLException( e.toString() + " (requested column '" + columnName + "' / zero-indexed row: " + rowNum + ")" );
 		sqlException.initCause(e);
 		return sqlException;
 	}
@@ -77,25 +84,30 @@ public class FmResultSet implements ResultSet {
 	public boolean next() throws SQLException {
 		if( ! isOpen ) throw new IllegalStateException("The ResultSet has been closed; you cannot read any more records from it." );
 		if( fmRecords.hasNext() ) {
-			currentRecord = (FmRecord) fmRecords.next();
+			try {
+				currentRecord = (FmRecord) fmRecords.next();
+			} catch( RuntimeException e ) {
+				log.log( Level.SEVERE, "Got an exception while trying to fetch next row from database.", e );
+				SQLException e1 = new SQLException( e.getMessage() );
+				e1.initCause( e );
+				throw e1;
+			}
 			// The first time through isBeforeFirst is still true, because we haven't set
 			// it to false yet, which means this is the first record.
-			if (isBeforeFirst) {
-				isFirst = true;
-				isBeforeFirst = false; // set isBeforeFirst to false now. We're on the first record
-			} else { // The following needs to happen in the else!
-				isFirst = false; // Set isFirst to false
-			}
+			rowNum++;
+			//if (isBeforeFirst) {
+			//	isFirst = true;
+			//	isBeforeFirst = false; // set isBeforeFirst to false now. We're on the first record
+			//} else { // The following needs to happen in the else!
+			//	isFirst = false; // Set isFirst to false
+			//}
 			// If there are no records after the current record
 			// we're on the last record.  Set isLast to true.
-			if (!fmRecords.hasNext()) {
-				isLast = true;
-			}
 			return true;
 		} else {
 			// This method 'next()'  has been called again and there are no more records.
 			// This means that we are after the last record
-			isLast = false;
+			//isLast = false;
 			isAfterLast = true;
 			//currentRecord = null; //Fix!!! should currentRecord be set to false since we are after the last record?
 			return false;
@@ -110,15 +122,15 @@ public class FmResultSet implements ResultSet {
 		fieldDefinitions = null;
 		isOpen = false;
 		connection.notifyClosedResultSet( this );
-	//try {
-      // need to close the FmXmlResult here!!!
+		//try {
+		// need to close the FmXmlResult here!!!
 //      actionHandler = ( (FmConnection)statement.getConnection7() ).getXmlRequestHandler();
-    //}
-  }
+		//}
+	}
 
 
 	public String getString( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		String result = currentRecord.getString(i - 1);
 		if (logger.isLoggable(Level.FINEST)) {
 			logger.log(Level.FINEST, result);
@@ -127,98 +139,98 @@ public class FmResultSet implements ResultSet {
 	}
 
 	public boolean getBoolean( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		return currentRecord.getBoolean(i - 1);
 	}
 
 	public byte getByte( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
 			return currentRecord.getByte(i - 1);
 		} catch (NumberFormatException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	public short getShort( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
 			return currentRecord.getShort(i - 1);
 		} catch (NumberFormatException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	public int getInt( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
 			return currentRecord.getInt(i - 1);
 		} catch (NumberFormatException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	public long getLong( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
-			return currentRecord.getInt(i - 1);
+			return currentRecord.getLong(i - 1);
 		} catch (NumberFormatException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	public float getFloat( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
 			return currentRecord.getFloat(i - 1);
 		} catch (NumberFormatException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	public double getDouble( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
 			return currentRecord.getDouble(i - 1);
 		} catch (NumberFormatException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	// Deprecated but implemented
 	public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		BigDecimal value = getBigDecimal(columnIndex);
 		try {
 			return value.setScale(scale);
 		} catch (ArithmeticException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, columnIndex);
 		}
 	}
 
 
 	public Date getDate( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
 			Date result = currentRecord.getDate(i - 1);
 			return result;
 		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	public Time getTime( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
 			Time result = currentRecord.getTime(i - 1);
 			return result;
 		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	public Timestamp getTimestamp( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		if (logger.isLoggable(Level.FINEST)) {
 			logger.log(Level.FINEST, String.valueOf(i));
 		}
@@ -226,13 +238,13 @@ public class FmResultSet implements ResultSet {
 			Timestamp result = currentRecord.getTimestamp(i - 1);
 			return result;
 		} catch (IllegalArgumentException e) {
-			SQLException sqlException = handleFormattingException( e );
+			SQLException sqlException = handleFormattingException( e, i );
 			throw sqlException;
 		}
 	}
 
 	public Blob getBlob( int i ) throws SQLException {
-		if( isBeforeFirst || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		if (logger.isLoggable(Level.FINEST)) {
 			logger.log(Level.FINEST, String.valueOf(i));
 		}
@@ -240,56 +252,96 @@ public class FmResultSet implements ResultSet {
 			Blob result = currentRecord.getBlob(i - 1, connection );
 			return result;
 		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
 	public String getString( String s ) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getString(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getString(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public boolean getBoolean(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getBoolean(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getBoolean(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public byte getByte(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getByte(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getByte(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public short getShort(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getShort(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getShort(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public int getInt(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getInt(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getInt(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public long getLong(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getLong(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getLong(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public float getFloat(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getFloat(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getFloat(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public double getDouble(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getDouble(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getDouble(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	// Deprecated method but implemented
@@ -302,20 +354,35 @@ public class FmResultSet implements ResultSet {
 
 	public Date getDate(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getDate(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getDate(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public Time getTime(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getTime(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getTime(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public Timestamp getTimestamp(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getTimestamp(i + 1);
+		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getTimestamp(i);
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public Blob getBlob( String s ) throws SQLException {
@@ -361,7 +428,7 @@ public class FmResultSet implements ResultSet {
 			BigDecimal result = currentRecord.getBigDecimal(i - 1);
 			return result;
 		} catch (NumberFormatException e) {
-			throw handleFormattingException(e);
+			throw handleFormattingException(e, i);
 		}
 	}
 
@@ -373,7 +440,7 @@ public class FmResultSet implements ResultSet {
 
 
 	public boolean isBeforeFirst() throws SQLException {
-		return isBeforeFirst;
+		return rowNum == -1;
 	}
 
 	public boolean isAfterLast() throws SQLException {
@@ -381,11 +448,11 @@ public class FmResultSet implements ResultSet {
 	}
 
 	public boolean isFirst() throws SQLException {
-		return isFirst;
+		return rowNum == 0;
 	}
 
 	public boolean isLast() throws SQLException {
-		return isLast;
+		return ( !fmRecords.hasNext() );
 	}
 
 	public boolean wasNull() throws SQLException {

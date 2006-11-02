@@ -87,7 +87,7 @@ public class StatementProcessorTest extends TestCase {
 
 	public void test_escapeFMWildCards7() throws Exception {
 		StringBuffer toAppendTo = new StringBuffer();
-		new StatementProcessor(null, null)._escapeFMWildCards7("a@b", toAppendTo, "!#@$%^");
+		new StatementProcessor((FmStatement)statement, null)._escapeFMWildCards7("a@b", toAppendTo, "!#@$%^");
 		assertEquals("a\\@b", toAppendTo.toString());
 	}
 
@@ -234,6 +234,21 @@ public class StatementProcessorTest extends TestCase {
 		rs = statement.executeQuery("SELECT repeating FROM Contacts WHERE firstName='Repeating'");
 		rs.next();
 		assertEquals("ASDF", rs.getString(1));
+
+		//Mix repeating field with other values, especially date and times --jsb
+		rs = statement.executeQuery( "SELECT state, city, lastName, gpa, \"Timestamp created\", dateValue, repeating, firstName, timeValue, state FROM Contacts WHERE firstName='Repeating'" );
+		Object eachObject;
+		rs.next();
+		eachObject = rs.getString(1); //state
+		eachObject = rs.getString(2); //city
+		eachObject = rs.getString(3); //lastName
+		eachObject = rs.getObject(4); //gpa
+		eachObject = rs.getTimestamp(5); //timestamp
+		eachObject = rs.getDate(6); //date
+		eachObject = rs.getString(7); //repeating
+		eachObject = rs.getString(8); //firstName
+		eachObject = rs.getTime(9); //timeValue
+
 		//
 		// try fetching a repeating field using the '*' operand
 		rs = statement.executeQuery("SELECT * FROM Contacts WHERE firstName='Repeating'");
