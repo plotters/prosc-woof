@@ -158,29 +158,26 @@ public class FmXmlRequest extends FmRequest {
 				input.setSystemId("http://");
 				FmXmlHandler xmlHandler = new FmXmlHandler();
 				try {
-					xParser.parse( input, xmlHandler ); // FIX!!! need some real exception handling here
+					xParser.parse( input, xmlHandler );
 				} catch (IOException ioe) {
 					if (ioe.getMessage().equals("stream is closed")) {
 						log.finest("The parsing thread was in the middle of parsing data from FM but someone closed the stream");
 					} else {
 						System.out.println("There was an error, so i'm setting all of the variables and continuing");
 						onErrorSetAllVariables(ioe);
-						throw new RuntimeException(ioe);
+						//throw new RuntimeException(ioe);
 					}
 				} catch (SAXException e) {
-					log.fine("There was SAXException: " + e.getMessage() + ", so the parsing thread is setting all of the threading variables to true and notifying all threads.\n Here's the stack trace: ");
-					e.printStackTrace();
+					//log.fine("There was SAXException: " + e.getMessage() + ", so the parsing thread is setting all of the threading variables to true and notifying all threads.\n Here's the stack trace: ");
 					onErrorSetAllVariables(e);
-					throw new RuntimeException(e);
+					//throw new RuntimeException(e);
 				} catch (RuntimeException e) {
-					log.fine("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading "
-							+ "variables to true and notifying all threads.");
+					//log.fine("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading " + "variables to true and notifying all threads.");
 					onErrorSetAllVariables(e);
-					throw new RuntimeException(e);
+					//throw new RuntimeException(e);
 
 				} finally {
 					closeRequest();
-
 				}
 			}
 
@@ -196,12 +193,18 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	private synchronized void onErrorSetAllVariables(Throwable t) {
-		recordIterator.setStoredError(t);
+		String fieldName = null;
+		try {
+			fieldName = (String)columnNames.get( columnIndex + 1 );
+		} catch( Exception e ) {
+			log.info( "Error occured while parsing XML data; couldn't tell which field caused the error." );
+		}
+		recordIterator.setStoredError(t, fieldName );
 		productVersionIsSet = true;
 		databaseNameIsSet = true;
 		foundCountIsSet = true;
 		recordIteratorIsSet = true;
-		recordIterator.setFinished();
+		//recordIterator.setFinished();
 		//recordIterator = null;
 		fieldDefinitionsListIsSet = true;
 		fieldDefinitions = null;
@@ -352,6 +355,10 @@ public class FmXmlRequest extends FmRequest {
 	private volatile ResultQueue recordIterator;
 	private transient StringBuffer currentData = new StringBuffer(255);
 	private transient int insertionIndex;
+	private boolean foundDataForColumn;
+	private int columnDataIndex;
+	private int columnIndex;
+	private List columnNames = new LinkedList();
 	private volatile int errorCode;
 
 	private static transient int code = 0;
@@ -378,7 +385,6 @@ public class FmXmlRequest extends FmRequest {
 		private StringBuffer requestContent = new StringBuffer();
 		private static final boolean debugMode = false; //If true, then the content of the XML will be stored in requestContent
 		private Integer currentNode = null;
-		private int columnIndex;
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
 		private int sizeEstimate;
 		/** Incremented as metadata fields are parsed */
@@ -389,7 +395,7 @@ public class FmXmlRequest extends FmRequest {
 		}
 
 		public void fatalError(SAXParseException e) throws SAXException {
-			log.log(Level.SEVERE, e.toString(), e );
+			//We don't need to log, because we're throwing the exception to the ResultQueue : log.log(Level.SEVERE, e.toString(), e );
 			super.fatalError(e);
 		}
 
@@ -428,22 +434,30 @@ public class FmXmlRequest extends FmRequest {
 			}
 			// Frequently repeated nodes
 			log.finest("Starting element qName = " + qName + " for " + this);
-			if ("DATA".equals(qName)) { //FIX! What if we have multiple DATA nodes per COL, ie. repeating fields? Our insertionIndex won't change? --jsb
-				columnIndex++;
-				insertionIndex = usedFieldArray[columnIndex];
+			if ("DATA".equals(qName)) {
+				//If this is the first <DATA> element; don't increment columnDataIndex. Otherwise it's a repeating field; go ahead.
+				if( foundDataForColumn ) columnDataIndex++;
+				else foundDataForColumn = true;
+
+				insertionIndex = usedFieldArray[columnDataIndex];
 				currentNode = insertionIndex == -1 ? IGNORE_NODE : DATA_NODE;
 				//currentData.delete( 0, currentData.length() );
 				currentData = new StringBuffer( 255 );
-			//} else if ("COL".equals(qName)) {
+			} else if ("COL".equals(qName)) {
+				foundDataForColumn = false;
+				columnDataIndex++;
+				columnIndex++;
 			} else if ("ROW".equals(qName)) {
 				//dt.markTime("  Starting row");
 				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
 				currentRow = new FmRecord(fieldDefinitions, Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
+				columnDataIndex = -1;
 				columnIndex = -1;
 			}
 			// One-shot nodes
 			else if ("FIELD".equals(qName)) {
 				String fieldName = attributes.getValue("NAME");
+				columnNames.add( fieldName );
 
 				String fieldType = attributes.getValue("TYPE");
 				FmFieldType theType = (FmFieldType)FmFieldType.typesByName.get(fieldType);

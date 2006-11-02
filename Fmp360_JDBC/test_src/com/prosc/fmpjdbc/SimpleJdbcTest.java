@@ -296,15 +296,26 @@ public class SimpleJdbcTest extends TestCase {
 		String tableName = jdbc.fmVersion >= 7 ? "WeirdTextFields" : "WeirdTextFields.WeirdTextFields"; //Need to include the db & layout name if using 6, right?
 		ResultSet rs = statement.executeQuery("SELECT * from " + tableName);
 		Number eachValueNumber;
+		int rowNum = 0;
 		while( rs.next() ) {
+			rowNum++;
 			eachValueNumber =  (Number)rs.getObject(1);
+			if( rs.wasNull() ) {
+				eachValueNumber = null;
+			}
 			if (eachValueNumber != null) assertEquals( BigDecimal.class, eachValueNumber.getClass() ); //Should FileMaker number return a Double or a BigDecimal? ddtek returns a Double, our driver returns a BigDecimal.
 			String eachValueString = rs.getString(1);
 			Number eachValueExpected = rs.getBigDecimal(2);
-			String comment = rs.getString(3);
-			log.info( comment + ": (" + eachValueString + ") is read as (" + eachValueNumber + ")" );
+			if( rs.wasNull() ) eachValueExpected = null;
+			rs.getDate( "DateValue" ); //Just to see if we get an exception
 			if (eachValueNumber != null) assertEquals( BigDecimal.class, eachValueNumber.getClass() );
-			assertEquals( eachValueExpected.toString(), eachValueNumber.toString() );
+			int i = rs.getInt( "Integer value" );
+			if( eachValueNumber == null && ! rs.wasNull() ) {
+				eachValueNumber = new Integer( i );
+			}
+			String comment = rs.getString("Comment");
+			log.info( comment + ": (" + eachValueString + ") is read as (" + eachValueNumber + ")" );
+			assertEquals( String.valueOf( eachValueExpected ), String.valueOf( eachValueNumber ) );
 		}
 	}
 
@@ -357,6 +368,7 @@ public class SimpleJdbcTest extends TestCase {
 	}
 
 	/** This test does not apply to the ddtek driver. */
+	/* I've disabled this because it takes a long time to run, and it's only purpose is for benchmarking, not for unit testing. --jsb
 	public void testXmlSpeed() throws IOException {
 		if (jdbc.use360driver) {
 			if( jdbc.fmVersion < 7 ) fail("Only the FMPXMLRESULT format is supported in pre-7 FileMaker." );
@@ -399,7 +411,7 @@ public class SimpleJdbcTest extends TestCase {
 
 			dt.stop();
 		}
-	}
+	}*/
 
 	//FIX!! Add test for null searches, and various operators ie. begins with, ends with, contains, not equals, etc.
 }

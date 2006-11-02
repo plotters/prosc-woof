@@ -1,6 +1,8 @@
 package com.prosc.fmpjdbc;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.text.SimpleDateFormat;
@@ -32,6 +34,7 @@ import java.net.URL;
  * Created by IntelliJ IDEA. User: jesse Date: Apr 17, 2005 Time: 4:36:27 PM
  */
 public class FmRecord {
+	private static final Logger log = Logger.getLogger( FmRecord.class.getName() );
 	private Integer recordId;
 	private Integer modCount;
 	private FmFieldList fieldList;
@@ -198,7 +201,8 @@ public class FmRecord {
 		try {
 			return Integer.valueOf( rawValue ).intValue();
 		} catch(NumberFormatException e) {
-			return Integer.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).intValue();
+			String stripDigits = NumberUtils.removeNonNumericChars( rawValue );
+			return new BigDecimal( stripDigits ).intValue(); //We do big decimal here so that if there is a decimal, we just toss it instead of getting a NumberFormatException
 		}
 	}
 
@@ -291,8 +295,9 @@ public class FmRecord {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
 			//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
-			e1.printStackTrace();
-			return null;
+			throw e1;
+			//log.log( Level.WARNING, "Can't parse this as a date: " + rawValue, e1 );
+			//return null;
 		}
 	}
 
@@ -309,9 +314,9 @@ public class FmRecord {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
 			//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
-			e1.printStackTrace();
-			return null;
-			//throw e1;
+			//log.log( Level.WARNING, "Can't parse this as a time: " + rawValue, e1 );
+			//return null;
+			throw e1;
 		}
 	}
 
@@ -328,9 +333,9 @@ public class FmRecord {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
 			//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
-			e1.printStackTrace();
-			return null;
-			//throw e1;
+			//log.log( Level.WARNING, "Can't parse this as a timestamp: " + rawValue, e1 );
+			//return null;
+			throw e1;
 		}
 	}
 
