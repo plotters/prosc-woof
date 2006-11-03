@@ -299,7 +299,7 @@ public class FmXmlRequest extends FmRequest {
 				missingFieldNames.add( ((FmField)it.next()).getColumnName() );
 			}
 			closeRequest();
-			throw new SQLException("The requested fields are not on the layout: " + missingFieldNames );
+			throw new SQLException("The requested fields are not on the layout: " + missingFieldNames, null, 102 );
 		}
 		return fieldDefinitions;
 	}
