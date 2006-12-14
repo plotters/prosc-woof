@@ -95,7 +95,6 @@ public class FmResultSetRequest extends FmRequest {
 			log.log(Level.FINE, theUrl + "?" + postArgs);
 			theConnection.setDoOutput(true);
 			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
-			//out.println("-db=Contacts&-lay=Contacts&-findall=");
 			out.print(postPrefix);
 			out.println(postArgs);
 			out.close();
@@ -105,8 +104,6 @@ public class FmResultSetRequest extends FmRequest {
 		serverStream = new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
 		try {
 			readResult();
-			//System.out.println(IOUtils.inputStreamAsString(serverStream));
-			//throw new SAXException("Just testing");
 		} catch (SAXException e) {
 			throw new RuntimeException(e); //FIX!! Better error handling than just rethrowing?
 		} catch( RuntimeException e ) {

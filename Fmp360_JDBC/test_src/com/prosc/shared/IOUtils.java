@@ -187,32 +187,6 @@ public class IOUtils extends Object {
 		return mimeType;
 	}
 
-	/**
-	 * This skips and discards all of the input from the source until the searchString occurs. It will block until the
-	 * searchString is found. When it returns, the reader will be positioned after the last character of the searchString.
-	 * It does NOT close the source Reader. Because this method reads one byte at a time, It is recommended for efficiency
-	 * that the Reader be buffered.
-	 * @return The number of characters that were skipped. If all of the bytes are read from the source without finding the
-	 *         searchString, -1 is returned.
-	 */
-	/*
-	Currently, this is broken, so I've commented it out. --Jesse
-	static public int skipToSearchString( Reader source, String searchString ) throws IOException {
-		char[] searchChars = searchString.toCharArray();
-		int searchIndex = 0;
-		int result = 0;
-		int character;
-		while( searchIndex < searchChars.length ) {
-			character = source.read();
-			if( character == -1 ) return -1;
-			if( (char)character == searchChars[searchIndex] ) searchIndex++;
-			else searchIndex = 0;
-			result++;
-		}
-		System.out.println("Found " + searchString + "!");
-		return result;
-	}*/
-
 
 
 	/**

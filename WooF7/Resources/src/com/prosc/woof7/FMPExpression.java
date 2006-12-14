@@ -66,18 +66,18 @@ public class FMPExpression extends com.webobjects.jdbcadaptor.JDBCExpression {
 				}
 			}
 			//OPTIMIZE: Can we do nothing if the row only contains a primary key?
-			System.out.println("INSERT STATEMENT: " + this);
+			log.fine("INSERT STATEMENT: " + this);
 		}
 	}
 
 	public String assembleInsertStatementWithRow(NSDictionary nsDictionary, String s, String s1, String s2) {
 		String result = super.assembleInsertStatementWithRow(nsDictionary, s, s1, s2);
-		System.out.println(result);
+		log.fine(result);
 		return result;
 	}
 
 	public int jdbcTypeForUnknownExternalType(String externalType, int precision, int scale) {
-		System.out.println("Getting type for " + externalType);
+		log.fine("Getting type for " + externalType);
 		if( "TEXT".equals(externalType) ) return java.sql.Types.VARCHAR;
 		if( "NUMBER".equals(externalType) ) return java.sql.Types.DOUBLE;
 		if( "DATE".equals(externalType) ) return java.sql.Types.DATE;

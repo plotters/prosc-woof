@@ -103,7 +103,6 @@ public class FmXmlRequest extends FmRequest {
 			log.log(Level.FINE, theUrl + "?" + postArgs);
 			theConnection.setDoOutput(true);
 			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
-			//out.println("-db=Contacts&-lay=Contacts&-findall=");
 			out.print(postPrefix);
 			out.println(postArgs);
 			out.close();
@@ -163,7 +162,7 @@ public class FmXmlRequest extends FmRequest {
 					if (ioe.getMessage().equals("stream is closed")) {
 						log.finest("The parsing thread was in the middle of parsing data from FM but someone closed the stream");
 					} else {
-						System.out.println("There was an error, so i'm setting all of the variables and continuing");
+						log.info("There was an error, so i'm setting all of the variables and continuing");
 						onErrorSetAllVariables(ioe);
 						//throw new RuntimeException(ioe);
 					}
@@ -547,7 +546,6 @@ public class FmXmlRequest extends FmRequest {
 				recordIterator.add(currentRow, (long) sizeEstimate);
 				sizeEstimate = 0; // set it to 0 and start estimating again
 				//records.add(currentRow);
-				//if( FmConnection.getDebugLevel() >= 3 ) System.out.println("Finished record: " + ++currentRowIndex);
 			}
 			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
 				//usedFieldArray = new int[allFieldNames.size()];
