@@ -43,7 +43,8 @@ public class StatementProcessor {
 	private final String encoding;
 	private final String maxRecords;
 	static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
-	static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
+	//static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
+	static final String WILDCARDS_LIKE = null;// note: this is null b/c when using LIKE we would like to pass in search strings exactly like we would in FileMaker
 
 	private static final String ESCAPE_C = "\\"; // escaped backslash.  Note, this should NOT be unicode encoded!
 	//private FieldPosition sharedFieldPosition = new FieldPosition(0);
