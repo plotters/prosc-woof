@@ -76,14 +76,14 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testSelectAllWithLayout() throws SQLException {
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		ResultSet resultSet = statement.executeQuery( "SELECT * FROM \""+tableName+"\"" );
 		assertEquals( "firstName", resultSet.getMetaData().getColumnName(1) );
 	}
 
 	/** This test passes. */
 	public void testSimpleInsert() throws SQLException {
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		//sql = "INSERT INTO \"Contact profiles\" LAYOUT WebObjects (Contact,Email,\"Active status\") values('Al Leong', 'kungfudude@mcgyver.com', 'Inactive')";
 		String sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress) values('Al', 'Leong', 'kungfudude@mcgyver.com')";
 		int rowCount = statement.executeUpdate( sql );
@@ -92,7 +92,7 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testSimpleSelect() throws SQLException {
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		String sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al'";
 		//sql = "SELECT * FROM Contacts where lastName='Leong' and emailAddress='kungfudude@mcgyver.com'";
 		ResultSet resultSet = statement.executeQuery( sql );
@@ -127,7 +127,7 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testSelectWithNamedAttributes() throws SQLException {
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		ResultSet resultSet = statement.executeQuery( "SELECT \"firstName\", \"lastName\", emailAddress, state, city, ZIP from \""+tableName+"\" where lastName='Leong' and CITY ='San Francisco'" );
 		//ResultSet resultSet = statement.executeQuery( "SELECT \"firstName\", \"lastName\", emailAddress, state, city from \"Contacts\" where lastName='Erdos' and CITY ='Budapest'" );
 		int rowCount = 0;
@@ -138,7 +138,7 @@ public class SimpleJdbcTest extends TestCase {
 		}
 		assertTrue( "No results in found set", rowCount > 0 );
 		ResultSetMetaData metaData = resultSet.getMetaData();
- 		assertEquals( "Should be five rows in result set", 6, metaData.getColumnCount() );
+		assertEquals( "Should be five rows in result set", 6, metaData.getColumnCount() );
 		assertEquals( "firstName", metaData.getColumnName(1) );
 		assertEquals( "lastName", metaData.getColumnName(2) );
 		assertEquals( "emailAddress", metaData.getColumnName(3) );
@@ -149,9 +149,9 @@ public class SimpleJdbcTest extends TestCase {
 
 	/** This test passes. */
 	public void testSimpleUpdate() throws SQLException {
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-        String sql = "INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, EMAILADDRESS, \"COMPANY ID\") VALUES( 'John', 'Hero', 'zero@yahoo.com', 3)";
-        int rowCount = statement.executeUpdate( sql );
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		String sql = "INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, EMAILADDRESS, \"COMPANY ID\") VALUES( 'John', 'Hero', 'zero@yahoo.com', 3)";
+		int rowCount = statement.executeUpdate( sql );
 		assertEquals( "Should have inserted one row", 1, rowCount );
 		sql = "UPDATE \""+tableName+"\" set \"LASTNAME\"='Zero' where emailAddress='zero@yahoo.com'"; //Currently fails with '@' symbol in search
 		//String sql = "UPDATE \"Contacts\" set \"ZIP\"='98989' where lastName='leong'";
@@ -200,11 +200,11 @@ public class SimpleJdbcTest extends TestCase {
 	//Test invalid relationships
 	/** This test passes. */
 	public void testSimpleDelete() throws SQLException {
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		//int rowCount = statement.executeUpdate("INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, \"COMPANY ID\") VALUES( 'Jesse', 'Barnum', 3)" );
 		//assertEquals( "Should have inserted one row", 1, rowCount );
-        String sql = "INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, \"COMPANY ID\") VALUES( 'John', 'Hero', 3)";
-        int rowCount = statement.executeUpdate( sql );
+		String sql = "INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, \"COMPANY ID\") VALUES( 'John', 'Hero', 3)";
+		int rowCount = statement.executeUpdate( sql );
 		assertEquals( "Should have inserted one row", 1, rowCount );
 		//rowCount = statement.executeUpdate("INSERT INTO "+tableName+"( FIRSTNAME, LASTNAME, \"COMPANY ID\") VALUES( 'Jesse', 'Spen', 4)" );
 		//assertEquals( "Should have inserted one row", 1, rowCount );
@@ -217,13 +217,18 @@ public class SimpleJdbcTest extends TestCase {
 	/** This test passes. */
 	public void testTimestampParsing() throws SQLException {
 		//FIX!! This is a bad test, it should create some sample data to test with. We're getting empty dates that are causing parse errors. Or maybe we should be able to handle this? --jsb
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		ResultSet rs = statement.executeQuery("SELECT * from "+tableName+" where ID=2");
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		ResultSet rs = statement.executeQuery("SELECT * from "+tableName+" where ID=144");
 		rs.next();
-		System.out.println("City: " + rs.getString(6) );
-		System.out.println("State: " + rs.getString(6) );
-		System.out.println("ZIP: " + rs.getString(6) );
-		System.out.println("Timestamp: " + rs.getTimestamp(9) );
+		System.out.println(rs.getString(1) );
+		System.out.println(rs.getString(2) );
+		System.out.println(rs.getString(3) );
+		System.out.println(rs.getString(4) );
+		System.out.println(rs.getString(5) );
+		System.out.println("City: " + rs.getString(14) );
+		System.out.println("State: " + rs.getString(15) );
+		System.out.println("ZIP: " + rs.getString(16) );
+		System.out.println("Timestamp: " + rs.getTimestamp(6) );
 	}
 
 
@@ -326,7 +331,7 @@ public class SimpleJdbcTest extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testAutoGeneratedKeys() throws SQLException {
-        String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 
 		//sql = "INSERT INTO \"Contact profiles\" LAYOUT WebObjects (Contact,Email,\"Active status\") values('Al Leong', 'kungfudude@mcgyver.com', 'Inactive')";
 		String sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress) values ('Al', 'Leong', 'kungfudude@mcgyver.com')";
@@ -336,8 +341,8 @@ public class SimpleJdbcTest extends TestCase {
 		assertTrue( "Should be at least one row in generated keys result set", rs.next() );
 		assertEquals( 3, rs.getMetaData().getColumnCount() ); //FIX Why is this 3?-Jo
 		assertEquals( "ID", rs.getMetaData().getColumnName(1) );
-		assertEquals( "city", rs.getMetaData().getColumnName(2) );
-		assertEquals( "Timestamp created", rs.getMetaData().getColumnName(3) );
+		assertEquals( "city", rs.getMetaData().getColumnName(3) );
+		assertEquals( "Timestamp created", rs.getMetaData().getColumnName(2) );
 		String idString = rs.getObject(1).toString();
 		int idInt = Integer.valueOf(idString).intValue();
 		assertTrue( "ID should be an integer greater than zero", idInt > 0 );
@@ -346,12 +351,12 @@ public class SimpleJdbcTest extends TestCase {
 	/** This test passes. */
 	public void testCaseSensitivity() throws SQLException {
 		statement.executeUpdate( "DELETE FROM Contacts where firstName LIKE 'toomsuba'" );
-        statement.executeUpdate( "DELETE FROM Contacts where firstName LIKE 'Toomsuba'" );
-        String sql = "SELECT * FROM Contacts where firstName='Toomsuba'";
-        sql = "SELECT * FROM Contacts where firstName='toomsuba'";
+		statement.executeUpdate( "DELETE FROM Contacts where firstName LIKE 'Toomsuba'" );
+		String sql = "SELECT * FROM Contacts where firstName='Toomsuba'";
+		sql = "SELECT * FROM Contacts where firstName='toomsuba'";
 		ResultSet resultSet = statement.executeQuery( sql );
-        //statement.executeUpdate( "DELETE FROM Contacts where firstName LIKE 'Toomsuba'" );
-        //statement.executeUpdate( "INSERT INTO Contacts(firstName) values 'Olivia'" );
+		//statement.executeUpdate( "DELETE FROM Contacts where firstName LIKE 'Toomsuba'" );
+		//statement.executeUpdate( "INSERT INTO Contacts(firstName) values 'Olivia'" );
 		//statement.executeUpdate( "INSERT INTO Contacts(firstName) values 'Olivia'" );
 		//statement.executeUpdate( "INSERT INTO Contacts(firstName) values 'olivia'" );
 		statement.executeUpdate( "INSERT INTO Contacts(firstName,lastName) values 'TOOMSUBA','Riley'" );
@@ -414,4 +419,20 @@ public class SimpleJdbcTest extends TestCase {
 	}*/
 
 	//FIX!! Add test for null searches, and various operators ie. begins with, ends with, contains, not equals, etc.
+
+	/** This test is not ready */
+	public void testSelectWithExactWordMatch() throws SQLException {
+		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+
+		String sql = "SELECT * FROM " + tableName + " where firstName LIKE '==ams team'";
+
+		ResultSet resultSet = statement.executeQuery( sql );
+		int rowCount = 0;
+		while( resultSet.next() ) {
+			rowCount++;
+
+			System.out.println(resultSet.getObject("firstName") + " PASSWORD:  " + resultSet.getObject("lastName"));
+		}
+	}
+
 }
