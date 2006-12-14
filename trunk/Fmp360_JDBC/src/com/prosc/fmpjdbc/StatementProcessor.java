@@ -67,12 +67,6 @@ public class StatementProcessor {
 			logger.log(Level.FINE, command.getSql());
 		}
 
-/*		if (params !=null) {
-		for( int i = 0; i < params.size(); i++ ) {
-			Object o = (Object)params.elementAt( i );
-			System.out.println( "Where:" + o );
-		}
-		}*/
 		if (command.getTable() == null) {
 			throw new SQLException("No table was specified");
 		}
@@ -369,7 +363,6 @@ public class StatementProcessor {
 
 	/*
 	private String urlEncode( String key, String value ) {
-		//System.out.println("Encoding " + key + "=" + value );
 		try {
 			StringBuffer result = new StringBuffer(URLEncoder.encode( key, "UTF-8" ) + "=");
 			if( value != null ) result.append( URLEncoder.encode( value, "UTF-8" ) );
@@ -521,12 +514,6 @@ public class StatementProcessor {
 		this.params = new Vector( params );
 		if (logger.isLoggable(Level.FINER)) {
 			logger.log(Level.FINER, "Setting " + params.size() + " param(s)");
-			/*
-			for( int i = 0; i < this.params.size(); i++ ) {
-				Object o = this.params.elementAt( i );
-				System.out.println("    " +  i + " " + o );
-			}
-			*/
 		}
 	}
 

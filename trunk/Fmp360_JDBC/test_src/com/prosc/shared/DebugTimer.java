@@ -1,6 +1,7 @@
 package com.prosc.shared;
 
 import java.util.Date;
+import java.util.logging.Logger;
 
 /** This is used to do millisecond-level timing of execution code, for optimization purposes. Typical useage would be something like this:
 <pre>
@@ -15,6 +16,7 @@ dt.stop();
 After stop() is called, it will dump a stopwatch log of each step to System.out. Because it does not generate any output until stop() is called, it has no significant effect on the execution speed of the code is is timing.
 */
 public class DebugTimer {
+	private static final Logger log = Logger.getLogger( DebugTimer.class.getName() );
 	protected String lastMessage = null;
 	protected Date startTime;
 	protected Date lastMark;
@@ -57,7 +59,7 @@ public class DebugTimer {
 		markTime(null);
 		if(enabled) {
 			System.out.print(progressMessage);
-			System.out.println("Finished");
+			log.info("Finished");
 		}
 	}
 

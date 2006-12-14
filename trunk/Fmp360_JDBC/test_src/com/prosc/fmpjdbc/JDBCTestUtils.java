@@ -6,11 +6,13 @@ import junit.framework.AssertionFailedError;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 /**
  * @author sbarnum
  */
 public class JDBCTestUtils {
+	private static final Logger log = Logger.getLogger( JDBCTestUtils.class.getName() );
 
 	//Configured via properties
 	public boolean use360driver;
@@ -31,7 +33,7 @@ public class JDBCTestUtils {
 		fmVersion = Integer.valueOf( System.getProperty("fmVersion", "7") ).intValue();
 		debugLevel = System.getProperty("debugLevel", "FINE");
 		use360driver = Boolean.valueOf( System.getProperty("use360driver", "true") ).booleanValue();
-		System.out.println("use 360 driver is set to : " + System.getProperty("use360driver") );
+		log.info("use 360 driver is set to : " + System.getProperty("use360driver") );
 		dbUsername = System.getProperty("dbUsername", "wo");
 		dbPassword = System.getProperty("dbPassword", "wo");
 		fmServer= System.getProperty("fmServer", "orion.360works.com");
@@ -83,7 +85,7 @@ public class JDBCTestUtils {
 		if (avg > maxAverageExecutionTime) {
 			throw new AssertionFailedError("Avg time of " + avg + "ms exceeded maximum of " + maxAverageExecutionTime + "ms for " + runnable);
 		}
-		System.out.println("Avg execution time for " + runnable + ": " + avg + "ms");
+		log.info("Avg execution time for " + runnable + ": " + avg + "ms");
 	}
 
 	/*public Connection getConnection() {

@@ -5,6 +5,8 @@ import com.webobjects.eoaccess.EODatabaseOperation;
 import com.webobjects.eocontrol.*;
 import com.webobjects.foundation.*;
 
+import java.util.logging.Logger;
+
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
     Copyright (C) 2006  Prometheus Systems Consulting, LLC d/b/a 360Works
@@ -28,6 +30,7 @@ import com.webobjects.foundation.*;
 
 /** @deprecated WooF7 does not use this class. It might be added back in at some time though. */
 public class FMPCalcSupport extends Object {
+	private static final Logger log = Logger.getLogger( FMPCalcSupport.class.getName() );
 	private static final FMPCalcSupport supportObject = new FMPCalcSupport();
 	private boolean needsListener = true;
 	
@@ -39,7 +42,7 @@ public class FMPCalcSupport extends Object {
 	private NSArray insertedIDs;
 	
 	static public void enable() {
-		System.out.println("¥Enabling FMPCalcSupport¥");
+		log.info("¥Enabling FMPCalcSupport¥");
 		EODatabaseContext.setDefaultDelegate(supportObject);
 		//EOAdaptorContext.setDefaultDelegate(supportObject);
 	}

@@ -3,6 +3,7 @@ package com.prosc.fmpjdbc;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.logging.Logger;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -31,6 +32,7 @@ import java.util.NoSuchElementException;
  * To change this template use File | Settings | File Templates.
  */
 public class ResultQueue implements Iterator {
+	private static final Logger log = Logger.getLogger( ResultQueue.class.getName() );
 	private long maxSize; // this is the max size of the queue
 	private long resumeSize; // this is when we'll start adding items again
 	private long currentSize; // this is the currentSize of the queue
@@ -55,7 +57,7 @@ public class ResultQueue implements Iterator {
 	}
 
 	public synchronized void setStoredError( Throwable storedError, String field ) {
-		System.out.println( "*** Stored an error ***" );
+		log.finest( "*** Stored an error ***" );
 		this.storedError = storedError;
 		this.errorFieldName = field;
 		errorRow = rowsReceived;
@@ -71,7 +73,6 @@ public class ResultQueue implements Iterator {
 	 */
 	public synchronized void add(Object toAdd, long size) {
 		// keep track of total size and only blocks until it can add new elements when
-		//System.out.println("Trying to add an object of size: " + size);
 		// what about when the first item you try to add to the list is LARGER than the max size?
 		// INCREASE THE MAX SIZE AND ADD IT ANYWAY
 		if (!(currentSize >= maxSize && objects.size() == 0)) {

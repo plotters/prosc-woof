@@ -65,15 +65,13 @@ public class Fmp360PlugIn extends com.webobjects.jdbcadaptor.JDBCPlugIn {
 			Class.forName("com.prosc.fmpjdbc.FmBlob");
 		} catch (NoClassDefFoundError e) {
 			String message = "WooF is not properly installed!  Make sure the fmp360_jdbc.jar is installed in the classpath.";
-			System.err.println(message);
 			throw new NoClassDefFoundError(message);
 		} catch (ClassNotFoundException e) {
 			String message = "WooF is not properly installed!  Make sure the fmp360_jdbc.jar is installed in the classpath.";
-			System.err.println(message);
-			throw new RuntimeException(e);
+			throw new RuntimeException(message, e);
 		}
 
-		System.out.println( "*** Successfully created new FmproPlugIn instance ***" );
+		log.info( "*** Successfully created new FmproPlugIn instance ***" );
 	}
 
 	public Object fetchBLOB(ResultSet resultSet, int i, EOAttribute eoAttribute, boolean b) throws SQLException {
@@ -83,11 +81,9 @@ public class Fmp360PlugIn extends com.webobjects.jdbcadaptor.JDBCPlugIn {
 			try {
 				return new FMData( rawBlob.getBinaryStream(), (int)rawBlob.length(), ((FmBlob)rawBlob).getMimeType() );
 			} catch (IOException e) {
-				System.err.println(e.getMessage());
-				//Ignore and return the raw blob
+				log.log( Level.WARNING, "Ignoring this IOException; returning the raw BLOB object.", e );
 			} catch ( NoClassDefFoundError e) {
 				String message = "WooF does not appear to be properly installed!  Make sure the fmp360_jdbc.jar file is installed in the classpath.";
-				System.err.println(message);
 				throw new NoClassDefFoundError(message);
 			}
 		}
@@ -95,7 +91,7 @@ public class Fmp360PlugIn extends com.webobjects.jdbcadaptor.JDBCPlugIn {
 	}
 
 	public Object fetchCLOB(ResultSet resultSet, int i, EOAttribute eoAttribute, boolean b) throws SQLException {
-		System.out.println("fetchCLOB (" + i + "), materialize: " + b);
+		log.finer("fetchCLOB (" + i + "), materialize: " + b);
 		return super.fetchCLOB(resultSet, i, eoAttribute, b);
 	}
 
@@ -109,9 +105,7 @@ public class Fmp360PlugIn extends com.webobjects.jdbcadaptor.JDBCPlugIn {
 	 * This is necessary to get the primary key, which is not obtainable using JDBC. **/
 	public NSArray newPrimaryKeys(int count, EOEntity entity, JDBCChannel channel) {
 		//OPTIMIZE: Only do the setup stuff once and cache it in a dictionary
-		//System.out.println("Need " + count + " new primary keys");
 		//Jesse - 6/16/2002: fixed the # problem with primary keys. Using the java.net.URLEncoder seems to have taken care of it.
-		//System.out.println("newPrimaryKeys: " + count + ", " + entity.name() + ", " + channel);
 		NSMutableArray newKeys = new NSMutableArray();
 		NSArray pkArray = entity.primaryKeyAttributes();
 		if( pkArray.count() != 1 ) {
@@ -121,7 +115,6 @@ public class Fmp360PlugIn extends com.webobjects.jdbcadaptor.JDBCPlugIn {
 				emptyPK.setObjectForKey(new Integer(0), (String)en.nextElement());
 			}
 			for( int n = 0; n < count; n++ ) { newKeys.addObject( emptyPK ); }
-			//System.out.println("newKeys: " + newKeys);
 		} else {
 			String pkColumnName = ((EOAttribute)pkArray.objectAtIndex(0)).columnName();
 			String pkAttributeName = (String)entity.primaryKeyAttributeNames().objectAtIndex(0);

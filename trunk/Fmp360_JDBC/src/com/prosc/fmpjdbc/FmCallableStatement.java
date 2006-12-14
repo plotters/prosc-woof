@@ -61,8 +61,6 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 		postArgs = postArgs.replaceAll("<layout>", ((FmMetaData)getConnection().getMetaData()).getAnyTableName());
 		postArgs = postArgs.replaceAll("<script>", scriptName);
 
-		//System.out.println(postArgs);
-
 		try {
 			request.doRequest(postArgs);
 		} catch (IOException ioe) {

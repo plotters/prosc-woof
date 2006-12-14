@@ -33,6 +33,7 @@ import java.net.MalformedURLException;
  * Created by IntelliJ IDEA. User: jesse Date: Apr 16, 2005 Time: 6:32:38 PM
  */
 public class FmMetaData implements DatabaseMetaData {
+	private static final Logger log = Logger.getLogger( FmMetaData.class.getName() );
 	private String databaseProductName;
 	private String databaseProductVersion;
 	private int dbMajorVersion;
@@ -48,7 +49,7 @@ public class FmMetaData implements DatabaseMetaData {
 	public FmMetaData(FmConnection connection) throws IOException, FileMakerException {
 		this.connection = connection;
 		FmXmlRequest requestHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 		logger.log(Level.FINER, "Creating FmMetaData");
 		requestHandler.doRequest("-max=0&-dbnames");
 		//databaseNames = iterator2List( requestHandler.getRecordIterator() );
@@ -70,8 +71,8 @@ public class FmMetaData implements DatabaseMetaData {
 			e.printStackTrace();
 		} finally {
 			requestHandler.closeRequest();
-      requestHandler = null;
-    }
+			requestHandler = null;
+		}
 	}
 
 //	private List iterator2List(Iterator it) {
@@ -114,7 +115,7 @@ public class FmMetaData implements DatabaseMetaData {
 			logger.log(Level.FINE, "getProcedures(" + catalog + ", " + schemaPattern + ", " + procedureNamePattern + ")");
 		}
 		FmXmlRequest handler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());  // connection.getXmlRequestHandler(); // FIX!!! Just create a new instance
+				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());  // connection.getXmlRequestHandler(); // FIX!!! Just create a new instance
 		String dbName = schemaPattern;
 		if( dbName == null ) dbName = catalog;
 		if( dbName == null ) dbName = connection.getCatalog();
@@ -165,7 +166,7 @@ public class FmMetaData implements DatabaseMetaData {
 			throw sqle;
 		} finally {
 			handler.closeRequest(); // The parsing thread should take care of this... but just in case it's taking too long
-    }
+		}
 	}
 
 	public ResultSet getProcedureColumns( String s, String s1, String s2, String s3 ) throws SQLException {
@@ -182,7 +183,7 @@ public class FmMetaData implements DatabaseMetaData {
 			logger.log(Level.FINE, "getTables(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + fieldTypeList + ")");
 		}
 		FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 		String postArgs;
 		String tableName;
 		String databaseName;
@@ -313,13 +314,13 @@ public class FmMetaData implements DatabaseMetaData {
 		if( connection.getFmVersion() >= 7 ) {
 			try {
 				handler = new FmResultSetRequest(connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml",
-				                                 connection.getPort(), connection.getUsername(), connection.getPassword());
+						connection.getPort(), connection.getUsername(), connection.getPassword());
 			} catch (MalformedURLException e) {
 				throw new RuntimeException(e);
 			}
 		} else {
 			handler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 		}
 		FmFieldList rawFields;
 		try {
@@ -384,11 +385,11 @@ public class FmMetaData implements DatabaseMetaData {
 			fieldRecord = new FmRecord( fields, null, null );
 			fieldRecord.setRawValue( tableNamePattern, 2 ); //FIX! Is this the right param to pass in? --jsb
 			fieldRecord.setRawValue( eachField.getAlias(), 3 );
-            try {
-                eachField.getType().getSqlDataType();
-            } catch(NullPointerException e) {
-                System.out.println(e);
-            }
+			try {
+				eachField.getType().getSqlDataType();
+			} catch(NullPointerException e) {
+				log.log( Level.SEVERE, "NPE while trying to get the SQL data type", e); //FIX! Brian wrote this code - are we supposed to do something here? Are we expecting this to fail? --jsb
+			}
 			fieldRecord.setRawValue( "" + eachField.getType().getSqlDataType(), 4 );
 			fieldRecord.setRawValue( eachField.getType().getTypeName(), 5 );
 			fieldRecord.setRawValue( "" + eachField.getType().getPrecision(), 6 );
@@ -542,7 +543,7 @@ public class FmMetaData implements DatabaseMetaData {
 		}
 
 		FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 		String postArgs;
 		List databases = new LinkedList();
 		postArgs = "-dbnames";
