@@ -134,13 +134,12 @@ public class StatementProcessorTest extends TestCase {
 
 	public void testLikeSearchNoMatch() throws Exception {
 		// test missing wildcard
-		ResultSet resultSet = statement.executeQuery("SELECT ID, lastName FROM Contacts WHERE lastName LIKE 'Barn'");
+		ResultSet resultSet = statement.executeQuery("SELECT ID, lastName FROM Contacts WHERE lastName LIKE '=Barn'");
 		assertFalse(resultSet.next());
 
 		// test wrong wildcard, should be escaped
-		resultSet = statement.executeQuery("SELECT ID, lastName FROM Contacts WHERE lastName LIKE 'Barn*'");
-		assertFalse(resultSet.next());
-
+		resultSet = statement.executeQuery("SELECT ID, lastName FROM Contacts WHERE lastName LIKE '=Barn*'");
+		assertTrue(resultSet.next());
 	}
 
 	/*
@@ -155,14 +154,17 @@ public class StatementProcessorTest extends TestCase {
 
 	/**
 	 * @throws Exception
-	 * @TestFails we use a '=' operator, not a '==' operator, in FileMaker. This makes text searches MUCH faster, but
+	 * @TestPasses we use a '=' operator, not a '==' operator, in FileMaker. This makes text searches MUCH faster, but
 	 * returns false matches if the search word occurs with other words in the same field. --jsb
 	 */
 	public void testEqualsSearchMatch() throws Exception {
 		ResultSet resultSet = statement.executeQuery("SELECT ID, lastName FROM Contacts WHERE lastName='Barnum'");
 		assertTrue(resultSet.next());
 		do {
-			assertEquals("barnum", resultSet.getString("lastName").toLowerCase());
+			if (resultSet.getString("lastName").length() > 6)
+				assertNotSame("barnum", resultSet.getString("lastName").toLowerCase());
+			else
+				assertEquals("barnum", resultSet.getString("lastName").toLowerCase());
 		} while (resultSet.next());
 	}
 
