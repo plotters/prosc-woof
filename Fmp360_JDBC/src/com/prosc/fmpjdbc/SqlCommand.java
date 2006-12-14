@@ -423,7 +423,8 @@ public class SqlCommand {
 							currentSearchTermOperator = SearchTerm.BEGINS_WITH;
 							whereFragment = whereFragment.substring(0, whereFragment.length() - 1);
 						} else {
-							currentSearchTermOperator = SearchTerm.EQUALS;
+							//currentSearchTermOperator = SearchTerm.EQUALS;
+							// keep searchTermOperator to be LIKE even if there are no % chars in search string -val
 						}
 					}
 					addSearchTerm( field, currentSearchTermOperator, whereFragment, false );
