@@ -420,11 +420,11 @@ public class SimpleJdbcTest extends TestCase {
 
 	//FIX!! Add test for null searches, and various operators ie. begins with, ends with, contains, not equals, etc.
 
-	/** This test is not ready */
+	/** This test passes.  This test is for testing LIKE opperator in the WHERE clause */
 	public void testSelectWithExactWordMatch() throws SQLException {
 		String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 
-		String sql = "SELECT * FROM " + tableName + " where firstName LIKE '==ams team'";
+		String sql = "SELECT * FROM " + tableName + " where firstName LIKE 'sam'";
 
 		ResultSet resultSet = statement.executeQuery( sql );
 		int rowCount = 0;
@@ -432,6 +432,26 @@ public class SimpleJdbcTest extends TestCase {
 			rowCount++;
 
 			System.out.println(resultSet.getObject("firstName") + " PASSWORD:  " + resultSet.getObject("lastName"));
+		}
+	}
+
+	public void testLargeNumberOfFields() throws ClassNotFoundException, SQLException {
+
+		Class.forName("com.prosc.fmpjdbc.Driver");
+
+		System.out.println("\n\njdbc driver is loaded\n\n");
+
+		Connection c = DriverManager.getConnection("jdbc:fmp360://" + "fmwpe.360works.com" +":" + 80 + "/testing_woof?loglevel=FINE", "admin", "");
+		Statement stmnt = c.createStatement();
+
+		String sql = "SELECT * FROM testing_woof";
+
+		ResultSet resultSet = stmnt.executeQuery(sql);
+		int rowCount = 0;
+		while( resultSet.next() ) {
+			rowCount++;
+
+			System.out.println(resultSet.getObject("FIELD Copy260") );
 		}
 	}
 
