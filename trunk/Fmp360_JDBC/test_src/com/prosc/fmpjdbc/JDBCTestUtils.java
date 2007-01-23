@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * @author sbarnum
@@ -40,6 +41,7 @@ public class JDBCTestUtils {
 		xmlServer = System.getProperty("xmlServer", "orion.360works.com" );
 		dbName = System.getProperty( "dbName", "Contacts" );
 		port = Integer.valueOf(System.getProperty("portNumber", "80")).intValue();
+		Logger.getLogger(JDBCTestUtils.class.getName()).setLevel(Level.FINEST);
 
 		if( fmVersion < 7 ) {
 			setFmVersion( 6 );

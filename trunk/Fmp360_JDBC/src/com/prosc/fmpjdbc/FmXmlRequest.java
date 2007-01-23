@@ -41,15 +41,23 @@ import org.xml.sax.*;
  * Time: 2:22:20 PM
  */
 public class FmXmlRequest extends FmRequest {
-	private static final int SERVER_STREAM_BUFFERSIZE = 16384;
+	/**
+	 * The URL (not including post data) where the response is retrieved from
+	 */
 	private URL theUrl;
+	/**
+	 * Input stream opened from the URL
+	 */
 	private InputStream serverStream;
+	/**
+	 * Parser used to extract data from the filemaker response stream
+	 */
 	private SAXParser xParser;
 	private String authString;
 	private String postPrefix = "";
 	private String postArgs;
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
-	/** A set that initially contains all fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown */
+	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set missingFields;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion)  {
@@ -335,14 +343,13 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 
-	/*
-	In this class we have a reference to FmFieldList called fieldDefinitions (see below). In all the uses of this class,
-	the state of this reference falls into 3 categories. Either it is set by the setSelectFields() method below,
-	in which case it has one or more FmFields or it might just contain 1 FmField which contains an asterisk '*" for 'select *'.
-	The last case is when fieldDefinitions is initially null. This will be the case when it is not set by setSelectFields().
-	i.e  for updates and inserts etc.
-	*/
-
+	/**
+	 * In this class we have a reference to FmFieldList called fieldDefinitions (see below). In all the uses of this class,
+	 * the state of this reference falls into 3 categories. If it is set by the setSelectFields() method below, it has one
+	 * or more FmFields.  Or, it might just contain 1 FmField which contains an asterisk '*" for 'select *'. The last case
+	 * is when fieldDefinitions is initially null. This will be the case when it is not set by setSelectFields(). i.e  for
+	 * updates and inserts etc.
+	 */
 	private volatile FmFieldList fieldDefinitions;
 	private FmTable fmTable;
 	private boolean useSelectFields = false;
@@ -350,27 +357,14 @@ public class FmXmlRequest extends FmRequest {
 	private volatile String productVersion;
 	private volatile String databaseName;
 	private volatile int foundCount = -1;
-	private FmRecord currentRow;
-	private volatile ResultQueue recordIterator;
-	private transient StringBuffer currentData = new StringBuffer(255);
-	private transient int insertionIndex;
-	private boolean foundDataForColumn;
-	private int columnDataIndex;
+	/**
+	 * Contains resultSet FmRecords
+	 */
+	private volatile ResultQueue recordIterator; // FIX! does this really need to be volatile? -ssb
+
 	private int columnIndex;
 	private List columnNames = new LinkedList();
 	private volatile int errorCode;
-
-	private static transient int code = 0;
-	private static Integer IGNORE_NODE = new Integer(code++);
-	private static Integer DATA_NODE = new Integer(code++);
-	private static Integer ERROR_NODE = new Integer(code++);
-
-	/**
-	 * Maps data indices in the XML data with data indices in the currentRow.  If a field in the XML data is not used, the value of that index will be -1.
-	 */
-	private int[] usedFieldArray = new int[32]; // The array used by the characters() method in xmlHandler.
-	//private List allFieldNames = new ArrayList(); // a list of Strings.  All the Field names inside the METADATA tag.
-
 
 	private boolean fieldDefinitionsListIsSet = false;
 	private boolean productVersionIsSet = false;
@@ -379,15 +373,45 @@ public class FmXmlRequest extends FmRequest {
 	private boolean recordIteratorIsSet = false;
 	private boolean errorCodeIsSet = false;
 
-	// ---XML parsing SAX implementation ---
+	/**
+	 * XML parsing SAX implementation.
+	 * This parses the result metadata and record data, adding FmRecord objects to the recordIterator.
+	 * <p>
+	 * Initially, metadata is parsed.  For each FIELD in the METADATA element, a FieldPositionPointer is added to the usedFieldArray list.
+	 * For repeating fields, multiple FieldPositionPointers are created, one for each repetition, each pointing to an index in the FmRecord to send data to.
+	 * <p>
+	 * Then, the RESULTSET data is parsed.  For each ROW, a new FmRecord is created and things are zeroed out.  For every COL, the next fieldPositionPointer is gotten.
+	 * WHen a DATA element is encountered, the current fieldPositionPointer is called to set the data in the FmRecord, if applicable. If multiple DATA elements are encountered within a column, the current fieldPositionPointer is queried to determine whether the COL is a repeating field or a portal.
+	 * If the former, the next fieldPositionPointer is gotten, and data is set.  If the latter, any data is ignored.
+	 */
 	private class FmXmlHandler extends org.xml.sax.helpers.DefaultHandler {
 		private StringBuffer requestContent = new StringBuffer();
 		private static final boolean debugMode = false; //If true, then the content of the XML will be stored in requestContent
-		private Integer currentNode = null;
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
 		private int sizeEstimate;
 		/** Incremented as metadata fields are parsed */
-		private int currentMetaDataFieldIndex;
+		//private int currentMetaDataFieldIndex;
+
+		/**
+		 * The row currently being parsed. Raw data is appended to the row at the appropriate index. When the row is completely parsed, it is appended to the recordIterator.
+		 */
+		private FmRecord currentRow;
+		/**
+		 * Contains string data for the current data element being parsed
+		 */
+		private transient StringBuffer currentData = new StringBuffer(255);
+		private boolean foundDataForColumn;
+		//private int columnDataIndex;
+
+		/**
+		 * Maps data indices in the XML data with data indices in the currentRow.  If a field in the XML data is not used, the value of that index will be -1.
+		 */
+		private List usedFieldArray = new ArrayList(64); // The array used by the characters() method in xmlHandler.
+		private FieldPositionPointer fieldPositionPointer;
+		private Iterator fieldPositionIterator;
+		private int nodeType;
+		private static final int NODE_TYPE_ERROR = 1;
+		private static final int NODE_TYPE_DATA = 2;
 
 		public FmXmlHandler() {
 			super();
@@ -420,7 +444,7 @@ public class FmXmlRequest extends FmRequest {
 			if( debugMode ) requestContent.append( "Starting document\n" );
 			log.log(Level.FINEST, "Start parsing response");
 			setRecordIterator(new ResultQueue(256*1024, 64*1024));  // FIX! is this a good size? -britt
-			currentNode = null;
+			nodeType = 0;
 		}
 
 		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) {
@@ -432,26 +456,37 @@ public class FmXmlRequest extends FmRequest {
 				requestContent.append( ">");
 			}
 			// Frequently repeated nodes
-			log.finest("Starting element qName = " + qName + " for " + this);
+			if (log.isLoggable(Level.FINEST)) {
+				log.finest("Starting element qName = " + qName + " for " + this);
+			}
 			if ("DATA".equals(qName)) {
-				//If this is the first <DATA> element; don't increment columnDataIndex. Otherwise it's a repeating field; go ahead.
-				if( foundDataForColumn ) columnDataIndex++;
-				else foundDataForColumn = true;
+				if( foundDataForColumn ) {
+					// this is not the first DATA in the COL. It's either a repeating field or portal
+					// FIX!! if a portal, only return the first item -ssb
+					if (fieldPositionPointer != null && fieldPositionPointer.isRepeating) {
+						fieldPositionPointer = (FieldPositionPointer) fieldPositionIterator.next();
+					} else {
+						fieldPositionPointer = null; // ignore any other data
+					}
+				} else {
+					// this is the first <DATA> element in the <COL>
+					foundDataForColumn = true;
+				}
 
-				insertionIndex = usedFieldArray[columnDataIndex];
-				currentNode = insertionIndex == -1 ? IGNORE_NODE : DATA_NODE;
 				//currentData.delete( 0, currentData.length() );
 				currentData = new StringBuffer( 255 );
 			} else if ("COL".equals(qName)) {
 				foundDataForColumn = false;
-				columnDataIndex++;
+				//columnDataIndex++;
+				fieldPositionPointer = (FieldPositionPointer) fieldPositionIterator.next();
 				columnIndex++;
 			} else if ("ROW".equals(qName)) {
 				//dt.markTime("  Starting row");
 				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
 				currentRow = new FmRecord(fieldDefinitions, Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
-				columnDataIndex = -1;
 				columnIndex = -1;
+				//columnDataIndex = -1;
+				fieldPositionIterator = usedFieldArray.iterator();
 			}
 			// One-shot nodes
 			else if ("FIELD".equals(qName)) {
@@ -480,6 +515,7 @@ public class FmXmlRequest extends FmRequest {
 				if (log.isLoggable(Level.FINE)) {
 					log.log(Level.FINE, "Resultset size: " + foundCount);
 				}
+				nodeType = NODE_TYPE_DATA;
 			} else if ("PRODUCT".equals(qName)) {
 				setDatabaseName(attributes.getValue("NAME")); // databaseName = attributes.getValue("NAME");
 				setProductVersion(attributes.getValue("VERSION")); // productVersion = attributes.getValue("VERSION");
@@ -492,7 +528,7 @@ public class FmXmlRequest extends FmRequest {
 
 
 			} else if ("ERRORCODE".equals(qName)) {
-				currentNode = ERROR_NODE;
+				nodeType = NODE_TYPE_ERROR;
 			}
 		}
 
@@ -505,12 +541,14 @@ public class FmXmlRequest extends FmRequest {
 		 */
 		private void handleParsedMetaDataField(String fieldName, int repetitionIndex, FmFieldType theType, boolean allowsNulls) {
 			//assert repetitionIndex >= 0;
+			/*
 			// ensure that the currentMetaDataFieldIndex can hold another value
 			if (currentMetaDataFieldIndex == usedFieldArray.length) {
 				int[] tmp = new int[usedFieldArray.length * 2];
 				System.arraycopy(usedFieldArray, 0, tmp, 0, usedFieldArray.length);
 				usedFieldArray = tmp;
 			}
+			*/
 			//
 			String adjustedName = repetitionIndex == 0 ? fieldName : fieldName + "[" + repetitionIndex + "]";
 			int fieldDefinitionIndex = fieldDefinitions.indexOfFieldWithColumnName(adjustedName);
@@ -522,12 +560,12 @@ public class FmXmlRequest extends FmRequest {
 				FmField fmField = fieldDefinitions.get(fieldDefinitionIndex);
 				fmField.setType(theType);
 				fmField.setNullable(allowsNulls);
-				usedFieldArray[currentMetaDataFieldIndex++] = fieldDefinitionIndex;
+				usedFieldArray.add(new FieldPositionPointer(fieldDefinitionIndex, repetitionIndex != 0));
 				if (missingFields != null) {
 					missingFields.remove(fmField);
 				}
 			} else {
-				usedFieldArray[currentMetaDataFieldIndex++] = -1;
+				usedFieldArray.add(new FieldPositionPointer(-1, repetitionIndex != 0)); // ignore this field
 			}
 		}
 
@@ -538,8 +576,8 @@ public class FmXmlRequest extends FmRequest {
 		public void endElement(String uri, String localName, String qName) {
 			if( debugMode ) requestContent.append( "</" + qName + ">" );
 			if( "DATA".equals(qName) ) {
-				if ( currentNode == DATA_NODE ) {
-					currentRow.setRawValue(currentData.toString(), insertionIndex);
+				if (fieldPositionPointer != null) {
+					fieldPositionPointer.setDataInRow(currentData, currentRow);
 				}
 			}
 			if ("ROW".equals(qName)) {
@@ -581,16 +619,37 @@ public class FmXmlRequest extends FmRequest {
 		public void characters(char ch[], int start, int length) {
 			if( debugMode ) requestContent.append( ch, start, length );
 			sizeEstimate += length;
-			if (currentNode == DATA_NODE) {
-				currentData.append( ch, start, length );
-			} else if (currentNode == ERROR_NODE) {
-				String error = new String(ch, start, length);
-				// all of the error code handling has been moved to readResult method -britt
-				setErrorCode(Integer.valueOf(error).intValue());
+			switch(nodeType) {
+				case 0:
+					log.log(Level.WARNING, "Unexpected character data : " + new String(ch, start, length));
+					break;
+				case NODE_TYPE_ERROR:
+					setErrorCode(Integer.parseInt(new String(ch, start, length)));
+					break;
+				case NODE_TYPE_DATA:
+					if (fieldPositionPointer != null && fieldPositionPointer.targetIndex != -1) {
+						currentData.append(ch, start, length);
+					}
+					break;
 			}
 		} // end of characters
 
+	}
 
+	private static class FieldPositionPointer {
+		private int targetIndex;
+		private boolean isRepeating;
+
+		public FieldPositionPointer(int targetIndex, boolean repeating) {
+			this.targetIndex = targetIndex;
+			isRepeating = repeating;
+		}
+
+		public void setDataInRow(StringBuffer data, FmRecord row) {
+			if (targetIndex != -1) {
+				row.setRawValue(data.toString(), targetIndex);
+			}
+		}
 	}
 
 
