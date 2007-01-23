@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><!DOCTYPE FMPXMLRESULT PUBLIC "-//FMI//DTD FMPXMLRESULT//EN" "/fmi/xml/FMPXMLRESULT.dtd">
+<FMPXMLRESULT xmlns="http://www.filemaker.com/fmpxmlresult">
+	<ERRORCODE>0</ERRORCODE>
+	<PRODUCT BUILD="11/14/2005" NAME="FileMaker Web Publishing Engine" VERSION="8.0.2.65"/>
+	<DATABASE DATEFORMAT="MM/dd/yyyy" LAYOUT="cities" NAME="Contacts" RECORDS="3" TIMEFORMAT="HH:mm:ss"/>
+	<METADATA>
+		<FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="name" TYPE="TEXT"/>
+		<FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="state" TYPE="TEXT"/>
+		<FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="description" TYPE="TEXT"/>
+		<FIELD EMPTYOK="NO" MAXREPEAT="1" NAME="Contacts::ID" TYPE="TEXT"/>
+		<FIELD EMPTYOK="NO" MAXREPEAT="1" NAME="Contacts::firstName" TYPE="TEXT"/>
+		<FIELD EMPTYOK="YES" MAXREPEAT="1" NAME="Contacts::lastName" TYPE="TEXT"/>
+	</METADATA>
+	<RESULTSET FOUND="1">
+		<ROW MODID="0" RECORDID="3">
+			<COL>
+				<DATA>Alpharetta</DATA>
+			</COL>
+			<COL>
+				<DATA>GA</DATA>
+			</COL>
+			<COL>
+				<DATA>Home of fred and al</DATA>
+			</COL>
+			<COL>
+				<DATA>2766</DATA>
+				<DATA>2782</DATA>
+			</COL>
+			<COL>
+				<DATA>Al</DATA>
+				<DATA>Fred</DATA>
+			</COL>
+			<COL>
+				<DATA>LEONG</DATA>
+				<DATA>FLINTSTONE</DATA>
+			</COL>
+		</ROW>
+	</RESULTSET>
+</FMPXMLRESULT>

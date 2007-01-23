@@ -22,6 +22,10 @@ public class InsertTest extends TestCase {
 		conn.close();
 	}
 
+	/**
+	 * @TestFails java.sql.SQLException: java.net.ConnectException: Connection refused
+	 * @throws SQLException
+	 */
 	public void testInsertRecord() throws SQLException {
 		Statement s = conn.createStatement();
 		String sql = "INSERT INTO \"production.defaultLayout\" (\"clientID\", \"distroMethod\", \"spaceMethod\", \"spaceLength\", \"actionID\", \"pathToProduction\", \"mixType\") VALUES('1095', 'Telink 700', 'AUTO', 'MATCH', '29652', 'm:\\audio\\AUDUBO12.wav', '0')";
