@@ -38,7 +38,6 @@ import java.net.URL;
 public class FmPreparedStatement extends FmStatement implements PreparedStatement {
 	String sql;
 	Vector params;
-	private Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
 
 	public FmPreparedStatement( FmConnection connection ) {
 		super( connection );

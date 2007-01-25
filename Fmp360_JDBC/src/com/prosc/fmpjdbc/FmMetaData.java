@@ -44,7 +44,7 @@ public class FmMetaData implements DatabaseMetaData {
 	private String anyTableName;
 	private int fieldCount;
 	private String catalogSeparator;
-	private Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
+	private Logger logger = Logger.getLogger( FmMetaData.class.getName() );
 
 	public FmMetaData(FmConnection connection) throws IOException, FileMakerException {
 		this.connection = connection;

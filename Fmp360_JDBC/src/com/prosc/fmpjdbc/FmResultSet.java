@@ -47,7 +47,7 @@ public class FmResultSet implements ResultSet {
 	//private boolean isFirst = false;
 	private boolean isAfterLast = false;
 	//private boolean isLast = false;
-	private Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
+	private Logger logger = Logger.getLogger( FmResultSet.class.getName() );
 	private int rowNum = -1;
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */

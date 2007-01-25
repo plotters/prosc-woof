@@ -48,7 +48,7 @@ public class StatementProcessor {
 
 	private static final String ESCAPE_C = "\\"; // escaped backslash.  Note, this should NOT be unicode encoded!
 	//private FieldPosition sharedFieldPosition = new FieldPosition(0);
-	private Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
+	private Logger logger = Logger.getLogger( StatementProcessor.class.getName() );
 
 	public StatementProcessor( FmStatement statement, SqlCommand command ) {
 		this.command = command;

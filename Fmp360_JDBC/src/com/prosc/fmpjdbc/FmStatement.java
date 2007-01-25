@@ -29,7 +29,6 @@ import java.util.logging.Logger;
 public class FmStatement implements Statement {
 	private FmConnection connection;
 	private StatementProcessor processor;
-	private Logger log = Logger.getLogger("com.prosc.fmpjdbc");
 
 	public FmStatement( FmConnection connection ) {
 		this.connection = connection;

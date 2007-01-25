@@ -41,7 +41,7 @@ import java.io.IOException;
  * catalogseparator: A string that is used for combining the databasename and table name. For example, if this is set to "|", then "Contacts|detail" would refer to the detail layout of the Contacts database. If unspecified, this defaults to ".". This is necessary for use with EOF, because EOF will complain when creating a new EOModel if any of the layout names are the same.
  */
 public class FmConnection implements Connection {
-	private static final Logger log = Logger.getLogger("com.prosc.fmpjdbc");
+	private static final Logger log = Logger.getLogger( FmConnection.class.getName() );
 	public static final String URL_EXAMPLE = " URL should be in the form 'jdbc:fmp360://hostname[:portNumber]/[DatabaseName][?key1=value1&key2=value2&...]";
 	private String mBeanName = FmConnection.class.getName() + ":instance=" + System.identityHashCode( this );
 	private String url;
@@ -68,15 +68,12 @@ public class FmConnection implements Connection {
 		isClosed = false;
 		this.properties = properties;
 		extractUrlProperties();
-		String logLevel =  properties.getProperty("loglevel", "INFO" ); // default log level is INFO
-		log.setLevel(Level.parse(logLevel));
-		if (log.isLoggable(Level.FINE)) {
-			Logger.getLogger( "com.prosc.fmpjdbc").setLevel( log.getLevel() );
-//			Logger.getLogger("").getHandlers()[0].setLevel(logger.getLevel());
+		String logLevel =  properties.getProperty("loglevel" ); // default log level is INFO
+		if( logLevel != null ) { //Override the JVM logging level with the one in the URL
+			Logger packageLogger = Logger.getLogger( "com.prosc.fmpjdbc" );
+			packageLogger.setLevel(Level.parse(logLevel));
 		}
-		if (log.isLoggable(Level.CONFIG)) {
-			log.log(Level.CONFIG, "Connecting to " + url + " with properties " + properties);
-		}
+		log.log(Level.CONFIG, "Connecting to " + url + " with properties " + properties);
 		fmVersion = Float.valueOf( properties.getProperty("fmversion", "7") ).floatValue();
 		if( fmVersion >= 7 ) {
 			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
@@ -251,7 +248,11 @@ public class FmConnection implements Connection {
 	}
 
 	public void setAutoCommit( boolean b ) throws SQLException {
-		throw new AbstractMethodError( "setAutoCommit is not implemented yet." ); //FIX! Broken placeholder
+		if( b ) {
+			//Ignore; we're always in auto-commit mode
+		} else {
+			throw new UnsupportedOperationException( "FileMaker does not support transactions; you cannot set auto commit to false." );
+		}
 	}
 
 	public boolean getAutoCommit() throws SQLException {
@@ -339,7 +340,7 @@ public class FmConnection implements Connection {
 	}
 
 	public PreparedStatement prepareStatement( String s, int i ) throws SQLException {
-		throw new AbstractMethodError( "prepareStatement is not implemented yet." ); //FIX! Broken placeholder
+		return prepareStatement( s + "" );
 	}
 
 	public PreparedStatement prepareStatement( String s, int[] ints ) throws SQLException {
