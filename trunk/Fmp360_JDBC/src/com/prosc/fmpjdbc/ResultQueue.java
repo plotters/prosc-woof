@@ -105,19 +105,16 @@ public class ResultQueue implements Iterator {
 	public synchronized boolean hasNext() {
 		// might not be finished, but nothing ready now so wait...
 		while (objects.size() <= 0 && !finished) {
+			if( storedError != null ) return true; //This will be thrown in the next() method
 			try {
 				wait();
-				if( storedError != null ) return true; //This will be thrown in the next() method
+				if( storedError != null ) return true; //We neeed to check before and after the call to wait()
 			} catch (InterruptedException ie) {
 				throw new RuntimeException(ie);
 			}
 		} // end of while, ready to decide
 
-		if (objects.size() > 0) {
-			return true;
-		} else {
-			return false; // finished putting stuff in the queue
-		}
+		return objects.size() > 0;
 	}
 
 	public synchronized void setFinished() {

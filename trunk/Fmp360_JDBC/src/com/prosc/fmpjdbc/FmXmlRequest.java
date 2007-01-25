@@ -167,8 +167,8 @@ public class FmXmlRequest extends FmRequest {
 				try {
 					xParser.parse( input, xmlHandler );
 				} catch (IOException ioe) {
-					if (ioe.getMessage().equals("stream is closed")) {
-						log.finest("The parsing thread was in the middle of parsing data from FM but someone closed the stream");
+					if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") ) {
+						log.config("The parsing thread was in the middle of parsing data from FM but something closed the stream. If this was an update or deletion, it may have succeeded anyway.");
 					} else {
 						log.info("There was an error, so i'm setting all of the variables and continuing");
 						onErrorSetAllVariables(ioe);

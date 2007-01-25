@@ -42,7 +42,7 @@ public class FmBlob implements Blob {
 	private String password;
 	private HttpURLConnection connection;
 	//private InputStream stream = null;
-	private Logger logger = Logger.getLogger("com.prosc.fmpjdbc");
+	private Logger logger = Logger.getLogger( FmBlob.class.getName() );
 
 	public FmBlob(URL containerUrl, String username, String password) {
 		this.containerUrl = containerUrl;
