@@ -592,4 +592,12 @@ public class AdvancedDriverTests extends TestCase {
 			rs.close();
 		}
 	}
+
+	public void testSelectSpecialCharacters6() throws SQLException {
+		ResultSet rs = connection6.prepareStatement( "SELECT firstName FROM Contacts.Contacts WHERE ID=234" ).executeQuery();
+		rs.next();
+		String dbValue = rs.getString( 1 );
+		System.out.println( dbValue );
+		assertTrue( dbValue.indexOf( "Õ") >= 0 );
+	}
 }
