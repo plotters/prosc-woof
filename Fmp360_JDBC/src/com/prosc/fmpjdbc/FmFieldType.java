@@ -33,7 +33,7 @@ import java.util.HashMap;
 public class FmFieldType {
 	public static final Map typesByName = new HashMap(6);
 	public static final FmFieldList resultSetFormat = new FmFieldList();
-	public static final FmFieldType TEXT, NUMBER, DATE, TIME, TIMESTAMP, CONTAINER;
+	public static final FmFieldType TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP, CONTAINER;
 
 	static {
 		TEXT = new FmFieldType("TEXT", Types.VARCHAR, Integer.MAX_VALUE); //Used to be LONGVARCHAR, but then EOModeler models that as a 'C' CharacterStream instead of 'S' String
@@ -45,6 +45,12 @@ public class FmFieldType {
 		NUMBER.setFixedPrecisionScale(true);
 		NUMBER.setAutoIncrement(true);
 
+		RECID = new FmFieldType( "RECID", Types.INTEGER, 400 ); //FIX!! Don't know what to put for precision for integers
+		RECID.setLiteralPrefix( null );
+		RECID.setLiteralSuffix( null );
+		RECID.setFixedPrecisionScale( false ); //FIX!! I don't really know what goes here; just guessing
+		RECID.setAutoIncrement( true ); //FIX!! I don't really know what goes here; just copied from previous
+
 		DATE = new FmFieldType("DATE", Types.DATE, 32 );
 
 		TIME = new FmFieldType("TIME", Types.TIME, 32 );
@@ -54,7 +60,7 @@ public class FmFieldType {
 		CONTAINER = new FmFieldType("BLOB", Types.BLOB, Integer.MAX_VALUE );
 		CONTAINER.setSearchable( (short)DatabaseMetaData.typePredNone);
 		
-		FmFieldType[] types = new FmFieldType[] { TEXT, NUMBER, DATE, TIME, TIMESTAMP };
+		FmFieldType[] types = new FmFieldType[] { TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP };
 		for( int n=0; n<types.length; n++ ) {
 			typesByName.put( types[n].getTypeName(), types[n] );
 		}
