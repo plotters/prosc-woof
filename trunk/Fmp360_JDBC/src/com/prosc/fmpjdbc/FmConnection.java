@@ -88,6 +88,7 @@ public class FmConnection implements Connection {
 		// lastly, check the username/pwd are valid by trying to access the db
 		if (catalog != null) {
 			((FmMetaData) getMetaData()).testUsernamePassword(); // this will throw a new SQLException(FmXmlRequest.HttpAuthenticationException)
+			//FIX!! Right now, this is very inefficient and runs every time a connection is open. We shoudl 1) make it more efficient, 2) make it configurable whether to do this, and 3) perhaps skip it if the same credentials are applied multiple times --jsb
 		}
 		// Commented out until we switched to JDK 1.5: MBeanUtils.registerMBean( mBeanName, this );
 	}

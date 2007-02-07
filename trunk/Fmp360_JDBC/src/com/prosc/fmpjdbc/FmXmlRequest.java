@@ -58,6 +58,8 @@ public class FmXmlRequest extends FmRequest {
 	private String postArgs;
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 	private boolean isStreamClosed = false;
+	private int recIdColumnIndex;
+
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set missingFields;
 
@@ -490,6 +492,10 @@ public class FmXmlRequest extends FmRequest {
 				//columnDataIndex++;
 				fieldPositionPointer = (FieldPositionPointer) fieldPositionIterator.next();
 				columnIndex++;
+				if( columnIndex == recIdColumnIndex ) {
+					currentRow.setRawValue(currentRow.getRecordId().toString(), columnIndex);
+					columnIndex++;
+				}
 			} else if ("ROW".equals(qName)) {
 				//dt.markTime("  Starting row");
 				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
@@ -550,16 +556,6 @@ public class FmXmlRequest extends FmRequest {
 		 * @param allowsNulls
 		 */
 		private void handleParsedMetaDataField(String fieldName, int repetitionIndex, FmFieldType theType, boolean allowsNulls) {
-			//assert repetitionIndex >= 0;
-			/*
-			// ensure that the currentMetaDataFieldIndex can hold another value
-			if (currentMetaDataFieldIndex == usedFieldArray.length) {
-				int[] tmp = new int[usedFieldArray.length * 2];
-				System.arraycopy(usedFieldArray, 0, tmp, 0, usedFieldArray.length);
-				usedFieldArray = tmp;
-			}
-			*/
-			//
 			String adjustedName = repetitionIndex == 0 ? fieldName : fieldName + "[" + repetitionIndex + "]";
 			int fieldDefinitionIndex = fieldDefinitions.indexOfFieldWithColumnName(adjustedName);
 			if (fieldDefinitionIndex == -1 && repetitionIndex == 1) {
@@ -593,6 +589,10 @@ public class FmXmlRequest extends FmRequest {
 			if ("ROW".equals(qName)) {
 				recordIterator.add(currentRow, (long) sizeEstimate);
 				sizeEstimate = 0; // set it to 0 and start estimating again
+				if( columnIndex == recIdColumnIndex ) { //This is necessary in case the record id is the last selected field; it won't be caught in the begin of the <COL> element.
+					currentRow.setRawValue(currentRow.getRecordId().toString(), columnIndex);
+					columnIndex++;
+				}
 				//records.add(currentRow);
 			}
 			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
@@ -677,7 +677,22 @@ public class FmXmlRequest extends FmRequest {
 			useSelectFields = true;
 		}
 
-		missingFields = new LinkedHashSet( fieldDefinitions.getFields() ); // this will be trimmed down as metadata is parsed
+		//missingFields = new LinkedHashSet( fieldDefinitions.getFields() ); // this will be trimmed down as metadata is parsed
+		missingFields = new LinkedHashSet( fieldDefinitions.getFields().size() );
+		int n=0;
+		for( Iterator it = fieldDefinitions.getFields().iterator(); it.hasNext(); ) {
+			FmField eachField = (FmField)it.next();
+			if( "recid".equalsIgnoreCase( eachField.getColumnName() ) ) {
+				eachField.setNullable( false );
+				eachField.setReadOnly( true );
+				eachField.setType( FmFieldType.RECID );
+				recIdColumnIndex = n;
+			}
+			else {
+				missingFields.add( eachField );
+			}
+			n++;
+		}
 	}
 
 	public static class HttpAuthenticationException extends IOException {

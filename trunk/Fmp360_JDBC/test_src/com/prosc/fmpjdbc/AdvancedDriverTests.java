@@ -226,9 +226,27 @@ public class AdvancedDriverTests extends TestCase {
 		assertEquals("San Francisco", rs.getString("city") );
 	}
 
+	public  void testFmpRecordIDs1() throws SQLException {
+		//Make sure that we get record ids when requested in the select statement
+		ResultSet rs = statement7.executeQuery( "SELECT recId, firstName, lastName FROM Contacts WHERE firstName='Robin'" );
+		rs.next();
+		assertEquals( rs.getObject(1).getClass(), Integer.class ); //getObject on recId should return an Integer
+		int recId = rs.getInt( 1 );
+		assertTrue( "Record is " + recId + "; expected non-zero value.", recId != 0 );
+
+		//Now try updating with that record ID
+		statement7.executeUpdate( "UPDATE Contacts SET firstName='Robin' WHERE recId=" + recId );
+
+		//Now try updating with record ID with prepared statements
+		PreparedStatement ps = connection7.prepareStatement( "UPDATE Contacts SET firstName=? WHERE recID=?" );
+		ps.setString( 1, "Robin" );
+		ps.setInt( 2, recId );
+		assertEquals( 1, ps.executeUpdate() );
+	}
+
 	/** This test does not apply to the ddtek driver.
 	 * @TestFails */
-	public void testFmpRecordIDs() throws SQLException {
+	public void testFmpRecordIDs2() throws SQLException {
 		if( jdbc7.use360driver ) {
 			String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 			statement7.executeUpdate( "DELETE from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Start out with an empty record set

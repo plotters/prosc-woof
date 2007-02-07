@@ -39,7 +39,7 @@ public class ExceptionTests extends TestCase {
 	public void testMissingDatabase() throws SQLException {
 		try {
 			Connection connection = jdbc.getConnection( "NoSuchDatabase", "user", "password" );
-			fail("You should be able to get a connection to a non-existant database");
+			fail("You should not be able to get a connection to a non-existant database");
 		} catch (SQLException sqle) {
 			// GOOD
 		}

@@ -105,10 +105,18 @@ public class StatementProcessor {
 			/** Contains keys used in the where segment, used to identify duplicates, which is handy for doing ranged searches. */
 			Map whereSegmentKeys = new HashMap( command.getSearchTerms().size() );
 
+			Iterator recordIdIterator = null;
 			for( Iterator it = command.getSearchTerms().iterator(); it.hasNext(); ) {
 				SearchTerm eachTerm = (SearchTerm)it.next();
 				if( "recid".equals( eachTerm.getField().getColumnName().toLowerCase() ) ) { //Throw away all other params, just use recid
-					whereClause = new StringBuffer( "&-recid=" + eachTerm.getValue() );
+					Object value = eachTerm.getValue();
+					if( eachTerm.isPlaceholder() ) {
+						value = params.elementAt(currentParam++);
+					}
+					whereClause = new StringBuffer( "&-recid=" + value );
+					List recordIds = new LinkedList();
+					recordIds.add( Integer.valueOf( value.toString() ) );
+					recordIdIterator = recordIds.iterator();
 					break;
 				}
 				String fieldName = eachTerm.getField().getColumnName(); //FIX!! use fully qualified table names for related fields
@@ -202,6 +210,8 @@ public class StatementProcessor {
 					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			Integer recordId;
 
+			boolean recordIdIsPreset;
+			int rowCount = 0;
 			switch( command.getOperation() ) {
 				case SqlCommand.SELECT:
 					StringBuffer postArgs = new StringBuffer( 200 );
@@ -233,9 +243,17 @@ public class StatementProcessor {
 
 
 				case SqlCommand.UPDATE:
-					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
-					for( Iterator it = recIdHandler.getRecordIterator(); it.hasNext(); ) {
-						recordId = ( (FmRecord)it.next() ).getRecordId();
+					recordIdIsPreset = ( recordIdIterator != null );
+					if( recordIdIterator == null ) { //Might already be set if we passed in a record ID for the WHERE clause
+						recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
+						recordIdIterator = recIdHandler.getRecordIterator();
+					}
+					while( recordIdIterator.hasNext() ) {
+						if( recordIdIsPreset ) {
+							recordId = (Integer)recordIdIterator.next();
+						} else {
+							recordId = ( (FmRecord)recordIdIterator.next() ).getRecordId();
+						}
 						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 						try {
@@ -246,15 +264,24 @@ public class StatementProcessor {
 							updateRowCount = 0;
 							throw e;
 						}
+						rowCount++;
 					}
-					updateRowCount = recIdHandler.getFoundCount();
+					updateRowCount = rowCount;
 					recIdHandler.closeRequest();
 					break;
 
 				case SqlCommand.DELETE:
-					recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
-					for( Iterator it = recIdHandler.getRecordIterator(); it.hasNext(); ) {
-						recordId = ( (FmRecord)it.next() ).getRecordId();
+					recordIdIsPreset = ( recordIdIterator != null );
+					if( recordIdIterator == null ) { //Might already be set if we passed in a record ID for the WHERE clause
+						recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
+						recordIdIterator = recIdHandler.getRecordIterator();
+					}
+					while( recordIdIterator.hasNext() ) {
+						if( recordIdIsPreset ) {
+							recordId = (Integer)recordIdIterator.next();
+						} else {
+							recordId = ( (FmRecord)recordIdIterator.next() ).getRecordId();
+						}
 						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 						try {
@@ -264,8 +291,9 @@ public class StatementProcessor {
 							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 							throw e;
 						}
+						rowCount++;
 					}
-					updateRowCount = recIdHandler.getFoundCount();
+					updateRowCount = rowCount;
 					recIdHandler.closeRequest();
 					break;
 

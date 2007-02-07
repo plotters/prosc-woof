@@ -1,12 +1,9 @@
 package com.prosc.fmpjdbc;
 
-import java.util.Iterator;
 import java.util.logging.Logger;
-import java.util.logging.Level;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.text.Format;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.net.URL;
@@ -103,23 +100,26 @@ public class FmRecord {
 
 	public Object getObject(int index, FmConnection connection) {
 		Object result;
-		int type = fieldList.get(index).getType().getSqlDataType();
+		FmFieldType fmType = fieldList.get( index ).getType();
+		int sqlType = fmType.getSqlDataType();
 
-		switch (type) {
+		switch (sqlType ) {
 			case Types.LONGVARCHAR:
 			case Types.VARCHAR:
 				result = getString(index);
-			break;
-			case Types.DECIMAL: result = getBigDecimal(index);
-			break;
+				break;
+			case Types.DECIMAL: result = getBigDecimal(index); //All filemaker numbers are treated as decimal by default
+				break;
 			case Types.DATE: result = getDate(index);
-			break;
+				break;
 			case Types.TIME: result = getTime(index);
-			break;
+				break;
 			case Types.TIMESTAMP: result = getTimestamp(index);
-			break;
+				break;
+			case Types.INTEGER: result = new Integer( getInt(index) ); //This will only happen for recIds
+				break;
 			case Types.BLOB: result = getBlob(index, connection);
-			break;
+				break;
 			default: result = getString(index);
 		}
 
