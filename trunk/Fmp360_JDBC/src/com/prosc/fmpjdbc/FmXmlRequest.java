@@ -57,6 +57,7 @@ public class FmXmlRequest extends FmRequest {
 	private String postPrefix = "";
 	private String postArgs;
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
+	private boolean isStreamClosed = false;
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set missingFields;
 
@@ -144,13 +145,17 @@ public class FmXmlRequest extends FmRequest {
 			try {
 				serverStream.close();
 				//serverStream = null;
+				synchronized(this) {
+					isStreamClosed = true;
+				}
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 	}
 
 	protected void finalize() throws Throwable {
-		if (serverStream != null) serverStream.close();
+		closeRequest();
+		//if (serverStream != null) serverStream.close();
 		super.finalize();
 	}
 
@@ -167,10 +172,15 @@ public class FmXmlRequest extends FmRequest {
 				try {
 					xParser.parse( input, xmlHandler );
 				} catch (IOException ioe) {
+					boolean ignore = false;
 					if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") ) {
-						log.config("The parsing thread was in the middle of parsing data from FM but something closed the stream. If this was an update or deletion, it may have succeeded anyway.");
-					} else {
-						log.info("There was an error, so i'm setting all of the variables and continuing");
+						synchronized( this ) {
+							if( isStreamClosed ) ignore = true;
+						}
+					}
+					if( ! ignore ) {
+						log.log(Level.WARNING, "The parsing thread was in the middle of parsing data from FM when an IOException occurred.", ioe );
+						//log.info("There was an error, so i'm setting all of the variables and continuing");
 						onErrorSetAllVariables(ioe);
 						//throw new RuntimeException(ioe);
 					}

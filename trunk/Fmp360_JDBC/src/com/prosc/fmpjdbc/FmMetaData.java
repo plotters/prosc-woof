@@ -83,7 +83,7 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public void testUsernamePassword() throws SQLException {
 		// if no exception gets thrown, then we're ok
-		ResultSet rs =  getTables(connection.getCatalog(), null, null, new String[] {"TEXT"}, true);
+		ResultSet rs =  getTables(connection.getCatalog(), null, null, true);
 		rs.close();
 	}
 
@@ -174,13 +174,12 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getTables( String catalog, String schemaPattern, String tableNamePattern, String[] fieldTypes ) throws SQLException {
-		return getTables(catalog, schemaPattern, tableNamePattern, fieldTypes, false);
+		return getTables(catalog, schemaPattern, tableNamePattern, false);
 	}
 
-	private ResultSet getTables( String catalog, String schemaPattern, String tableNamePattern, String[] fieldTypes, boolean testingConnection ) throws SQLException {
+	private ResultSet getTables( String catalog, String schemaPattern, String tableNamePattern, boolean testingConnection ) throws SQLException {
 		if (logger.isLoggable(Level.FINE)) {
-			List fieldTypeList = Arrays.asList(fieldTypes);
-			logger.log(Level.FINE, "getTables(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + fieldTypeList + ")");
+			logger.log(Level.FINE, "getTables(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ")");
 		}
 		FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
