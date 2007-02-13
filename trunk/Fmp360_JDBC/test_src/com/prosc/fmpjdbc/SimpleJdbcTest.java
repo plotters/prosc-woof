@@ -13,6 +13,10 @@ import java.util.logging.Logger;
 import com.prosc.shared.IOUtils;
 import com.prosc.shared.DebugTimer;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 /** This test case is designed to test many of the basic functions of any JDBC driver. I have documented the cases
  * where this test fails for the ddtek driver, read the detailed method descriptions towards the bottom to see my notes
  * on these. You can run the tests yourself by installing <a href="http://ant.apache.org">ant</a> and then typing 'ant testddtek'
@@ -453,6 +457,10 @@ public class SimpleJdbcTest extends TestCase {
 
 			System.out.println(resultSet.getObject("FIELD Copy260") );
 		}
+	}
+
+	public void testWorkingXmlParser() throws ParserConfigurationException, SAXException {
+		javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser();
 	}
 
 }
