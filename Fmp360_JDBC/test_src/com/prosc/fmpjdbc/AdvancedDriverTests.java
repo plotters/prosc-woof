@@ -242,6 +242,15 @@ public class AdvancedDriverTests extends TestCase {
 		ps.setString( 1, "Robin" );
 		ps.setInt( 2, recId );
 		assertEquals( 1, ps.executeUpdate() );
+
+		//Now see if we get the record ID in a newly created record
+		assertEquals( 1, statement7.executeUpdate( "INSERT INTO Contacts(firstName) VALUES(\"recid test\") " ) );
+		ResultSet keys = statement7.getGeneratedKeys();
+		keys.next();
+		recId = keys.getInt( "recid" );
+
+		//Now test a deletion by the record ID
+		assertEquals( 1, statement7.executeUpdate( "DELETE FROM Contacts WHERE recId = " + recId ) );
 	}
 
 	/** This test does not apply to the ddtek driver.

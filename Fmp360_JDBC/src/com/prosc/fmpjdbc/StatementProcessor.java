@@ -64,8 +64,8 @@ public class StatementProcessor {
 	 * -process -script -view
 	 */
 	public void execute() throws SQLException {
-		if (logger.isLoggable(Level.FINE)) {
-			logger.log(Level.FINE, command.getSql());
+		if (logger.isLoggable(Level.CONFIG)) {
+			logger.log(Level.CONFIG, command.getSql());
 		}
 
 		if (command.getTable() == null) {
@@ -504,7 +504,7 @@ public class StatementProcessor {
 	public ResultSet getGeneratedKeys() {
 		// generate a map of keys & values which have non-null values, but were not in the assignmentTerms for the SqlCommand.
 		// these are the auto-generated items.
-		Map resultMap = new LinkedHashMap( 2 );
+		Map resultMap = new LinkedHashMap( 3 );
 		FmFieldList fieldList = insertedRecord.getFieldList();
 		Set newFields = new LinkedHashSet( fieldList.getFields() ); // this contains FmField objects
 		for( Iterator it = command.getAssignmentTerms().iterator(); it.hasNext(); ) {
@@ -520,23 +520,23 @@ public class StatementProcessor {
 			if( generatedValue != null && generatedValue.length() > 0 )//add this to exclude empty fields
 				resultMap.put( field, generatedValue );
 		}
-		FmConnection connection = null;
-		connection = (FmConnection)statement.getConnection();
-		if( resultMap.size() == 0 ) {
-			return new FmResultSet( null, null, connection );
-		} else {
-			int keysFound = 0;
-			FmFieldList resultFieldList = new FmFieldList();
-			for( Iterator it = resultMap.keySet().iterator(); it.hasNext(); ) {
-				resultFieldList.add( (FmField)it.next() );
-			}
-			FmRecord resultRecord = new FmRecord( resultFieldList, null, null );
-			for( Iterator it = resultMap.keySet().iterator(); it.hasNext(); ) {
-				resultRecord.setRawValue( (String)resultMap.get( it.next() ), keysFound++ );
-			}
-			return new FmResultSet( Collections.singletonList( resultRecord ).iterator(), resultFieldList, connection );
-
+		FmConnection connection = (FmConnection)statement.getConnection();
+		int keysFound = 0;
+		FmFieldList resultFieldList = new FmFieldList();
+		for( Iterator it = resultMap.keySet().iterator(); it.hasNext(); ) {
+			resultFieldList.add( (FmField)it.next() );
 		}
+		FmTable recIdTable = null; //FIX!! Will this break anything? Where should this value come from?
+		FmField recIdField = new FmField( recIdTable, "recid", "recid", FmFieldType.RECID, false, true );
+		resultFieldList.add( recIdField ); //Always include record id as an auto-generatetd key
+		resultMap.put( recIdField, insertedRecord.getRecordId().toString() );
+
+		FmRecord resultRecord = new FmRecord( resultFieldList, null, null );
+		for( Iterator it = resultMap.keySet().iterator(); it.hasNext(); ) {
+			resultRecord.setRawValue( (String)resultMap.get( it.next() ), keysFound++ );
+		}
+		
+		return new FmResultSet( Collections.singletonList( resultRecord ).iterator(), resultFieldList, connection );
 	}
 
 	public void setParams( Vector params ) {

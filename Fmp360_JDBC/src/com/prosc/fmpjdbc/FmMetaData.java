@@ -276,7 +276,7 @@ public class FmMetaData implements DatabaseMetaData {
 			} catch( FmXmlRequest.HttpAuthenticationException e) {
 				if (testingConnection) {
 					// then i'm trying to see if i CAN access this db...
-					SQLException sqle = new SQLException(e.toString());
+					SQLException sqle = new SQLException( e.getMessage() );
 					sqle.initCause(e);
 					throw sqle;
 				} else {
