@@ -51,8 +51,16 @@ public class SimpleJdbcTest extends TestCase {
 	}
 
 	public void testWrongHost() {
-		try {
+		try { //Try with hostname
 			DriverManager.getConnection( "jdbc:fmp360://hermes.360works.com/Contacts", jdbc.dbUsername, jdbc.dbPassword );
+			fail( "This is the wrong host; should have failed." );
+		} catch( SQLException e ) {
+			assertTrue( e.getMessage().indexOf( "IOException: Server has moved to new location" ) >= 0 );
+		}
+
+		try { //Try without hostname
+			Connection connection = DriverManager.getConnection( "jdbc:fmp360://hermes.360works.com/", jdbc.dbUsername, jdbc.dbPassword ); //This by itself won't throw an exception, because we don't connect to FM server initially if no catalog is set
+			connection.getMetaData(); //This will actually connect to FM to get catalog names, and should fail
 			fail( "This is the wrong host; should have failed." );
 		} catch( SQLException e ) {
 			assertTrue( e.getMessage().indexOf( "IOException: Server has moved to new location" ) >= 0 );
