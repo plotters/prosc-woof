@@ -32,6 +32,8 @@ import java.text.*;
 /**
  * Created by IntelliJ IDEA. User: jesse Date: Apr 17, 2005 Time: 10:26:23 AM
  */
+//FIX!!! Searches WHERE x=NULL do not appear to work correctly. Need a test case. --jsb
+//FIX!!! Search WHERE x LIKE '=' to not appear to work either; you need to do x LIKE '==' to find null values.
 public class StatementProcessor {
 	private SqlCommand command;
 	private FmStatement statement;
@@ -505,6 +507,11 @@ public class StatementProcessor {
 		// generate a map of keys & values which have non-null values, but were not in the assignmentTerms for the SqlCommand.
 		// these are the auto-generated items.
 		Map resultMap = new LinkedHashMap( 3 );
+		FmFieldList resultFieldList = new FmFieldList();
+		FmConnection connection = (FmConnection)statement.getConnection();
+		if( insertedRecord == null ) { //Return an empty record set. FIX!! Right now won't work with updates, only inserts. --jsb
+			return new FmResultSet( Collections.EMPTY_LIST.iterator(), resultFieldList, connection );
+		}
 		FmFieldList fieldList = insertedRecord.getFieldList();
 		Set newFields = new LinkedHashSet( fieldList.getFields() ); // this contains FmField objects
 		for( Iterator it = command.getAssignmentTerms().iterator(); it.hasNext(); ) {
@@ -520,9 +527,7 @@ public class StatementProcessor {
 			if( generatedValue != null && generatedValue.length() > 0 )//add this to exclude empty fields
 				resultMap.put( field, generatedValue );
 		}
-		FmConnection connection = (FmConnection)statement.getConnection();
 		int keysFound = 0;
-		FmFieldList resultFieldList = new FmFieldList();
 		for( Iterator it = resultMap.keySet().iterator(); it.hasNext(); ) {
 			resultFieldList.add( (FmField)it.next() );
 		}

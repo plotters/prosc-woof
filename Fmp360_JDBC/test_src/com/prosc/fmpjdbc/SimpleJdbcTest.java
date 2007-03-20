@@ -50,6 +50,15 @@ public class SimpleJdbcTest extends TestCase {
 		}
 	}
 
+	public void testWrongHost() {
+		try {
+			DriverManager.getConnection( "jdbc:fmp360://hermes.360works.com/Contacts", jdbc.dbUsername, jdbc.dbPassword );
+			fail( "This is the wrong host; should have failed." );
+		} catch( SQLException e ) {
+			assertTrue( e.getMessage().indexOf( "IOException: Server has moved to new location" ) >= 0 );
+		}
+	}
+
 	/** This test does not apply to the ddtek driver. */
 	public void testRawConnection() throws IOException {
 		if( jdbc.use360driver ) {

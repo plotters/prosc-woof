@@ -137,8 +137,8 @@ public class FmResultSet implements ResultSet {
 	public String getString( int i ) throws SQLException {
 		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		String result = currentRecord.getString(i - 1);
-		if (logger.isLoggable(Level.FINEST)) {
-			logger.log(Level.FINEST, result);
+		if (logger.isLoggable(Level.FINER)) {
+			logger.log(Level.FINER, result);
 		}
 		return result;
 	}
@@ -217,8 +217,7 @@ public class FmResultSet implements ResultSet {
 	public Date getDate( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			Date result = currentRecord.getDate(i - 1);
-			return result;
+			return currentRecord.getDate(i - 1);
 		} catch (IllegalArgumentException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -227,8 +226,7 @@ public class FmResultSet implements ResultSet {
 	public Time getTime( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			Time result = currentRecord.getTime(i - 1);
-			return result;
+			return currentRecord.getTime(i - 1);
 		} catch (IllegalArgumentException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -236,26 +234,23 @@ public class FmResultSet implements ResultSet {
 
 	public Timestamp getTimestamp( int i ) throws SQLException {
 		checkResultSet();
-		if (logger.isLoggable(Level.FINEST)) {
-			logger.log(Level.FINEST, String.valueOf(i));
+		if (logger.isLoggable(Level.FINER)) {
+			logger.log(Level.FINER, String.valueOf(i));
 		}
 		try {
-			Timestamp result = currentRecord.getTimestamp(i - 1);
-			return result;
+			return currentRecord.getTimestamp(i - 1);
 		} catch (IllegalArgumentException e) {
-			SQLException sqlException = handleFormattingException( e, i );
-			throw sqlException;
+			throw handleFormattingException( e, i );
 		}
 	}
 
 	public Blob getBlob( int i ) throws SQLException {
 		checkResultSet();
-		if (logger.isLoggable(Level.FINEST)) {
-			logger.log(Level.FINEST, String.valueOf(i));
+		if (logger.isLoggable(Level.FINER)) {
+			logger.log(Level.FINER, String.valueOf(i));
 		}
 		try {
-			Blob result = currentRecord.getBlob(i - 1, connection );
-			return result;
+			return currentRecord.getBlob(i - 1, connection );
 		} catch (IllegalArgumentException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -401,8 +396,8 @@ public class FmResultSet implements ResultSet {
 	public Object getObject( int i ) throws SQLException {
 		checkResultSet();
 		Object result = currentRecord.getObject(i - 1, connection);
-		if (logger.isLoggable(Level.FINEST)) {
-			logger.log(Level.FINEST, "getObject(" + i + ") is " + result);
+		if (logger.isLoggable(Level.FINER)) {
+			logger.log(Level.FINER, "getObject(" + i + ") is " + result);
 		}
 		return result;
 	}
@@ -422,8 +417,7 @@ public class FmResultSet implements ResultSet {
 	public BigDecimal getBigDecimal( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			BigDecimal result = currentRecord.getBigDecimal(i - 1);
-			return result;
+			return currentRecord.getBigDecimal(i - 1);
 		} catch (NumberFormatException e) {
 			throw handleFormattingException(e, i);
 		}

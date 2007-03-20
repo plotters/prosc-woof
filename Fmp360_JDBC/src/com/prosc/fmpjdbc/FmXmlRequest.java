@@ -107,6 +107,7 @@ public class FmXmlRequest extends FmRequest {
 		postArgs = input;
 		if (serverStream != null) throw new IllegalStateException("You must call closeRequest() before sending another request.");
 		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
+		theConnection.setInstanceFollowRedirects( false );
 		theConnection.setUseCaches(false);
 		if (authString != null) theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		if (postArgs != null) {
@@ -121,8 +122,11 @@ public class FmXmlRequest extends FmRequest {
 
 		try {
 			int httpStatusCode = theConnection.getResponseCode();
-			if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage() );
-			if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
+			if( httpStatusCode >= 200 && httpStatusCode < 300 ) {} //Fine, no problem
+			else if( httpStatusCode >= 300 && httpStatusCode < 400 ) throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
+			else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage() );
+			else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
+			else throw new IOException("Server returned unexpected status code: " + httpStatusCode );
 			serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
 		} catch( IOException e ) {
 			if( e.getCause() instanceof FileNotFoundException ) {
@@ -528,8 +532,8 @@ public class FmXmlRequest extends FmRequest {
 
 			} else if ("RESULTSET".equals(qName)) {
 				setFoundCount(Integer.valueOf(attributes.getValue("FOUND")).intValue()); //foundCount = Integer.valueOf(attributes.getValue("FOUND")).intValue();
-				if (log.isLoggable(Level.FINE)) {
-					log.log(Level.FINE, "Resultset size: " + foundCount);
+				if (log.isLoggable(Level.CONFIG)) {
+					log.log(Level.CONFIG, "Resultset size: " + foundCount);
 				}
 				nodeType = NODE_TYPE_DATA;
 			} else if ("PRODUCT".equals(qName)) {

@@ -425,7 +425,7 @@ public class FmMetaData implements DatabaseMetaData {
 			logger.log(Level.FINE, String.valueOf( FmFieldType.resultSetFormat));
 		}
 		Object eachType;
-		for( Iterator it = FmFieldType.typesByName.values().iterator(); it.hasNext(); ) {
+		for( Iterator it = FmFieldType.publishedTypes.iterator(); it.hasNext(); ) {
 			eachType = ((FmFieldType)it.next()).getInResultSetFormat();
 			if (logger.isLoggable(Level.FINER)) {
 				logger.log(Level.FINER, String.valueOf(eachType ));
