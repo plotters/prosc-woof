@@ -73,7 +73,7 @@ public class FmConnection implements Connection {
 			Logger packageLogger = Logger.getLogger( "com.prosc.fmpjdbc" );
 			packageLogger.setLevel(Level.parse(logLevel));
 		}
-		log.log(Level.CONFIG, "Connecting to " + url + " with properties " + properties);
+		log.log(Level.CONFIG, "Connecting to " + url);
 		fmVersion = Float.valueOf( properties.getProperty("fmversion", "7") ).floatValue();
 		if( fmVersion >= 7 ) {
 			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );

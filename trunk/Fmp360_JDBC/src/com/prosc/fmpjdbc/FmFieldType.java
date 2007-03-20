@@ -4,6 +4,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.Types;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -30,10 +34,13 @@ import java.util.HashMap;
  * Date: Apr 20, 2005
  * Time: 11:41:39 AM
  */
-public class FmFieldType {
-	public static final Map typesByName = new HashMap(6);
-	public static final FmFieldList resultSetFormat = new FmFieldList();
-	public static final FmFieldType TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP, CONTAINER;
+public class FmFieldType implements Cloneable {
+	private static final Logger log = Logger.getLogger( FmFieldType.class.getName() );
+
+	static final Map typesByName = new HashMap(6);
+	static final Collection publishedTypes = new LinkedList();
+	static final FmFieldList resultSetFormat = new FmFieldList();
+	static final FmFieldType TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP, CONTAINER;
 
 	static {
 		TEXT = new FmFieldType("TEXT", Types.VARCHAR, Integer.MAX_VALUE); //Used to be LONGVARCHAR, but then EOModeler models that as a 'C' CharacterStream instead of 'S' String
@@ -55,16 +62,70 @@ public class FmFieldType {
 
 		TIME = new FmFieldType("TIME", Types.TIME, 32 );
 
-		TIMESTAMP = new FmFieldType("TIMESTAMP", Types.TIMESTAMP, 64 );
+		TIMESTAMP = new FmFieldType("TIMESTAMP", Types.TIMESTAMP, 64 ); //FIX!! Don't publish this type if the connnection is FM6
 
 		CONTAINER = new FmFieldType("BLOB", Types.BLOB, Integer.MAX_VALUE );
 		CONTAINER.setSearchable( (short)DatabaseMetaData.typePredNone);
 		
-		FmFieldType[] types = new FmFieldType[] { TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP };
+		FmFieldType[] types = new FmFieldType[] { TEXT, NUMBER, DATE, TIME, TIMESTAMP };
 		for( int n=0; n<types.length; n++ ) {
 			typesByName.put( types[n].getTypeName(), types[n] );
+			publishedTypes.add( types[n] );
 		}
-        typesByName.put( "CONTAINER", CONTAINER ); //Needs special handling because we name it "BLOB", not "CONTAINER" like FileMaker.
+		typesByName.put( RECID.getTypeName(), RECID ); //Separate because this is not a published type
+		typesByName.put( "CONTAINER", CONTAINER ); //Needs special handling because we name it "BLOB", not "CONTAINER" like FileMaker.
+
+		try {
+			FmFieldType t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.BIGINT );
+			publishedTypes.add( t );
+			t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.BIT );
+			publishedTypes.add( t );
+			t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.BOOLEAN );
+			publishedTypes.add( t );
+			t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.DOUBLE );
+			publishedTypes.add( t );
+			t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.FLOAT );
+			publishedTypes.add( t );
+			t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.INTEGER );
+			publishedTypes.add( t );
+			t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.NUMERIC );
+			publishedTypes.add( t );
+			t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.SMALLINT );
+			publishedTypes.add( t );
+			t = (FmFieldType)NUMBER.clone();
+			t.setSqlDataType( Types.TINYINT );
+
+			t = (FmFieldType)CONTAINER.clone();
+			t.setSqlDataType( Types.BINARY );
+			publishedTypes.add( t );
+			t = (FmFieldType)CONTAINER.clone();
+			t.setSqlDataType( Types.LONGVARBINARY );
+			publishedTypes.add( t );
+			t = (FmFieldType)CONTAINER.clone();
+			t.setSqlDataType( Types.VARBINARY );
+			publishedTypes.add( t );
+
+			t = (FmFieldType)TEXT.clone();
+			t.setSqlDataType( Types.CHAR );
+			publishedTypes.add( t );
+			t = (FmFieldType)TEXT.clone();
+			t.setSqlDataType( Types.CLOB );
+			publishedTypes.add( t );
+			t = (FmFieldType)TEXT.clone();
+			t.setSqlDataType( Types.LONGVARCHAR );
+			publishedTypes.add( t );
+		} catch( CloneNotSupportedException e ) {
+			log.log( Level.SEVERE, "Could not clone a field type", e );
+			throw new RuntimeException( e );
+		}
 
 		FmTable metaDataTable = new FmTable("fmp_jdbc_metadata");
 		resultSetFormat.add( new FmField(metaDataTable, "TYPE_NAME", null, types[0], false) );

@@ -77,7 +77,7 @@ public class FmStatement implements Statement {
 	}
 
 	public ResultSet getGeneratedKeys() throws SQLException {
-		return processor.getGeneratedKeys(); //FIX!! throws NullPointerException
+		return processor.getGeneratedKeys();
 	}
 
 	public boolean getMoreResults() throws SQLException {
