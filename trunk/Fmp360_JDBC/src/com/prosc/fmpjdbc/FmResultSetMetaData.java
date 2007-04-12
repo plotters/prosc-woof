@@ -37,6 +37,15 @@ public class FmResultSetMetaData implements ResultSetMetaData {
 		return fieldDefinitions.getFields().size();
 	}
 
+	public String getColumnClassName( int i ) throws SQLException {
+		return fieldDefinitions.get(i-1).getType().getJavaClass().getName();
+	}
+
+	public int getColumnType( int i ) throws SQLException {
+		FmFieldType type = fieldDefinitions.get( i - 1 ).getType();
+		return type.getSqlDataType();
+	}
+
 	public String getColumnLabel( int i ) throws SQLException {
 		throw new AbstractMethodError( "getColumnLabel is not implemented yet." ); //FIX!!! Broken placeholder
 	}
@@ -45,16 +54,8 @@ public class FmResultSetMetaData implements ResultSetMetaData {
 		return fieldDefinitions.get(i - 1).getColumnName();
 	}
 
-	public int getColumnType( int i ) throws SQLException {
-		throw new AbstractMethodError( "getColumnType is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public String getColumnTypeName( int i ) throws SQLException {
 		throw new AbstractMethodError( "getColumnTypeName is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public String getColumnClassName( int i ) throws SQLException {
-		throw new AbstractMethodError( "getColumnClassName is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public int getPrecision( int i ) throws SQLException {
