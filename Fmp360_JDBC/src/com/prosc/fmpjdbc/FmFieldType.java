@@ -2,12 +2,14 @@ package com.prosc.fmpjdbc;
 
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
+import java.sql.Blob;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.math.BigDecimal;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -43,28 +45,28 @@ public class FmFieldType implements Cloneable {
 	static final FmFieldType TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP, CONTAINER;
 
 	static {
-		TEXT = new FmFieldType("TEXT", Types.VARCHAR, Integer.MAX_VALUE); //Used to be LONGVARCHAR, but then EOModeler models that as a 'C' CharacterStream instead of 'S' String
+		TEXT = new FmFieldType("TEXT", Types.VARCHAR, Integer.MAX_VALUE, String.class); //Used to be LONGVARCHAR, but then EOModeler models that as a 'C' CharacterStream instead of 'S' String
 		TEXT.setAutoIncrement(true);
 
-		NUMBER = new FmFieldType("NUMBER", Types.DECIMAL, 400);
+		NUMBER = new FmFieldType("NUMBER", Types.DECIMAL, 400, BigDecimal.class);
 		NUMBER.setLiteralPrefix(null);
 		NUMBER.setLiteralSuffix(null);
 		NUMBER.setFixedPrecisionScale(true);
 		NUMBER.setAutoIncrement(true);
 
-		RECID = new FmFieldType( "RECID", Types.INTEGER, 400 ); //FIX!! Don't know what to put for precision for integers
+		RECID = new FmFieldType( "RECID", Types.INTEGER, 400, Integer.class ); //FIX!! Don't know what to put for precision for integers
 		RECID.setLiteralPrefix( null );
 		RECID.setLiteralSuffix( null );
 		RECID.setFixedPrecisionScale( false ); //FIX!! I don't really know what goes here; just guessing
 		RECID.setAutoIncrement( true ); //FIX!! I don't really know what goes here; just copied from previous
 
-		DATE = new FmFieldType("DATE", Types.DATE, 32 );
+		DATE = new FmFieldType("DATE", Types.DATE, 32, java.sql.Date.class );
 
-		TIME = new FmFieldType("TIME", Types.TIME, 32 );
+		TIME = new FmFieldType("TIME", Types.TIME, 32, java.sql.Time.class );
 
-		TIMESTAMP = new FmFieldType("TIMESTAMP", Types.TIMESTAMP, 64 ); //FIX!! Don't publish this type if the connnection is FM6
+		TIMESTAMP = new FmFieldType("TIMESTAMP", Types.TIMESTAMP, 64, java.sql.Timestamp.class ); //FIX!! Don't publish this type if the connnection is FM6
 
-		CONTAINER = new FmFieldType("BLOB", Types.BLOB, Integer.MAX_VALUE );
+		CONTAINER = new FmFieldType("BLOB", Types.BLOB, Integer.MAX_VALUE, Blob.class );
 		CONTAINER.setSearchable( (short)DatabaseMetaData.typePredNone);
 		
 		FmFieldType[] types = new FmFieldType[] { TEXT, NUMBER, DATE, TIME, TIMESTAMP };
@@ -151,6 +153,7 @@ public class FmFieldType implements Cloneable {
 	private String typeName;
 	private int sqlDataType;
 	private int precision;
+	private Class javaClass;
 	private String literalPrefix = "'";
 	private String literalSuffix = "'";
 	private String createParams = null;
@@ -165,10 +168,11 @@ public class FmFieldType implements Cloneable {
 	private short maximumScale = 100; //FIX!!! I don't really know what this is asking for --jsb
 	private int numberPrecisionRadix = 10;
 
-	private FmFieldType(String typeName, int sqlDataType, int precision) {
+	private FmFieldType(String typeName, int sqlDataType, int precision, Class javaClass) {
 		this.typeName = typeName;
 		this.sqlDataType = sqlDataType;
 		this.precision = precision;
+		this.javaClass = javaClass;
 	}
 
 	public FmRecord getInResultSetFormat() {
@@ -216,6 +220,10 @@ public class FmFieldType implements Cloneable {
 
 	public void setPrecision(int precision) {
 		this.precision = precision;
+	}
+
+	public Class getJavaClass() {
+		return javaClass;
 	}
 
 	public String getLiteralPrefix() {

@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 
 /**
  * Created by IntelliJ IDEA. User: jesse Date: Apr 20, 2005 Time: 10:43:32 PM
@@ -540,6 +541,24 @@ public class AdvancedDriverTests extends TestCase {
 			System.out.println( "elapsed time: " + elapsedTime + "ms" );
 			assertTrue( "Test took " + elapsedTime + "ms to execute, should not be more than 2000ms", elapsedTime <= 2000 ); //ddtek driver fails for me; this takes 3,672 on my dual-processor 2.5GHz G5
 		}
+	}
+
+	public void testResultSetMetaData() throws SQLException {
+		ResultSet rs = statement7.executeQuery( "SELECT mimeType, contactID, \"Date created\", \"Time inserted\", \"Picture taken\", portrait FROM Portrait" );
+		ResultSetMetaData metaData = rs.getMetaData();
+		int n=0;
+		assertEquals( String.class.getName(), metaData.getColumnClassName( ++n ) );
+		assertEquals( Types.VARCHAR, metaData.getColumnType(n) );
+		assertEquals( BigDecimal.class.getName(), metaData.getColumnClassName( ++n ) );
+		assertEquals( Types.DECIMAL, metaData.getColumnType(n) );
+		assertEquals( java.sql.Date.class.getName(), metaData.getColumnClassName( ++n ) );
+		assertEquals( Types.DATE, metaData.getColumnType(n) );
+		assertEquals( java.sql.Time.class.getName(), metaData.getColumnClassName( ++n ) );
+		assertEquals( Types.TIME, metaData.getColumnType(n) );
+		assertEquals( java.sql.Timestamp.class.getName(), metaData.getColumnClassName( ++n ) );
+		assertEquals( Types.TIMESTAMP, metaData.getColumnType(n) );
+		assertEquals( Blob.class.getName(), metaData.getColumnClassName( ++n ) );
+		assertEquals( Types.BLOB, metaData.getColumnType(n) );
 	}
 
 	/** Tests a download of 500,000 records. You can try setting the -Xmx8m JVM param to set the max size to 8 megs, to ensure
