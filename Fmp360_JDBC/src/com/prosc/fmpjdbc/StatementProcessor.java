@@ -35,6 +35,7 @@ import java.text.*;
 //FIX!!! Searches WHERE x=NULL do not appear to work correctly. Need a test case. --jsb
 //FIX!!! Search WHERE x LIKE '=' to not appear to work either; you need to do x LIKE '==' to find null values.
 public class StatementProcessor {
+	private final static String DISPLAY_LAYOUT_MARKER="^^";
 	private SqlCommand command;
 	private FmStatement statement;
 	private int updateRowCount = 0;
@@ -78,13 +79,23 @@ public class StatementProcessor {
 		FmXmlRequest actionHandler = null;
 		try {
 			String dbLayoutString;
+			String layout = getLayoutName();
+			String displayLayout = null;
+			int mark = layout.indexOf( DISPLAY_LAYOUT_MARKER );
+			if( mark >= 0 ) {
+				displayLayout = layout.substring( mark + DISPLAY_LAYOUT_MARKER.length() );
+				layout = layout.substring( 0, mark );
+			}
+			if( layout != null ) layout = URLEncoder.encode( layout, "UTF-8" );
+			if( displayLayout != null ) displayLayout = URLEncoder.encode( displayLayout, "UTF-8" );
 			if( ( (FmConnection)statement.getConnection() ).getFmVersion() < 7 ) {
-				dbLayoutString = "-db=" + getDatabaseName();
-				String layoutName = getLayoutName();
-				if( layoutName != null ) dbLayoutString += "&-lay=" + layoutName;
+				dbLayoutString = "-db=" + URLEncoder.encode( getDatabaseName(), "UTF-8" );
+				//String layoutName = getLayoutName();
+				if( displayLayout == null ) displayLayout = layout; //FM6 only needs a displayLayout, it's OK to search for fields that don't exist on the layout
+				if( displayLayout != null ) dbLayoutString += "&-lay=" + displayLayout;
 				else logger.info( "Executing an SQL query without a layout name can be slow. Specify a layout name for best efficiency." );
 			} else {
-				dbLayoutString = "-db=" + getDatabaseName() + "&-lay=" + getLayoutName();
+				dbLayoutString = "-db=" + URLEncoder.encode( getDatabaseName(), "UTF-8" ) + "&-lay=" + layout + ( displayLayout == null ? "" : "&-lay.response=" + displayLayout );
 			}
 			int currentParam = 0;
 

@@ -646,4 +646,32 @@ public class AdvancedDriverTests extends TestCase {
 		System.out.println( dbValue );
 		assertTrue( dbValue.indexOf( "Õ") >= 0 );
 	}
+
+	/** When you do a search in FileMaker, all search fields must be on the layout, otherwise you get an error 102. However, sometimes for speed
+	 * or security reasons, you do not want to get all of the search fields returned in the result. If you specify your table name as 'searchLayout->displayLayout', 
+	 * then the search will be done on the searchLayout, and the values returned will be from the displayLayout.
+	 * This test shows an example of how this is done. */
+	public void testSelectFromDifferentLayout() throws SQLException {
+		//String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+
+		try {
+			String sql = "SELECT * FROM Contacts_minimal where lastName='BARNUM' and firstName='Benjamin' and zip='94109'";
+			statement7.executeQuery( sql );
+			fail("Should fail with an error 102");
+		} catch( SQLException e ) {
+			assertEquals( 102, e.getErrorCode() );
+		}
+
+		String sql = "SELECT * FROM Contacts^^Contacts_minimal where lastName='BARNUM' and firstName='Benjamin' and zip='94109'";
+		ResultSet rs = statement7.executeQuery( sql );
+		rs.next();
+		rs.getObject( "lastName" );
+		rs.getObject( "firstName" );
+		try {
+			rs.getObject( "zip" );
+			fail("Should not be able to get zip column, it is not on the Contacts_minimal layout");
+		} catch(SQLException e) {
+			//This is correct
+		}
+	}
 }

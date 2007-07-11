@@ -63,12 +63,13 @@ public class FmResultSet implements ResultSet {
 	//OPTIMIZE make all methods final
 
 	private SQLException handleFormattingException(Exception e, int position) {
+		logger.log(Level.WARNING, e.toString());
 		String columnName = fieldDefinitions.get( position - 1 ).getColumnName();
 		return handleFormattingException(e, columnName);
 	}
 
 	private SQLException handleFormattingException(Exception e, String columnName) {
-		logger.log(Level.WARNING, e.toString());
+		logger.log(Level.WARNING, e.toString(), e);
 		SQLException sqlException = new SQLException( e.toString() + " (requested column '" + columnName + "' / zero-indexed row: " + rowNum + ")" );
 		sqlException.initCause(e);
 		return sqlException;
@@ -207,7 +208,7 @@ public class FmResultSet implements ResultSet {
 		checkResultSet();
 		BigDecimal value = getBigDecimal(columnIndex);
 		try {
-			return value.setScale(scale);
+			return value.setScale(scale, BigDecimal.ROUND_HALF_UP );
 		} catch (ArithmeticException e) {
 			throw handleFormattingException(e, columnIndex);
 		}
