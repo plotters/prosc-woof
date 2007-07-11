@@ -57,11 +57,13 @@ public class FmXmlRequest extends FmRequest {
 	private String postPrefix = "";
 	private String postArgs;
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
-	private boolean isStreamClosed = false;
+	private boolean isStreamOpen = false;
 	private int recIdColumnIndex;
+	private long requestStartTime;
 
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set missingFields;
+	private RuntimeException creationStackTrace;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion)  {
 		try {
@@ -106,18 +108,23 @@ public class FmXmlRequest extends FmRequest {
 	public void doRequest(String input) throws IOException, FileMakerException {
 		postArgs = input;
 		if (serverStream != null) throw new IllegalStateException("You must call closeRequest() before sending another request.");
+		requestStartTime = System.currentTimeMillis();
 		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
 		theConnection.setInstanceFollowRedirects( false );
 		theConnection.setUseCaches(false);
 		if (authString != null) theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		if (postArgs != null) {
 			postArgs = postPrefix + postArgs;
-			log.log(Level.FINE, theUrl + "?" + postArgs);
+			log.log(Level.FINE, "Starting request: " + theUrl + "?" + postArgs);
 			theConnection.setDoOutput(true);
 			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 			out.print(postPrefix);
 			out.println(postArgs);
 			out.close();
+		}
+		isStreamOpen = true;
+		if( log.isLoggable( Level.FINE ) ) {
+			creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
 		}
 
 		try {
@@ -152,7 +159,12 @@ public class FmXmlRequest extends FmRequest {
 				serverStream.close();
 				//serverStream = null;
 				synchronized(this) {
-					isStreamClosed = true;
+					if( isStreamOpen ) {
+						if( log.isLoggable( Level.CONFIG ) ) {
+							log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + theUrl + "?" + postArgs + " )" );
+						}
+						isStreamOpen = false;
+					}
 				}
 			} catch (IOException e) {
 				throw new RuntimeException(e);
@@ -160,7 +172,16 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	protected void finalize() throws Throwable {
-		closeRequest();
+		synchronized( this ) {
+			if( isStreamOpen ) {
+				if( log.isLoggable( Level.FINE ) ) {
+					log.log( Level.FINE, "Warning - request was finalized without every being closed. The stack trace that follows shows the thread that created this request. (" + theUrl + "?" + postArgs + ")", creationStackTrace );
+				} else {
+					log.warning( "Warning - request was finalized without ever being closed. Set log level to FINE to get a stack trace of when this request was created. (" + theUrl + "?" + postArgs + " )" );
+				}
+				closeRequest();
+			}
+		}
 		//if (serverStream != null) serverStream.close();
 		super.finalize();
 	}
@@ -181,7 +202,7 @@ public class FmXmlRequest extends FmRequest {
 					boolean ignore = false;
 					if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") ) {
 						synchronized( this ) {
-							if( isStreamClosed ) ignore = true;
+							if( ! isStreamOpen ) ignore = true;
 						}
 					}
 					if( ! ignore ) {
@@ -548,6 +569,7 @@ public class FmXmlRequest extends FmRequest {
 
 
 			} else if ("ERRORCODE".equals(qName)) {
+				log.log( Level.FINE, "Took " + ( System.currentTimeMillis() - requestStartTime ) + "ms to start receiving XML data" );
 				nodeType = NODE_TYPE_ERROR;
 			}
 		}
