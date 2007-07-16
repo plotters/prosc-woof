@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 
 import java.sql.*;
 import java.util.*;
+import java.util.logging.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -15,22 +16,72 @@ public class AdvancedDriverTests extends TestCase {
 	private Connection connection7;
 	private Connection connection6;
 	private Statement statement7;
+	private Statement statement6;
 	private JDBCTestUtils jdbc7;
+	private JDBCTestUtils jdbc6;
+
+	//private Logger logger;
+
 
 	protected void setUp() throws Exception {
 		jdbc7 = new JDBCTestUtils();
 		connection7 = jdbc7.getConnection();
 		statement7 = connection7.createStatement();
 
-		JDBCTestUtils jdbc6 = new JDBCTestUtils();
-		jdbc6.setFmVersion( 6 );
+		jdbc6 = new JDBCTestUtils();
+		jdbc6.setFmVersion(6);
 		connection6 = jdbc6.getConnection();
+		statement6 = connection6.createStatement();
+
+		//Logger.getLogger("").setLevel(Level.FINE);
 	}
 
 	protected void tearDown() throws Exception {
 		statement7.close();
 		connection7.close();
 	}
+
+
+	/** Simple select test for FM6 */
+	public void testSimpleSelectForFM6() throws SQLException {
+		//String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		System.out.println("Begin select in fm6");
+		long start = System.currentTimeMillis();
+
+		String tableName =  "Contacts.Contacts"; // Need to include the db & layout name if using 6
+		String sql = "SELECT * FROM " + tableName + " where lastName='Leong' and emailAddress='kungfudude@mcgyver.com'";
+		ResultSet resultSet = statement6.executeQuery( sql );
+		int rowCount = 0;
+		while( resultSet.next() ) {
+			rowCount++;
+			if( rowCount == 1 ) assertEquals( "Al", resultSet.getObject("firstName") );
+		}
+		assertTrue( "No results in found set", rowCount > 0 );
+
+		long end = System.currentTimeMillis();
+		System.out.println("End select in fm6.  duration : " + (end - start) + " milliseconds.  rowCount = " + rowCount);
+	}
+
+
+	/** Simple select test in FM7 */
+	public void testSimpleSelectForFM7() throws SQLException {
+		System.out.println("Begin select in fm7");
+		long start = System.currentTimeMillis();
+
+		String tableName =  "Contacts";
+		String sql = "SELECT * FROM " + tableName + " where lastName='Leong' and emailAddress='kungfudude@mcgyver.com'";
+		ResultSet resultSet = statement7.executeQuery( sql );
+		int rowCount = 0;
+		while( resultSet.next() ) {
+			rowCount++;
+			if( rowCount == 1 ) assertEquals( "Al", resultSet.getObject("firstName") );
+		}
+		assertTrue( "No results in found set", rowCount > 0 );
+
+		long end = System.currentTimeMillis();
+		System.out.println("End select in fm7.  duration : " + (end - start) + " milliseconds.  rowCount = " + rowCount);
+	}
+
 
 	/** @TestPasses */
 	public void testEscapeFMWildCards() throws SQLException {
