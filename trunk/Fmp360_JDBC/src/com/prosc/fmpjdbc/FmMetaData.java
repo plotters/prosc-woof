@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.net.MalformedURLException;
+import java.net.URLEncoder;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -227,7 +228,8 @@ public class FmMetaData implements DatabaseMetaData {
 		List tables = new LinkedList();
 		for( Iterator dbIterator=databaseNames.iterator(); dbIterator.hasNext(); ) {
 			databaseName = (String)dbIterator.next();
-			postArgs = "-db=" + databaseName + "&-layoutnames"; //fixed hard-coded test value -bje
+			String encodedDBName = URLEncoder.encode(databaseName);
+			postArgs = "-db=" + encodedDBName + "&-layoutnames"; //fixed hard-coded test value -bje
 			try {
 				request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 						connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
