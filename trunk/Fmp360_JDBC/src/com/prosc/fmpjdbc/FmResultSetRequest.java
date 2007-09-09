@@ -64,7 +64,7 @@ public class FmResultSetRequest extends FmRequest {
 			setFeature( "http://xml.org/sax/features/validation", false );
 			setFeature( "http://xml.org/sax/features/namespaces", false );
 			setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-			log.finer( "Created an XML parser; class is: " + xParser.getClass() );
+			log.finest( "Created an XML parser; class is: " + xParser.getClass() );
 		} catch( ParserConfigurationException e ) {
 			throw new RuntimeException( e );
 		} catch ( SAXException e) {

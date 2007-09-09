@@ -84,7 +84,7 @@ public class FmXmlRequest extends FmRequest {
 			setFeature( "http://xml.org/sax/features/validation", false );
 			setFeature( "http://xml.org/sax/features/namespaces", false );
 			setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-			log.finer( "Created an XML parser; class is: " + xParser.getClass() );
+			log.finest( "Created an XML parser; class is: " + xParser.getClass() );
 		} catch( ParserConfigurationException e ) {
 			throw new RuntimeException( e );
 		} catch ( SAXException e) {
@@ -553,9 +553,7 @@ public class FmXmlRequest extends FmRequest {
 
 			} else if ("RESULTSET".equals(qName)) {
 				setFoundCount(Integer.valueOf(attributes.getValue("FOUND")).intValue()); //foundCount = Integer.valueOf(attributes.getValue("FOUND")).intValue();
-				if (log.isLoggable(Level.CONFIG)) {
-					log.log(Level.CONFIG, "Resultset size: " + foundCount);
-				}
+				log.log(Level.FINE, "Resultset size: " + foundCount);
 				nodeType = NODE_TYPE_DATA;
 			} else if ("PRODUCT".equals(qName)) {
 				setDatabaseName(attributes.getValue("NAME")); // databaseName = attributes.getValue("NAME");
