@@ -138,9 +138,7 @@ public class FmResultSet implements ResultSet {
 	public String getString( int i ) throws SQLException {
 		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		String result = currentRecord.getString(i - 1);
-		if (logger.isLoggable(Level.FINER)) {
-			logger.log(Level.FINER, result);
-		}
+		logger.log(Level.FINEST, result);
 		return result;
 	}
 

@@ -51,7 +51,7 @@ public class FmMetaData implements DatabaseMetaData {
 		this.connection = connection;
 		FmXmlRequest requestHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-		logger.log(Level.FINER, "Creating FmMetaData");
+		logger.log(Level.FINEST, "Creating FmMetaData");
 		requestHandler.doRequest("-max=0&-dbnames");
 		//databaseNames = iterator2List( requestHandler.getRecordIterator() );
 		try {
@@ -127,8 +127,8 @@ public class FmMetaData implements DatabaseMetaData {
 				scriptIterator = Collections.EMPTY_LIST.iterator();
 			} else {
 				handler.doRequest("-db=" + dbName +"&-scriptnames"); //fixed hard-coded database columnName -bje
-				if (logger.isLoggable(Level.FINER)) {
-					logger.log(Level.FINE, "Script count: " + handler.getFoundCount() );
+				if (logger.isLoggable(Level.FINEST)) {
+					logger.log(Level.FINEST, "Script count: " + handler.getFoundCount() );
 				}
 				scriptIterator = handler.getRecordIterator();
 			}
@@ -144,8 +144,8 @@ public class FmMetaData implements DatabaseMetaData {
 			scriptInfo.add( new FmField(storedProcDummyTable, "REMARKS",null, FmFieldType.TEXT, false ) );
 			scriptInfo.add( new FmField(storedProcDummyTable, "PROCEDURE_TYPE",null, FmFieldType.NUMBER, false ) );
 
-			if (logger.isLoggable(Level.FINER)) {
-				logger.log(Level.FINER, String.valueOf(scriptInfo));
+			if (logger.isLoggable(Level.FINEST)) {
+				logger.log(Level.FINEST, String.valueOf(scriptInfo));
 			}
 
 			List scripts = new LinkedList();
@@ -156,8 +156,8 @@ public class FmMetaData implements DatabaseMetaData {
 				scriptObject.setRawValue( (String)scriptRecord.getValue(0), 2 );
 				scriptObject.setRawValue( "" + DatabaseMetaData.procedureNoResult, 7 );
 				scripts.add( scriptObject );
-				if (logger.isLoggable(Level.FINER)) {
-					logger.log(Level.FINER, String.valueOf(scriptObject));
+				if (logger.isLoggable(Level.FINEST)) {
+					logger.log(Level.FINEST, String.valueOf(scriptObject));
 				}
 			}
 			return new FmResultSet( scripts.iterator(), scriptInfo, connection );
@@ -222,8 +222,8 @@ public class FmMetaData implements DatabaseMetaData {
 		tableFormat.add( new FmField(dummyTable, "TYPE_NAME", null, FmFieldType.TEXT, true) );
 		tableFormat.add( new FmField(dummyTable, "SELF_REFERENCING_COL_NAME", null, FmFieldType.TEXT, true) );
 		tableFormat.add( new FmField(dummyTable, "REF_GENERATION",null, FmFieldType.TEXT, true) );
-		if (logger.isLoggable(Level.FINER)) {
-			logger.log(Level.FINER, String.valueOf(tableFormat));
+		if (logger.isLoggable(Level.FINEST)) {
+			logger.log(Level.FINEST, String.valueOf(tableFormat));
 		}
 		List tables = new LinkedList();
 		for( Iterator dbIterator=databaseNames.iterator(); dbIterator.hasNext(); ) {
@@ -271,8 +271,8 @@ public class FmMetaData implements DatabaseMetaData {
 					}
 					processedRecord.setRawValue( "TABLE", 3 );
 					tables.add( processedRecord );
-					if (logger.isLoggable(Level.FINER)) {
-						logger.log(Level.FINER, String.valueOf(processedRecord ));
+					if (logger.isLoggable(Level.FINEST)) {
+						logger.log(Level.FINEST, String.valueOf(processedRecord ));
 					}
 				}
 			} catch( FmXmlRequest.HttpAuthenticationException e) {
@@ -372,8 +372,8 @@ public class FmMetaData implements DatabaseMetaData {
 		fields.add( new FmField(dummyTable, "SCOPE_TABLE", null, FmFieldType.TEXT, true) ); //20
 		fields.add( new FmField(dummyTable, "SOURCE_DATA_TYPE", null, FmFieldType.NUMBER, true) ); //21
 
-		if (logger.isLoggable(Level.FINER)) {
-			logger.log(Level.FINER, String.valueOf(fields ));
+		if (logger.isLoggable(Level.FINEST)) {
+			logger.log(Level.FINEST, String.valueOf(fields ));
 		}
 
 
@@ -402,8 +402,8 @@ public class FmMetaData implements DatabaseMetaData {
 			fieldRecord.setRawValue( "" + n+1, 16 );
 			fieldRecord.setRawValue( eachField.isNullable() ? "YES" : "NO", 17 );
 			columns.add( fieldRecord );
-			if (logger.isLoggable(Level.FINER)) {
-				logger.log(Level.FINER, String.valueOf(fieldRecord ));
+			if (logger.isLoggable(Level.FINEST)) {
+				logger.log(Level.FINEST, String.valueOf(fieldRecord ));
 			}
 		}
 		return new FmResultSet( columns.iterator(), fields, connection );
