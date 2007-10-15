@@ -687,9 +687,9 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 
-	/*
+	/**
 	*  Use this to set the fields that are actually used in the select statement.
-	*  The data we get from filmaker contains all the fields so we need to parse it appropriately.
+	*  The data we get from filemaker contains all the fields so we need to parse it appropriately.
 	*/
 	public void setSelectFields(FmFieldList selectFields) {
 		fieldDefinitions = selectFields;

@@ -22,7 +22,7 @@ public class EOFTests extends TestCase {
 	private static NSArray tableNames;
 	private static EOEntity contactEntity;
 	private static EOEntity portraitEntity;
-	private JDBCTestUtils jdbcTestUtils;
+	private static JDBCTestUtils jdbcTestUtils;
 
 	protected void setUp() throws Exception {
 		Class.forName( "com.prosc.fmpjdbc.Driver" );

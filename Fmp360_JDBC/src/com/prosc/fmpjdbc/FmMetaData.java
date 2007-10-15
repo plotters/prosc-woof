@@ -184,116 +184,118 @@ public class FmMetaData implements DatabaseMetaData {
 		}
 		FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-		String postArgs;
-		String tableName;
-		String databaseName;
-		int mark;
-		List databaseNames = new LinkedList();
-		if( catalog == null ) catalog = connection.getCatalog();
-		if( catalog != null ) {
-			databaseNames.add( catalog );
-		} else {
-			postArgs = "-dbnames";
-			try {
-				request.doRequest( postArgs );
-				for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
-					databaseName = ((FmRecord)it.next()).getString(0);
-					mark = databaseName.toLowerCase().indexOf(".fp");
-					if( mark != -1 ) databaseName = databaseName.substring(0, mark);
-					databaseNames.add( databaseName );
+		try {
+			String postArgs;
+			String tableName;
+			String databaseName;
+			int mark;
+			List databaseNames = new LinkedList();
+			if( catalog == null ) catalog = connection.getCatalog();
+			if( catalog != null ) {
+				databaseNames.add( catalog );
+			} else {
+				postArgs = "-dbnames";
+				try {
+					request.doRequest( postArgs );
+					for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
+						databaseName = ((FmRecord)it.next()).getString(0);
+						mark = databaseName.toLowerCase().indexOf(".fp");
+						if( mark != -1 ) databaseName = databaseName.substring(0, mark);
+						databaseNames.add( databaseName );
+					}
+				} catch (IOException e) {
+					SQLException sqlException = new SQLException( e.toString() );
+					sqlException.initCause(e);
+					throw sqlException;
+				} finally {
+					request.closeRequest(); // The parsing thread should take care of this, but just in case it's taking too long
 				}
-			} catch (IOException e) {
-				SQLException sqlException = new SQLException( e.toString() );
-				sqlException.initCause(e);
-				throw sqlException;
-			} finally {
-				request.closeRequest(); // The parsing thread should take care of this, but just in case it's taking too long
 			}
-		}
-		FmFieldList tableFormat = new FmFieldList();
-		FmTable dummyTable = new FmTable("fmp_jdbc_table_data");
-		tableFormat.add( new FmField(dummyTable, "TABLE_CAT",null, FmFieldType.TEXT, true) ); //Return dbNames here, maybe?
-		tableFormat.add( new FmField(dummyTable, "TABLE_SCHEM",null, FmFieldType.TEXT, true) ); //Return layout names here, maybe?
-		tableFormat.add( new FmField(dummyTable, "TABLE_NAME",null, FmFieldType.TEXT, false) );
-		tableFormat.add( new FmField(dummyTable, "TABLE_TYPE",null, FmFieldType.TEXT, false) );
-		tableFormat.add( new FmField(dummyTable, "TABLE_REMARKS",null, FmFieldType.TEXT, false) );
-		tableFormat.add( new FmField(dummyTable, "TYPE_CAT",null, FmFieldType.TEXT, true) );
-		tableFormat.add( new FmField(dummyTable, "TYPE_SCHEME", null, FmFieldType.TEXT, true) );
-		tableFormat.add( new FmField(dummyTable, "TYPE_NAME", null, FmFieldType.TEXT, true) );
-		tableFormat.add( new FmField(dummyTable, "SELF_REFERENCING_COL_NAME", null, FmFieldType.TEXT, true) );
-		tableFormat.add( new FmField(dummyTable, "REF_GENERATION",null, FmFieldType.TEXT, true) );
-		if (logger.isLoggable(Level.FINEST)) {
-			logger.log(Level.FINEST, String.valueOf(tableFormat));
-		}
-		List tables = new LinkedList();
-		for( Iterator dbIterator=databaseNames.iterator(); dbIterator.hasNext(); ) {
-			databaseName = (String)dbIterator.next();
-			String encodedDBName = URLEncoder.encode(databaseName);
-			postArgs = "-db=" + encodedDBName + "&-layoutnames"; //fixed hard-coded test value -bje
-			try {
-				request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-						connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-				request.doRequest( postArgs );
-				for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
-					FmRecord rawRecord = (FmRecord)it.next();
-					FmRecord processedRecord = new FmRecord( tableFormat, null, null );
-					tableName = rawRecord.getRawValue(0);
-					mark = tableName.toLowerCase().indexOf(".fp");
-					if( mark != -1 ) tableName = tableName.substring(0, mark);
+			FmFieldList tableFormat = new FmFieldList();
+			FmTable dummyTable = new FmTable("fmp_jdbc_table_data");
+			tableFormat.add( new FmField(dummyTable, "TABLE_CAT",null, FmFieldType.TEXT, true) ); //Return dbNames here, maybe?
+			tableFormat.add( new FmField(dummyTable, "TABLE_SCHEM",null, FmFieldType.TEXT, true) ); //Return layout names here, maybe?
+			tableFormat.add( new FmField(dummyTable, "TABLE_NAME",null, FmFieldType.TEXT, false) );
+			tableFormat.add( new FmField(dummyTable, "TABLE_TYPE",null, FmFieldType.TEXT, false) );
+			tableFormat.add( new FmField(dummyTable, "TABLE_REMARKS",null, FmFieldType.TEXT, false) );
+			tableFormat.add( new FmField(dummyTable, "TYPE_CAT",null, FmFieldType.TEXT, true) );
+			tableFormat.add( new FmField(dummyTable, "TYPE_SCHEME", null, FmFieldType.TEXT, true) );
+			tableFormat.add( new FmField(dummyTable, "TYPE_NAME", null, FmFieldType.TEXT, true) );
+			tableFormat.add( new FmField(dummyTable, "SELF_REFERENCING_COL_NAME", null, FmFieldType.TEXT, true) );
+			tableFormat.add( new FmField(dummyTable, "REF_GENERATION",null, FmFieldType.TEXT, true) );
+			if (logger.isLoggable(Level.FINEST)) {
+				logger.log(Level.FINEST, String.valueOf(tableFormat));
+			}
+			List tables = new LinkedList();
+			for( Iterator dbIterator=databaseNames.iterator(); dbIterator.hasNext(); ) {
+				databaseName = (String)dbIterator.next();
+				String encodedDBName = URLEncoder.encode(databaseName);
+				postArgs = "-db=" + encodedDBName + "&-layoutnames"; //fixed hard-coded test value -bje
+				try {
+					request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+							connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+					request.doRequest( postArgs );
+					for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
+						FmRecord rawRecord = (FmRecord)it.next();
+						FmRecord processedRecord = new FmRecord( tableFormat, null, null );
+						tableName = rawRecord.getRawValue(0);
+						mark = tableName.toLowerCase().indexOf(".fp");
+						if( mark != -1 ) tableName = tableName.substring(0, mark);
 
-					//FIX!!! Just here for experimentation
-					//tableName = "dbName." + tableName + ".someLayoutName";
-					//processedRecord.setRawValue( "catalogName", 0);
-					//processedRecord.setRawValue( "schemaName", 1);
+						//FIX!!! Just here for experimentation
+						//tableName = "dbName." + tableName + ".someLayoutName";
+						//processedRecord.setRawValue( "catalogName", 0);
+						//processedRecord.setRawValue( "schemaName", 1);
 
-					/*
-					It seems that for FM6, we should use -dbnames to get the names of all the open databases, and then we
-					iterate through each databasename and use -layoutnames to get the names of all the layouts for each
-					database. We store the database name as the table name, and the layout name as the schema name.
-					Will this cause a problem, since we'll have duplication on the table names (if the client app
-					doesn't consider the schema for uniqueness?) The nice thing about that is that things that don't know
-					about schemas will ask us for the databasename, which won't be optimized, but will still work. If the user
-					specifies an xxx.yyy syntax in the SQL query, we would treat that as the databasename / layout name.
+						/*
+					 It seems that for FM6, we should use -dbnames to get the names of all the open databases, and then we
+					 iterate through each databasename and use -layoutnames to get the names of all the layouts for each
+					 database. We store the database name as the table name, and the layout name as the schema name.
+					 Will this cause a problem, since we'll have duplication on the table names (if the client app
+					 doesn't consider the schema for uniqueness?) The nice thing about that is that things that don't know
+					 about schemas will ask us for the databasename, which won't be optimized, but will still work. If the user
+					 specifies an xxx.yyy syntax in the SQL query, we would treat that as the databasename / layout name.
 
-					For FM7, we would treat the database name as the catalog. The layout names would be the jdbc tables, and
-					the fm tables would be the schema (I think?). If everything is stored in a single database, we can always
-					get the database name from the connection's catalog, and if the catalog is null, then we would assume that
-					the database name is the same as the fm table name, which we can get from the schema. If the user specified
-					an xxx.yyy syntax in the SQL query, we would treat that as the databasename / layout name.
-					*/
+					 For FM7, we would treat the database name as the catalog. The layout names would be the jdbc tables, and
+					 the fm tables would be the schema (I think?). If everything is stored in a single database, we can always
+					 get the database name from the connection's catalog, and if the catalog is null, then we would assume that
+					 the database name is the same as the fm table name, which we can get from the schema. If the user specified
+					 an xxx.yyy syntax in the SQL query, we would treat that as the databasename / layout name.
+					 */
 
-					processedRecord.setRawValue( "Catalog name goes here", 0); //FIX!!! Temporary for testing... does this get used anywhere?
-					if( getCatalogSeparator() != null && getCatalogSeparator() != "." ) {
-						processedRecord.setRawValue( databaseName + getCatalogSeparator() + tableName, 2 );
+						processedRecord.setRawValue( "Catalog name goes here", 0); //FIX!!! Temporary for testing... does this get used anywhere?
+						if( getCatalogSeparator() != null && getCatalogSeparator() != "." ) {
+							processedRecord.setRawValue( databaseName + getCatalogSeparator() + tableName, 2 );
+						} else {
+							processedRecord.setRawValue( databaseName, 1);
+							processedRecord.setRawValue( tableName, 2 );
+						}
+						processedRecord.setRawValue( "TABLE", 3 );
+						tables.add( processedRecord );
+						if (logger.isLoggable(Level.FINEST)) {
+							logger.log(Level.FINEST, String.valueOf(processedRecord ));
+						}
+					}
+				} catch( FmXmlRequest.HttpAuthenticationException e) {
+					if (testingConnection) {
+						// then i'm trying to see if i CAN access this db...
+						SQLException sqle = new SQLException( e.getMessage() );
+						sqle.initCause(e);
+						throw sqle;
 					} else {
-						processedRecord.setRawValue( databaseName, 1);
-						processedRecord.setRawValue( tableName, 2 );
+						//Ignore this database, we can't get to it with our username and password
 					}
-					processedRecord.setRawValue( "TABLE", 3 );
-					tables.add( processedRecord );
-					if (logger.isLoggable(Level.FINEST)) {
-						logger.log(Level.FINEST, String.valueOf(processedRecord ));
-					}
-				}
-			} catch( FmXmlRequest.HttpAuthenticationException e) {
-				if (testingConnection) {
-					// then i'm trying to see if i CAN access this db...
-					SQLException sqle = new SQLException( e.getMessage() );
+				} catch (IOException e) {
+					SQLException sqle = new SQLException(e.toString());
 					sqle.initCause(e);
 					throw sqle;
-				} else {
-					//Ignore this database, we can't get to it with our username and password
 				}
-			} catch (IOException e) {
-				SQLException sqle = new SQLException(e.toString());
-				sqle.initCause(e);
-				throw sqle;
-			} finally {
-				request.closeRequest(); // the resultSet/parsing thread should take care of this, but just in case it's taking too long
 			}
+			ResultSet result = new FmResultSet( tables.iterator(), tableFormat, connection );
+			return result;
+		} finally {
+			request.closeRequest(); // the resultSet/parsing thread should take care of this, but just in case it's taking too long
 		}
-		ResultSet result = new FmResultSet( tables.iterator(), tableFormat, connection );
-		return result;
 	}
 
 	/**

@@ -34,11 +34,11 @@ public class JDBCTestUtils {
 		fmVersion = Integer.valueOf( System.getProperty("fmVersion", "7") ).intValue();
 		debugLevel = System.getProperty("debugLevel", "FINE");
 		use360driver = Boolean.valueOf( System.getProperty("use360driver", "true") ).booleanValue();
-		log.info("use 360 driver is set to : " + System.getProperty("use360driver") );
+		log.info("use 360 driver is set to : " + use360driver );
 		dbUsername = System.getProperty("dbUsername", "wo");
 		dbPassword = System.getProperty("dbPassword", "wo");
-		fmServer= System.getProperty("fmServer", "orion.360works.com");
-		xmlServer = System.getProperty("xmlServer", "orion.360works.com" );
+		fmServer= System.getProperty("fmServer", "artemis.360works.com");
+		xmlServer = System.getProperty("xmlServer", "artemis.360works.com" );
 		dbName = System.getProperty( "dbName", "Contacts" );
 		port = Integer.valueOf(System.getProperty("portNumber", "80")).intValue();
 		Logger.getLogger(JDBCTestUtils.class.getName()).setLevel(Level.FINEST);
