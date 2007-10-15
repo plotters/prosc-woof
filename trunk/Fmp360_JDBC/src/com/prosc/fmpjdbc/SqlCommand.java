@@ -97,6 +97,9 @@ public class SqlCommand {
 		searchTerms = new LinkedList();
 		assignmentTerms = new LinkedList();
 		doParse();
+		if( operation == SELECT && fields.size() == 0 ) {
+			throw new IllegalArgumentException("No fields issued for SELECT: " + sql );
+		}
 	}
 
 	/**

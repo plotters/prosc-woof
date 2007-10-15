@@ -39,6 +39,8 @@ public class AdvancedDriverTests extends TestCase {
 	protected void tearDown() throws Exception {
 		statement7.close();
 		connection7.close();
+		statement6.close();
+		connection6.close();
 	}
 
 
