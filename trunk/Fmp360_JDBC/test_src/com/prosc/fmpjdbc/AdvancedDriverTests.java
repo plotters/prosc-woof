@@ -324,7 +324,7 @@ public class AdvancedDriverTests extends TestCase {
 			rs.next();
 			try {
 				rs.getInt("recId");
-				fail("Should have failed - we only get the recId if we explicityly ask for it"); //Is this definitely how we want this to work?
+				fail("Should have failed - we only get the recId if we explicitly ask for it"); //Is this definitely how we want this to work?
 			} catch (IllegalArgumentException e) {
 				//This is correct - we did not specify recId as one of the search terms
 			}
