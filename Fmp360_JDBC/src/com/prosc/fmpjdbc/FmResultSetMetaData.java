@@ -47,7 +47,7 @@ public class FmResultSetMetaData implements ResultSetMetaData {
 	}
 
 	public String getColumnLabel( int i ) throws SQLException {
-		throw new AbstractMethodError( "getColumnLabel is not implemented yet." ); //FIX!!! Broken placeholder
+		return getColumnName(i); // FIX! less than ideal -ssb
 	}
 
 	public String getColumnName( int i ) throws SQLException {

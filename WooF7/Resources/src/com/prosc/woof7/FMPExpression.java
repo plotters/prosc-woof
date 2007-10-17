@@ -42,6 +42,10 @@ public class FMPExpression extends com.webobjects.jdbcadaptor.JDBCExpression {
 		return ("\"" + entity.externalName() + "\"");
 	}
 
+	public void prepareSelectExpressionWithAttributes(NSArray nsArray, boolean b, EOFetchSpecification eoFetchSpecification) {
+		super.prepareSelectExpressionWithAttributes(nsArray, b, eoFetchSpecification);
+	}
+
 	/** Override the default implementation to transform this into an update, because the FmproPlugin has already created the row for us.
 	 **/
 	public void prepareInsertExpressionWithRow( NSDictionary row ) {
