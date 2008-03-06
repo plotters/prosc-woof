@@ -1,0 +1,31 @@
+<h1>360Works FMPro JDBC Driver</h1>
+<p>Why did we write a custom JDBC Driver?</p>
+<ul>
+<li>Support for auto-entered serial #'s in FileMaker Pro
+</li><li>Support for dates in PreparedStatements
+</li><li>Multi-threaded and streaming, which means it can retrieve an unlimited number of records without running out of memory
+</li><li>Better support for container fields
+</li><li>Much, much smaller (about 100K as opposed to several megabytes for driver that ships with FileMaker Server)
+</li><li>More reliable, in my experience
+</li><li>Includes source code
+</li><li>Works through XML publishing, so does not require FMSA.
+</li><li>Does not require any server plugins, permissions, or configuration other than standard XML publishing
+</li><li>Supports more data types
+</li><li>Better error reporting
+</li>
+</ul>
+
+<p>
+There are some downsides of our driver to be aware of compared to the FileMaker-supplied driver:
+</p>
+
+<ul>
+<li>Not as fast for small record sets, updates, and inserts
+</li><li>Cannot create tables and fields on the fly
+</li><li>Cannot combine AND / OR searches (this is a limitation of XML gateway)
+</li>
+</ul>
+
+<p>
+The JDBC driver is available as part of <a href="index.html">WooF</a>, download it and try it out.
+<p>
