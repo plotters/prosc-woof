@@ -438,6 +438,7 @@ public class FmXmlRequest extends FmRequest {
 		 */
 		private transient StringBuffer currentData = new StringBuffer(255);
 		private boolean foundDataForColumn;
+        private boolean foundColStart = false; // added to fix a bug with columns that only have an end element - mww
 		//private int columnDataIndex;
 
 		/**
@@ -514,6 +515,7 @@ public class FmXmlRequest extends FmRequest {
 				currentData = new StringBuffer( 255 );
 			} else if ("COL".equals(qName)) {
 				foundDataForColumn = false;
+                foundColStart = true; // added to fix a bug with columns that only have an end element - mww
 				//columnDataIndex++;
 				fieldPositionPointer = (FieldPositionPointer) fieldPositionIterator.next();
 				columnIndex++;
@@ -619,6 +621,18 @@ public class FmXmlRequest extends FmRequest {
 				}
 				//records.add(currentRow);
 			}
+            if("COL".equals(qName)){ // added to fix a bug with columns that only have an end element - mww
+                if(!foundColStart){ // do only if there was no start COL element
+                    fieldPositionPointer = (FieldPositionPointer) fieldPositionIterator.next();
+                    columnIndex++;
+				    if( columnIndex == recIdColumnIndex ) {
+                        // no need to set the data since there is none
+					    //currentRow.setRawValue(currentRow.getRecordId().toString(), columnIndex);
+					    columnIndex++;
+				    }
+                    foundColStart = false;
+                }
+            }
 			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
 				//usedFieldArray = new int[allFieldNames.size()];
 				//missingFields = new LinkedHashSet( fieldDefinitions.getFields() );
