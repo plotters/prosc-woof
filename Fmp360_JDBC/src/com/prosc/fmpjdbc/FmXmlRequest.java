@@ -96,7 +96,7 @@ public class FmXmlRequest extends FmRequest {
 		try {
 			xParser.getXMLReader().setFeature( feature, enabled );
 		} catch( SAXException e ) { //Ignore
-			log.finer( "Could not enable feature " + feature + " because of a SAXException: " + e );
+			log.warning( "Could not enable feature " + feature + " because of a SAXException: " + e );
 		}
 	}
 
@@ -115,7 +115,7 @@ public class FmXmlRequest extends FmRequest {
 		if (authString != null) theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		if (postArgs != null) {
 			postArgs = postPrefix + postArgs;
-			log.log(Level.FINE, "Starting request: " + theUrl + "?" + postArgs);
+			log.log(Level.CONFIG, "Starting request: " + theUrl + "?" + postArgs);
 			theConnection.setDoOutput(true);
 			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 			out.print(postPrefix);

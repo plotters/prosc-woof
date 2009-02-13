@@ -10,6 +10,24 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 
 /**
+ * This uses the following system properties:<br>
+ * Applies to 360 / ddtek driver:
+ * <ul>
+ * <li>fmServer (hostname.360works.com)</li>
+ * <li>port (80, or 2399 for ddtek driver)</li>
+ * <li>dbName (Contacts)</li>
+ * <li>dbUsername (username)</li>
+ * <li>dbPassword (password)</li>
+ * </ul>
+ * 
+ * Applies only to 360Driver:
+ * <ul>
+ * <li>use360driver (true / false)</li>
+ * <li>fmVersion (6, or leave empty for 7+)</li>
+ * <li>debugLevel (ALL, FINER, FINE, INFO, WARNING, SEVERE)</li>
+ * <li>xmlServer (hostname.360works.com)</li>
+ * </ul>
+ * 
  * @author sbarnum
  */
 public class JDBCTestUtils {

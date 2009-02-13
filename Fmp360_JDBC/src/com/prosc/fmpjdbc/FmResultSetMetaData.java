@@ -29,6 +29,7 @@ public class FmResultSetMetaData implements ResultSetMetaData {
 	private FmFieldList fieldDefinitions;
 
 	public FmResultSetMetaData(FmFieldList fieldDefinitions) {
+		if( fieldDefinitions == null ) throw new IllegalArgumentException("You must supply a non-null FmFieldList value" );
 		this.fieldDefinitions = fieldDefinitions;
 	}
 

@@ -37,18 +37,22 @@ public class Driver implements java.sql.Driver {
 
 	/** Creates a new {@link FmConnection} by passing the parameters into the constructor of the Connection. */
 	public Connection connect( String url, Properties properties ) throws SQLException {
-		try {
-			return new FmConnection(url, properties);
-		} catch( MalformedURLException e ) {
-			SQLException sqlException = new SQLException( e.getMessage() );
-			sqlException.initCause(e);
-			throw sqlException;
+		if( acceptsURL( url ) ) {
+			try {
+				return new FmConnection(url, properties);
+			} catch( MalformedURLException e ) {
+				SQLException sqlException = new SQLException( e.getMessage() );
+				sqlException.initCause(e);
+				throw sqlException;
+			}
+		} else {
+			throw new SQLException("The 360Works FileMaker JDBC driver does not support this URL: " + url );
 		}
 	}
 
 	/** Returns true if the word 'fmp360' appears in the URL. */
 	public boolean acceptsURL( String s ) throws SQLException {
-		return ( s != null && s.indexOf("fmp360") > -1 );
+		return( s != null && s.toLowerCase().startsWith( "jdbc:fmp360" ) );
 	}
 
 	/** Alwasy returns an empty array. This method is unnecessary for basic operation; it is an optional
