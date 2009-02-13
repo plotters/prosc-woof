@@ -49,12 +49,12 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public FmMetaData(FmConnection connection) throws IOException, FileMakerException {
 		this.connection = connection;
+		//databaseNames = iterator2List( requestHandler.getRecordIterator() );
 		FmXmlRequest requestHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-		logger.log(Level.FINEST, "Creating FmMetaData");
-		requestHandler.doRequest("-max=0&-dbnames");
-		//databaseNames = iterator2List( requestHandler.getRecordIterator() );
 		try {
+			logger.log(Level.FINEST, "Creating FmMetaData");
+			requestHandler.doRequest("-max=0&-dbnames");
 			databaseProductName = requestHandler.getDatabaseName();
 			databaseProductVersion = requestHandler.getProductVersion();
 			int endIndex = databaseProductVersion.indexOf('.');
@@ -68,11 +68,9 @@ public class FmMetaData implements DatabaseMetaData {
 			}
 			//databaseNames = iterator2List( requestHandler.getRecordIterator() );
 		} catch (Exception e) {
-			logger.warning("Unable to parse metadata: " + e.getMessage());
-			e.printStackTrace();
+			log.log( Level.WARNING, "Unable to parse metadata", e );
 		} finally {
 			requestHandler.closeRequest();
-			requestHandler = null;
 		}
 	}
 

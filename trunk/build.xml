@@ -145,7 +145,7 @@ refmodel (optional for the eogenerator task), ie. 'PrototyptesMysql.emodeld'
 		</woframework>
 	</target>
 
-	<target name="build_binaries" description="Bundle compiled sources into a file along with the INSTALL.txt file, for binary download." depends="build_jdbc_driver,build_eombundle">
+	<target name="build_binaries" description="Bundle compiled sources into a file along with the INSTALL.txt file, for binary download." depends="build_jdbc_driver,build_eombundle,build_woof7_framework">
 		<mkdir dir="build/woof_binaries"/>
 		<copy todir="build/woof_binaries" overwrite="true">
 			<fileset dir="EOMBundle" includes="WooF7_EOModelerPlugIn.EOMplugin/**"/>

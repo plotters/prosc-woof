@@ -79,24 +79,20 @@ public class FmBlob implements Blob {
 	public byte[] getBytes(long pos, final int length) throws SQLException {
 		if( pos == 0 ) {
 			byte[] result = new byte[length];
-			DataInputStream dis = null;
-			InputStream stream = null;
 			try {
-				stream = getStream();
-				dis = new DataInputStream(stream);
-				dis.readFully(result);
-				//getStream().read( result, 0, length );
-				return result;
-			} catch (IOException e) {
-				throw handleIOException(e);
-			} finally {
+				InputStream stream = getStream();
+				DataInputStream dis = new DataInputStream(stream);
 				try {
-					dis.close();
-					stream.close();
-					stream = null;
+					dis.readFully(result);
+					//getStream().read( result, 0, length );
+					return result;
 				} catch (IOException e) {
-					throw new RuntimeException(e);
+					throw handleIOException(e);
+				} finally {
+					dis.close();
 				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 		} else {
 			throw new AbstractMethodError("Currently, can only read from position 0."); //FIX!!! Broken placeholder
