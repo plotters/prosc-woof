@@ -137,7 +137,12 @@ public class FmResultSet implements ResultSet {
 
 	public String getString( int i ) throws SQLException {
 		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
-		String result = currentRecord.getString(i - 1);
+		String result;
+		if( Types.BLOB == fieldDefinitions.get( i - 1 ).getType().getSqlDataType() ) {
+			result = ((FmBlob)getBlob( i )).getURL().toExternalForm();
+		} else {
+			result = currentRecord.getString(i - 1);
+		}
 		logger.log(Level.FINEST, result);
 		return result;
 	}
@@ -253,6 +258,14 @@ public class FmResultSet implements ResultSet {
 		} catch (IllegalArgumentException e) {
 			throw handleFormattingException(e, i);
 		}
+	}
+
+	/** Used for BLOB / Container data to return a URL that contains the data. Be cautious with where you show this URL, because if there is a username / password, it will be
+	 * embedded into the URL.
+	 */
+	public URL getURL( int i ) throws SQLException {
+		FmBlob blob = (FmBlob)getBlob(i);
+		return blob.getURL();
 	}
 
 	public String getString( String s ) throws SQLException {
@@ -378,6 +391,12 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		if (i == -1) throw new SQLException(s + " is not a defined field.");
 		return getBlob(i + 1);
+	}
+
+	public URL getURL( String s ) throws SQLException {
+		int i = fieldDefinitions.indexOfFieldWithAlias(s);
+		if (i == -1) throw new SQLException(s + " is not a defined field.");
+		return getURL(i + 1);
 	}
 
 	public SQLWarning getWarnings() throws SQLException {
@@ -562,14 +581,6 @@ public class FmResultSet implements ResultSet {
 
 	public Array getArray( String s ) throws SQLException {
 		throw handleMissingMethod( "getArray is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public URL getURL( int i ) throws SQLException {
-		throw handleMissingMethod( "getURL is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public URL getURL( String s ) throws SQLException {
-		throw handleMissingMethod( "getURL is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public void deleteRow() throws SQLException {

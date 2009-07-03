@@ -252,21 +252,21 @@ public class FmConnection implements Connection {
 		if( b ) {
 			//Ignore; we're always in auto-commit mode
 		} else {
-			throw new UnsupportedOperationException( "FileMaker does not support transactions; you cannot set auto commit to false." );
+			//throw new UnsupportedOperationException( "FileMaker does not support transactions; you cannot set auto commit to false." );
+			log.warning( "FileMaker does not support transactions; setting auto commit to false has no effect." );
 		}
 	}
 
+	/** This always returns true, because we do not support real transactions. */
 	public boolean getAutoCommit() throws SQLException {
-		throw new AbstractMethodError( "getAutoCommit is not implemented yet." ); //FIX! Broken placeholder
+		return true;
 	}
 
-	public void commit() throws SQLException {
-		throw new AbstractMethodError( "commit is not implemented yet." ); //FIX! Broken placeholder
-	}
+	/** This method does nothing. */
+	public void commit() throws SQLException {}
 
-	public void rollback() throws SQLException {
-		throw new AbstractMethodError( "rollback is not implemented yet." ); //FIX! Broken placeholder
-	}
+	/** This method does nothing. */
+	public void rollback() throws SQLException {}
 
 	public void setReadOnly( boolean b ) throws SQLException {
 		throw new AbstractMethodError( "setReadOnly is not implemented yet." ); //FIX! Broken placeholder
@@ -288,8 +288,10 @@ public class FmConnection implements Connection {
 		throw new AbstractMethodError( "createStatement is not implemented yet." ); //FIX! Broken placeholder
 	}
 
-	public PreparedStatement prepareStatement( String s, int i, int i1 ) throws SQLException {
-		throw new AbstractMethodError( "prepareStatement is not implemented yet." ); //FIX! Broken placeholder
+	public PreparedStatement prepareStatement( String s, int resultSetType, int resultSetConcurrency ) throws SQLException {
+		if( resultSetType != ResultSet.TYPE_FORWARD_ONLY ) throw new UnsupportedOperationException("Forward-only is the only type of supported ResultSet" );
+		if( resultSetConcurrency != ResultSet.CONCUR_READ_ONLY ) throw new UnsupportedOperationException("Read-only is the only type of concurrency supported" );
+		return prepareStatement( s );
 	}
 
 	public CallableStatement prepareCall( String s, int i, int i1 ) throws SQLException {

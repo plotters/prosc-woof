@@ -387,6 +387,7 @@
   </component>
   <UsedPathMacros>
     <macro name="idea_dir" />
+    <macro name="java_dir" />
   </UsedPathMacros>
 </project>
 

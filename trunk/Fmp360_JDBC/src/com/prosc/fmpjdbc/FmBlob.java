@@ -62,6 +62,31 @@ public class FmBlob implements Blob {
 		}
 	}
 
+	public URL getURL() {
+		return containerUrl;
+		
+		/*URL u = containerUrl;
+		String authority = "";
+		if( username != null || password != null ) {
+			authority = (username == null ? "" : username) + ":" +
+					(password == null ? "": password) + "@";
+		}
+		String port = "";
+		if( u.getPort() != -1 && u.getPort() != 80 && u.getPort() != 443 ) {
+			port = ":" + u.getPort();
+		}
+		String fragment = "";
+		if( u.getRef() != null ) {
+			fragment = "#" + u.getRef();
+		}
+		String spec = u.getProtocol() + "://" + authority + u.getHost() + port + u.getFile() + fragment;
+		try {
+			return new URL( spec );
+		} catch( MalformedURLException e ) {
+			throw new RuntimeException(e);
+		}*/
+	}
+
 	public int hashCode() {
 		return containerUrl.hashCode();
 	}
