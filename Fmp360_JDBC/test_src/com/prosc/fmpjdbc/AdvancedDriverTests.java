@@ -8,6 +8,9 @@ import java.util.logging.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.net.URL;
+
+import com.prosc.shared.IOUtils;
 
 /**
  * Created by IntelliJ IDEA. User: jesse Date: Apr 20, 2005 Time: 10:43:32 PM
@@ -215,7 +218,7 @@ public class AdvancedDriverTests extends TestCase {
 	//Test containers/BLOBs
 	public Blob testContainerFields() throws SQLException, IOException {
 		String tableName = jdbc7.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
-		ResultSet rs = statement7.executeQuery("SELECT * from " + tableName + " where contactID != null");
+		ResultSet rs = statement7.executeQuery("SELECT contactID, portrait from " + tableName + " where contactID != null");
 		Blob eachValue = null;
 		int successCount = 0;
 		while( rs.next() ) {
@@ -231,11 +234,30 @@ public class AdvancedDriverTests extends TestCase {
 
 				assertTrue( length > 20 );
 				assertTrue ( bytes.length == length );
-				assertEquals( "image/jpeg", ((FmBlob)eachValue).getMimeType() );
+				String mimeType = ( (FmBlob)eachValue ).getMimeType();
+				assertTrue( "image/jpeg".equals( mimeType ) || "application/octet-stream".equals( mimeType ) );
 				successCount++;
+
+				URL url = rs.getURL( 2 );
+				InputStream in = url.openStream();
+				try {
+					byte[] urlBytes = IOUtils.inputStreamAsBytes( in );
+					assertTrue( "BLOB bytes are not the same as URL bytes", Arrays.equals( bytes, urlBytes ) );
+				} finally {
+					in.close();
+				}
+				
+				url = new URL (rs.getString( 2 ) );
+				in = url.openStream();
+				try {
+					byte[] urlBytes = IOUtils.inputStreamAsBytes( in );
+					assertTrue( "BLOB bytes are not the same as URL bytes", Arrays.equals( bytes, urlBytes ) );
+				} finally {
+					in.close();
+				}
 			}
 		}
-		if( successCount == 0 ) fail("No container fields found to test with." );
+		if( successCount == 0 ) fail("No container data found to test with." );
 		return eachValue;
 	}
 

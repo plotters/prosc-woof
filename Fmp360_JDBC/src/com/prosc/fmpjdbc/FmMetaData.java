@@ -578,6 +578,162 @@ public class FmMetaData implements DatabaseMetaData {
 		return result;
 	}
 
+	public boolean usesLocalFiles() throws SQLException {
+		return false;
+	}
+
+	public int getJDBCMajorVersion() throws SQLException {
+		return 3;
+	}
+
+	public int getJDBCMinorVersion() throws SQLException {
+		return 12;
+	}
+
+	public boolean usesLocalFilePerTable() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsMixedCaseIdentifiers() throws SQLException {
+		return false;
+	}
+
+	public boolean storesUpperCaseIdentifiers() throws SQLException {
+		return false;
+	}
+
+	public boolean storesLowerCaseIdentifiers() throws SQLException {
+		return false;
+	}
+
+	public boolean storesMixedCaseIdentifiers() throws SQLException {
+		return true;
+	}
+
+	public boolean supportsMixedCaseQuotedIdentifiers() throws SQLException {
+		return false;
+	}
+
+	public boolean storesUpperCaseQuotedIdentifiers() throws SQLException {
+		return false;
+	}
+
+	public boolean storesLowerCaseQuotedIdentifiers() throws SQLException {
+		return false;
+	}
+
+	public boolean storesMixedCaseQuotedIdentifiers() throws SQLException {
+		return true;
+	}
+
+	public String getSQLKeywords() throws SQLException {
+		return ""; //FIX!! Do we have any special functions? What about recid?
+	}
+
+	public String getNumericFunctions() throws SQLException {
+		return "";
+	}
+
+	public boolean supportsAlterTableWithAddColumn() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsAlterTableWithDropColumn() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsConvert() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsConvert( int i, int i1 ) throws SQLException {
+		return false;
+	}
+
+	public boolean supportsGroupBy() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsGroupByUnrelated() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsGroupByBeyondSelect() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsMultipleResultSets() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsMultipleTransactions() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsOuterJoins() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsFullOuterJoins() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsLimitedOuterJoins() throws SQLException {
+		return false;
+	}
+
+	public String getCatalogSeparator() throws SQLException {
+		return catalogSeparator;
+	}
+
+	public void setCatalogSeparator(String o) {
+		catalogSeparator = o;
+	}
+
+	public boolean supportsSelectForUpdate() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsSubqueriesInComparisons() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsSubqueriesInExists() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsSubqueriesInIns() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsSubqueriesInQuantifieds() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsCorrelatedSubqueries() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsUnion() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsUnionAll() throws SQLException {
+		return false;
+	}
+
+	public int getMaxConnections() throws SQLException {
+		return Integer.MAX_VALUE; //Connections in woof are stateless
+	}
+
+	public boolean supportsBatchUpdates() throws SQLException {
+		return false;
+	}
+
+	public boolean supportsMultipleOpenResults() throws SQLException {
+		return true;
+	}
+
 
 
 
@@ -615,54 +771,6 @@ public class FmMetaData implements DatabaseMetaData {
 		throw new AbstractMethodError( "nullsAreSortedAtEnd is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
-	public boolean usesLocalFiles() throws SQLException {
-		throw new AbstractMethodError( "usesLocalFiles is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean usesLocalFilePerTable() throws SQLException {
-		throw new AbstractMethodError( "usesLocalFilePerTable is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsMixedCaseIdentifiers() throws SQLException {
-		throw new AbstractMethodError( "supportsMixedCaseIdentifiers is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean storesUpperCaseIdentifiers() throws SQLException {
-		throw new AbstractMethodError( "storesUpperCaseIdentifiers is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean storesLowerCaseIdentifiers() throws SQLException {
-		throw new AbstractMethodError( "storesLowerCaseIdentifiers is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean storesMixedCaseIdentifiers() throws SQLException {
-		throw new AbstractMethodError( "storesMixedCaseIdentifiers is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsMixedCaseQuotedIdentifiers() throws SQLException {
-		throw new AbstractMethodError( "supportsMixedCaseQuotedIdentifiers is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean storesUpperCaseQuotedIdentifiers() throws SQLException {
-		throw new AbstractMethodError( "storesUpperCaseQuotedIdentifiers is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean storesLowerCaseQuotedIdentifiers() throws SQLException {
-		throw new AbstractMethodError( "storesLowerCaseQuotedIdentifiers is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean storesMixedCaseQuotedIdentifiers() throws SQLException {
-		throw new AbstractMethodError( "storesMixedCaseQuotedIdentifiers is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public String getSQLKeywords() throws SQLException {
-		throw new AbstractMethodError( "getSQLKeywords is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public String getNumericFunctions() throws SQLException {
-		throw new AbstractMethodError( "getNumericFunctions is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public String getSearchStringEscape() throws SQLException {
 		throw new AbstractMethodError( "getSearchStringEscape is not implemented yet." ); //FIX!!! Broken placeholder
 	}
@@ -671,28 +779,12 @@ public class FmMetaData implements DatabaseMetaData {
 		throw new AbstractMethodError( "getExtraNameCharacters is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
-	public boolean supportsAlterTableWithAddColumn() throws SQLException {
-		throw new AbstractMethodError( "supportsAlterTableWithAddColumn is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsAlterTableWithDropColumn() throws SQLException {
-		throw new AbstractMethodError( "supportsAlterTableWithDropColumn is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public boolean supportsColumnAliasing() throws SQLException {
 		throw new AbstractMethodError( "supportsColumnAliasing is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public boolean nullPlusNonNullIsNull() throws SQLException {
 		throw new AbstractMethodError( "nullPlusNonNullIsNull is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsConvert() throws SQLException {
-		throw new AbstractMethodError( "supportsConvert is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsConvert( int i, int i1 ) throws SQLException {
-		throw new AbstractMethodError( "supportsConvert is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public boolean supportsTableCorrelationNames() throws SQLException {
@@ -711,28 +803,8 @@ public class FmMetaData implements DatabaseMetaData {
 		throw new AbstractMethodError( "supportsOrderByUnrelated is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
-	public boolean supportsGroupBy() throws SQLException {
-		throw new AbstractMethodError( "supportsGroupBy is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsGroupByUnrelated() throws SQLException {
-		throw new AbstractMethodError( "supportsGroupByUnrelated is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsGroupByBeyondSelect() throws SQLException {
-		throw new AbstractMethodError( "supportsGroupByBeyondSelect is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public boolean supportsLikeEscapeClause() throws SQLException {
 		throw new AbstractMethodError( "supportsLikeEscapeClause is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsMultipleResultSets() throws SQLException {
-		throw new AbstractMethodError( "supportsMultipleResultSets is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsMultipleTransactions() throws SQLException {
-		throw new AbstractMethodError( "supportsMultipleTransactions is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public boolean supportsMinimumSQLGrammar() throws SQLException {
@@ -751,18 +823,6 @@ public class FmMetaData implements DatabaseMetaData {
 		throw new AbstractMethodError( "supportsIntegrityEnhancementFacility is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
-	public boolean supportsOuterJoins() throws SQLException {
-		throw new AbstractMethodError( "supportsOuterJoins is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsFullOuterJoins() throws SQLException {
-		throw new AbstractMethodError( "supportsFullOuterJoins is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsLimitedOuterJoins() throws SQLException {
-		throw new AbstractMethodError( "supportsLimitedOuterJoins is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public String getSchemaTerm() throws SQLException {
 		throw new AbstractMethodError( "getSchemaTerm is not implemented yet." ); //FIX!!! Broken placeholder
 	}
@@ -773,14 +833,6 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public boolean isCatalogAtStart() throws SQLException {
 		throw new AbstractMethodError( "isCatalogAtStart is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public String getCatalogSeparator() throws SQLException {
-		return catalogSeparator;
-	}
-
-	public void setCatalogSeparator(String o) {
-		catalogSeparator = o;
 	}
 
 	public boolean supportsSchemasInDataManipulation() throws SQLException {
@@ -831,38 +883,6 @@ public class FmMetaData implements DatabaseMetaData {
 		throw new AbstractMethodError( "supportsPositionedUpdate is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
-	public boolean supportsSelectForUpdate() throws SQLException {
-		throw new AbstractMethodError( "supportsSelectForUpdate is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsSubqueriesInComparisons() throws SQLException {
-		throw new AbstractMethodError( "supportsSubqueriesInComparisons is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsSubqueriesInExists() throws SQLException {
-		throw new AbstractMethodError( "supportsSubqueriesInExists is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsSubqueriesInIns() throws SQLException {
-		throw new AbstractMethodError( "supportsSubqueriesInIns is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsSubqueriesInQuantifieds() throws SQLException {
-		throw new AbstractMethodError( "supportsSubqueriesInQuantifieds is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsCorrelatedSubqueries() throws SQLException {
-		throw new AbstractMethodError( "supportsCorrelatedSubqueries is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsUnion() throws SQLException {
-		throw new AbstractMethodError( "supportsUnion is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsUnionAll() throws SQLException {
-		throw new AbstractMethodError( "supportsUnionAll is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public boolean supportsOpenCursorsAcrossCommit() throws SQLException {
 		throw new AbstractMethodError( "supportsOpenCursorsAcrossCommit is not implemented yet." ); //FIX!!! Broken placeholder
 	}
@@ -909,10 +929,6 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public int getMaxColumnsInTable() throws SQLException {
 		throw new AbstractMethodError( "getMaxColumnsInTable is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public int getMaxConnections() throws SQLException {
-		throw new AbstractMethodError( "getMaxConnections is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public int getMaxCursorNameLength() throws SQLException {
@@ -1046,10 +1062,6 @@ public class FmMetaData implements DatabaseMetaData {
 		throw new AbstractMethodError( "insertsAreDetected is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
-	public boolean supportsBatchUpdates() throws SQLException {
-		throw new AbstractMethodError( "supportsBatchUpdates is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public ResultSet getUDTs( String s, String s1, String s2, int[] ints ) throws SQLException {
 		throw new AbstractMethodError( "getUDTs is not implemented yet." ); //FIX!!! Broken placeholder
 	}
@@ -1060,10 +1072,6 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public boolean supportsNamedParameters() throws SQLException {
 		throw new AbstractMethodError( "supportsNamedParameters is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public boolean supportsMultipleOpenResults() throws SQLException {
-		throw new AbstractMethodError( "supportsMultipleOpenResults is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public ResultSet getSuperTypes( String s, String s1, String s2 ) throws SQLException {
@@ -1084,14 +1092,6 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public int getResultSetHoldability() throws SQLException {
 		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public int getJDBCMajorVersion() throws SQLException {
-		throw new AbstractMethodError( "getJDBCMajorVersion is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public int getJDBCMinorVersion() throws SQLException {
-		throw new AbstractMethodError( "getJDBCMinorVersion is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public int getSQLStateType() throws SQLException {
