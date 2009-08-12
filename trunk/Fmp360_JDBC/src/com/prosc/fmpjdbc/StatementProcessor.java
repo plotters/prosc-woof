@@ -181,6 +181,9 @@ public class StatementProcessor {
 				}
 				eachTermSegments[1] = "&" + URLEncoder.encode(fieldName, "UTF-8") + "=";
 				eachTermSegments[2] = urlEncodedValue(value, applyFormatter, wildcardsToEscape, operator == SearchTerm.EQUALS);
+				if ("%3D".equals(eachTermSegments[2]) && (eachTerm.getOperator() == SearchTerm.EQUALS)) {
+					eachTermSegments[2] = "%3D%3D"; // need two == signs for an exact empty match
+				}
 
 				/* This checks to see if the same term is used multiple times, and if it is, it
 					 * checks to see if it's a range operation. If so, it re-adds the two search terms using a "..." notation.
