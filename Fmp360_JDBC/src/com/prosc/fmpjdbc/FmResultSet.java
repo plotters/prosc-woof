@@ -139,7 +139,9 @@ public class FmResultSet implements ResultSet {
 		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		String result;
 		if( Types.BLOB == fieldDefinitions.get( i - 1 ).getType().getSqlDataType() ) {
-			result = ((FmBlob)getBlob( i )).getURL().toExternalForm();
+			FmBlob fmBlob = (FmBlob)getBlob( i );
+			if( fmBlob == null ) return null;
+			result = fmBlob.getURL().toExternalForm();
 		} else {
 			result = currentRecord.getString(i - 1);
 		}
