@@ -75,7 +75,6 @@ public class StatementProcessor {
 			throw new SQLException("No table was specified");
 		}
 
-		FmXmlRequest recIdHandler = null;
 		FmXmlRequest actionHandler = null;
 		try {
 			String dbLayoutString;
@@ -220,8 +219,6 @@ public class StatementProcessor {
 			}
 
 			FmConnection connection = (FmConnection) statement.getConnection();
-			recIdHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			Integer recordId;
@@ -259,6 +256,10 @@ public class StatementProcessor {
 
 
 				case SqlCommand.UPDATE:
+
+				{
+					FmXmlRequest recIdHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+							connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 					recordIdIsPreset = ( recordIdIterator != null );
 					if( recordIdIterator == null ) { //Might already be set if we passed in a record ID for the WHERE clause
 						recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
@@ -284,9 +285,13 @@ public class StatementProcessor {
 					}
 					updateRowCount = rowCount;
 					recIdHandler.closeRequest();
-					break;
+				}
+				break;
 
 				case SqlCommand.DELETE:
+				{
+					FmXmlRequest recIdHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+							connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 					recordIdIsPreset = ( recordIdIterator != null );
 					if( recordIdIterator == null ) { //Might already be set if we passed in a record ID for the WHERE clause
 						recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
@@ -311,7 +316,8 @@ public class StatementProcessor {
 					}
 					updateRowCount = rowCount;
 					recIdHandler.closeRequest();
-					break;
+				}
+				break;
 
 				case SqlCommand.INSERT:
 					try {
@@ -554,7 +560,7 @@ public class StatementProcessor {
 		for( Iterator it = resultMap.keySet().iterator(); it.hasNext(); ) {
 			resultRecord.setRawValue( (String)resultMap.get( it.next() ), keysFound++ );
 		}
-		
+
 		return new FmResultSet( Collections.singletonList( resultRecord ).iterator(), resultFieldList, connection );
 	}
 
