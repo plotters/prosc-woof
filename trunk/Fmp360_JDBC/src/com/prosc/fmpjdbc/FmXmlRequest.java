@@ -112,7 +112,9 @@ public class FmXmlRequest extends FmRequest {
 		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
 		theConnection.setInstanceFollowRedirects( false );
 		theConnection.setUseCaches(false);
-		if (authString != null) theConnection.addRequestProperty("Authorization", "Basic " + authString);
+		if (authString != null) {
+			theConnection.addRequestProperty("Authorization", "Basic " + authString);
+		}
 		if (postArgs != null) {
 			postArgs = postPrefix + postArgs;
 			log.log(Level.CONFIG, "Starting request: " + theUrl + "?" + postArgs);
