@@ -201,7 +201,7 @@ public class FmXmlRequest extends FmRequest {
 				try {
 					xParser.parse( input, xmlHandler );
 				} catch (IOException ioe) {
-					boolean ignore = false;
+					boolean ignore = false; //FIX!! Have the close() method set a thread-safe variable which is checked here, if it was closed then ignore the exception --jsb
 					if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") ) {
 						synchronized( this ) {
 							if( ! isStreamOpen ) ignore = true;
@@ -440,7 +440,7 @@ public class FmXmlRequest extends FmRequest {
 		 */
 		private transient StringBuffer currentData = new StringBuffer(255);
 		private boolean foundDataForColumn;
-        private boolean foundColStart = false; // added to fix a bug with columns that only have an end element - mww
+		private boolean foundColStart = false; // added to fix a bug with columns that only have an end element - mww
 		//private int columnDataIndex;
 
 		/**
@@ -517,7 +517,7 @@ public class FmXmlRequest extends FmRequest {
 				currentData = new StringBuffer( 255 );
 			} else if ("COL".equals(qName)) {
 				foundDataForColumn = false;
-                foundColStart = true; // added to fix a bug with columns that only have an end element - mww
+				foundColStart = true; // added to fix a bug with columns that only have an end element - mww
 				//columnDataIndex++;
 				fieldPositionPointer = (FieldPositionPointer) fieldPositionIterator.next();
 				columnIndex++;
@@ -623,18 +623,23 @@ public class FmXmlRequest extends FmRequest {
 				}
 				//records.add(currentRow);
 			}
-            if("COL".equals(qName)){ // added to fix a bug with columns that only have an end element - mww
-                if(!foundColStart){ // do only if there was no start COL element
-                    fieldPositionPointer = (FieldPositionPointer) fieldPositionIterator.next();
-                    columnIndex++;
-				    if( columnIndex == recIdColumnIndex ) {
-                        // no need to set the data since there is none
-					    //currentRow.setRawValue(currentRow.getRecordId().toString(), columnIndex);
-					    columnIndex++;
-				    }
-                    foundColStart = false;
-                }
-            }
+			if("COL".equals(qName)){ // added to fix a bug with columns that only have an end element - mww
+				if( ! foundDataForColumn ) { //If there is a related field but the relationship is invalid, then FM does not contain a <DATA> element. We need to catch that specially and treat it as null.
+					if (fieldPositionPointer != null) {
+						fieldPositionPointer.setDataInRow(currentData, currentRow); //FIX!! This should actually be null instead of an empty string, but currently that will throw a NPE - need to fix many things to support this. --jsb
+					}
+				}
+				if(!foundColStart){ // do only if there was no start COL element
+					fieldPositionPointer = (FieldPositionPointer) fieldPositionIterator.next();
+					columnIndex++;
+					if( columnIndex == recIdColumnIndex ) {
+						// no need to set the data since there is none
+						//currentRow.setRawValue(currentRow.getRecordId().toString(), columnIndex);
+						columnIndex++;
+					}
+					foundColStart = false;
+				}
+			}
 			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
 				//usedFieldArray = new int[allFieldNames.size()];
 				//missingFields = new LinkedHashSet( fieldDefinitions.getFields() );
@@ -704,9 +709,9 @@ public class FmXmlRequest extends FmRequest {
 
 
 	/**
-	*  Use this to set the fields that are actually used in the select statement.
-	*  The data we get from filemaker contains all the fields so we need to parse it appropriately.
-	*/
+	 *  Use this to set the fields that are actually used in the select statement.
+	 *  The data we get from filemaker contains all the fields so we need to parse it appropriately.
+	 */
 	public void setSelectFields(FmFieldList selectFields) {
 		fieldDefinitions = selectFields;
 
