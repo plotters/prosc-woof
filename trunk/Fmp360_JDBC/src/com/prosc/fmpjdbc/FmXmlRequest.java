@@ -585,22 +585,40 @@ public class FmXmlRequest extends FmRequest {
 		 */
 		private void handleParsedMetaDataField(String fieldName, int repetitionIndex, FmFieldType theType, boolean allowsNulls) {
 			String adjustedName = repetitionIndex == 0 ? fieldName : fieldName + "[" + repetitionIndex + "]";
-			int fieldDefinitionIndex = fieldDefinitions.indexOfFieldWithColumnName(adjustedName);
-			if (fieldDefinitionIndex == -1 && repetitionIndex == 1) {
-				// this is the first repetition of a repeating field.  Look for a fieldDefinition name without the brackets
-				fieldDefinitionIndex = fieldDefinitions.indexOfFieldWithColumnName(fieldName);
-			}
-			if (fieldDefinitionIndex != -1) { // set the type and nullable if this is a field in the field definitions
-				FmField fmField = fieldDefinitions.get(fieldDefinitionIndex);
-				fmField.setType(theType);
-				fmField.setNullable(allowsNulls);
-				usedFieldArray.add(new FieldPositionPointer(fieldDefinitionIndex, repetitionIndex != 0));
-				if (missingFields != null) {
-					missingFields.remove(fmField);
+			int columnIndex = -1;
+			boolean foundOneOccurrence = false;
+			int[] indeces = new int[1];
+			do {
+				int indexToTry = columnIndex + 1;
+				columnIndex = fieldDefinitions.indexOfFieldWithColumnName(adjustedName, indexToTry );
+				if (columnIndex == -1 && repetitionIndex == 1) {
+					// this is the first repetition of a repeating field, which does not have a [] bracket.  Look for a fieldDefinition name without the brackets
+					columnIndex = fieldDefinitions.indexOfFieldWithColumnName(fieldName, indexToTry );
 				}
+				if (columnIndex != -1) { // set the type and nullable if this is a field in the field definitions
+					FmField fmField = fieldDefinitions.get(columnIndex);
+					fmField.setType(theType);
+					fmField.setNullable(allowsNulls);
+					if( foundOneOccurrence ) { //We've already found at least one occurrence in the SELECT field list; this is a subsequent one
+						int[] biggerArray = new int[ indeces.length + 1 ]; //Copy into a bigger array and add this index to the end
+						System.arraycopy( indeces, 0, biggerArray, 0, indeces.length );
+						biggerArray[ biggerArray.length -1 ] = columnIndex;
+						indeces = biggerArray;
+					} else {
+						indeces[0] = columnIndex;
+						foundOneOccurrence = true;
+						if( missingFields != null ) { //Remove this from the list of missing fields
+							missingFields.remove(fmField);
+						}
+					}
+				}
+			} while( columnIndex != -1 );
+			if( foundOneOccurrence ) {
+				usedFieldArray.add( new FieldPositionPointer( indeces, repetitionIndex != 0 ) );
 			} else {
-				usedFieldArray.add(new FieldPositionPointer(-1, repetitionIndex != 0)); // ignore this field
+				usedFieldArray.add( new FieldPositionPointer( new int[0], repetitionIndex != 0 ) ); // ignore this field
 			}
+
 		}
 
 		public void endDocument() throws SAXException {
@@ -682,7 +700,7 @@ public class FmXmlRequest extends FmRequest {
 					setErrorCode(Integer.parseInt(new String(ch, start, length)));
 					break;
 				case NODE_TYPE_DATA:
-					if (fieldPositionPointer != null && fieldPositionPointer.targetIndex != -1) {
+					if (fieldPositionPointer != null && fieldPositionPointer.targetIndeces.length > 0 ) {
 						currentData.append(ch, start, length);
 					}
 					break;
@@ -692,17 +710,17 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	private static class FieldPositionPointer {
-		private int targetIndex;
+		private int[] targetIndeces;
 		private boolean isRepeating;
 
-		public FieldPositionPointer(int targetIndex, boolean repeating) {
-			this.targetIndex = targetIndex;
+		public FieldPositionPointer(int[] targetIndeces, boolean repeating) {
+			this.targetIndeces = targetIndeces;
 			isRepeating = repeating;
 		}
 
 		public void setDataInRow(StringBuffer data, FmRecord row) {
-			if (targetIndex != -1) {
-				row.setRawValue(data.toString(), targetIndex);
+			for( int n=0; n<targetIndeces.length; n++ ) {
+				row.setRawValue( data.toString(), targetIndeces[n] );
 			}
 		}
 	}

@@ -40,7 +40,7 @@ public class FmBlob implements Blob {
 	private URL containerUrl;
 	private String username;
 	private String password;
-	private HttpURLConnection connection;
+	//private HttpURLConnection connection;
 	//private InputStream stream = null;
 	private Logger logger = Logger.getLogger( FmBlob.class.getName() );
 
