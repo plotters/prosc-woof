@@ -1,9 +1,6 @@
 package com.prosc.fmpjdbc;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.ResultSet;
-import java.sql.Connection;
+import java.sql.*;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
@@ -1103,6 +1100,44 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public boolean supportsStatementPooling() throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+	
+	// === These are new methods added in Java 1.5 ===
+
+	public RowIdLifetime getRowIdLifetime() throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public ResultSet getSchemas( String s, String s1 ) throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public boolean supportsStoredFunctionsUsingCallSyntax() throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public boolean autoCommitFailureClosesAllResultSets() throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public ResultSet getClientInfoProperties() throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public ResultSet getFunctions( String s, String s1, String s2 ) throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public ResultSet getFunctionColumns( String s, String s1, String s2, String s3 ) throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public <T> T unwrap( Class<T> aClass ) throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
 		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 }

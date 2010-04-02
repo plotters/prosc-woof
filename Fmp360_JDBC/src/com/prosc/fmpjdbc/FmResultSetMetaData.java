@@ -121,4 +121,14 @@ public class FmResultSetMetaData implements ResultSetMetaData {
 	public boolean isDefinitelyWritable( int i ) throws SQLException {
 		throw new AbstractMethodError( "isDefinitelyWritable is not implemented yet." ); //FIX!!! Broken placeholder
 	}
+	
+	// ==== New methods added in Java 1.5 ====
+
+	public <T> T unwrap( Class<T> aClass ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
 }

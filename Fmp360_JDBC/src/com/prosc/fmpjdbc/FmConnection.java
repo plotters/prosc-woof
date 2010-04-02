@@ -302,10 +302,6 @@ public class FmConnection implements Connection {
 		throw new AbstractMethodError( "getTypeMap is not implemented yet." ); //FIX! Broken placeholder
 	}
 
-	public void setTypeMap( Map map ) throws SQLException {
-		throw new AbstractMethodError( "setTypeMap is not implemented yet." ); //FIX! Broken placeholder
-	}
-
 	public void setHoldability( int i ) throws SQLException {
 		throw new AbstractMethodError( "setHoldability is not implemented yet." ); //FIX! Broken placeholder
 	}
@@ -352,5 +348,63 @@ public class FmConnection implements Connection {
 
 	public PreparedStatement prepareStatement( String s, String[] strings ) throws SQLException {
 		throw new AbstractMethodError( "prepareStatement is not implemented yet." ); //FIX! Broken placeholder
+	}
+	
+	//---These methods were added to the interface in Java 1.5.... ? How bizarre that they would add methods to an existing interface???
+
+	public void setTypeMap( Map<String, Class<?>> map ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public Clob createClob() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public Blob createBlob() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public NClob createNClob() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public SQLXML createSQLXML() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public boolean isValid( int i ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setClientInfo( String s, String s1 ) throws SQLClientInfoException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setClientInfo( Properties properties ) throws SQLClientInfoException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public String getClientInfo( String s ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public Properties getClientInfo() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public Array createArrayOf( String s, Object[] objects ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public Struct createStruct( String s, Object[] objects ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public <T> T unwrap( Class<T> aClass ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 }

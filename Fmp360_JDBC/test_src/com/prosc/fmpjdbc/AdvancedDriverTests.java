@@ -17,11 +17,11 @@ import com.prosc.shared.IOUtils;
  */
 public class AdvancedDriverTests extends TestCase {
 	private Connection connection7;
-	private Connection connection6;
+	//private Connection connection6;
 	private Statement statement7;
-	private Statement statement6;
+	//private Statement statement6;
 	private JDBCTestUtils jdbc7;
-	private JDBCTestUtils jdbc6;
+	//private JDBCTestUtils jdbc6;
 
 	//private Logger logger;
 
@@ -31,10 +31,10 @@ public class AdvancedDriverTests extends TestCase {
 		connection7 = jdbc7.getConnection();
 		statement7 = connection7.createStatement();
 
-		jdbc6 = new JDBCTestUtils();
-		jdbc6.setFmVersion(6);
-		connection6 = jdbc6.getConnection();
-		statement6 = connection6.createStatement();
+		//jdbc6 = new JDBCTestUtils();
+		//jdbc6.setFmVersion(6);
+		//connection6 = jdbc6.getConnection();
+		//statement6 = connection6.createStatement();
 
 		//Logger.getLogger("").setLevel(Level.FINE);
 	}
@@ -42,13 +42,13 @@ public class AdvancedDriverTests extends TestCase {
 	protected void tearDown() throws Exception {
 		statement7.close();
 		connection7.close();
-		statement6.close();
-		connection6.close();
+		//statement6.close();
+		//connection6.close();
 	}
 
 
 	/** Simple select test for FM6 */
-	public void testSimpleSelectForFM6() throws SQLException {
+	/*public void testSimpleSelectForFM6() throws SQLException {
 		//String tableName = jdbc.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		System.out.println("Begin select in fm6");
 		long start = System.currentTimeMillis();
@@ -65,7 +65,7 @@ public class AdvancedDriverTests extends TestCase {
 
 		long end = System.currentTimeMillis();
 		System.out.println("End select in fm6.  duration : " + (end - start) + " milliseconds.  rowCount = " + rowCount);
-	}
+	}*/
 
 
 	/** Simple select test in FM7 */
@@ -309,9 +309,14 @@ public class AdvancedDriverTests extends TestCase {
 		assertEquals( rs.getObject(1).getClass(), Integer.class ); //getObject on recId should return an Integer
 		int recId = rs.getInt( 1 );
 		assertTrue( "Record is " + recId + "; expected non-zero value.", recId != 0 );
+		rs.close();
 
 		//Now try updating with that record ID
 		statement7.executeUpdate( "UPDATE Contacts SET firstName='Robin' WHERE recId=" + recId );
+		//rs = statement7.getGeneratedKeys();
+		//rs.next();
+		//assertNotNull( rs.getObject( "Mod count" ) );
+		//rs.close();
 
 		//Now try updating with record ID with prepared statements
 		PreparedStatement ps = connection7.prepareStatement( "UPDATE Contacts SET firstName=? WHERE recID=?" );
@@ -328,6 +333,10 @@ public class AdvancedDriverTests extends TestCase {
 		//Now test a deletion by the record ID
 		assertEquals( 1, statement7.executeUpdate( "DELETE FROM Contacts WHERE recId = " + recId ) );
 	}
+	
+	/*public void testGeneratedKeys() {
+		statement7.executeUpdate( "" )
+	}*/
 
 	/** This test does not apply to the ddtek driver.
 	 * @TestFails */
@@ -572,7 +581,7 @@ public class AdvancedDriverTests extends TestCase {
 		assertTrue(rs.getString(12).indexOf("readonly") > -1);
 	}
 
-	public void testGetColumnNamesFm6() throws SQLException {
+	/*public void testGetColumnNamesFm6() throws SQLException {
 		JDBCTestUtils testUtils = new JDBCTestUtils();
 		testUtils.fmVersion = 6;
 		testUtils.xmlServer = "forge.360works.com";
@@ -587,7 +596,7 @@ public class AdvancedDriverTests extends TestCase {
 
 		assertTrue( columnNames.contains("firstName") );
 		assertTrue( columnNames.contains("lastName") );
-	}
+	}*/
 
 	//FIX!! Write tests for FmResultSetMetaData, it is mostly abstract errors right now
 
@@ -642,7 +651,7 @@ public class AdvancedDriverTests extends TestCase {
 	 * the memory handling.
 	 * @throws Exception
 	 */
-	public void testLargeResultSet() throws Exception {
+	/*public void testLargeResultSet() throws Exception {
 		FmConnection fmConnection = new FmConnection(jdbc7.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
 		Statement statement = fmConnection.createStatement();
 
@@ -666,7 +675,7 @@ public class AdvancedDriverTests extends TestCase {
 		} catch(IllegalStateException ex) {
 			System.out.println( "Expected this exception: " + ex );
 		}
-	}
+	}*/
 
 	/** This passes 10/2/2006 --jsb */
 	public void testInsertSpecialCharacters7() throws IOException, SQLException {
@@ -692,7 +701,7 @@ public class AdvancedDriverTests extends TestCase {
 	}
 
 	/** This test fails 10/2/2006 - I can't figure out how to insert a curly quote (Õ) into FileMaker 6. --jsb */
-	public void testInsertSpecialCharacters6() throws IOException, SQLException {
+	/*public void testInsertSpecialCharacters6() throws IOException, SQLException {
 		InputStream stream = getClass().getResourceAsStream( "InsertText.txt" );
 		byte[] buffer = new byte[stream.available()];
 		assertEquals( buffer.length, stream.read( buffer ) );
@@ -712,15 +721,15 @@ public class AdvancedDriverTests extends TestCase {
 			assertEquals( value, rs.getString(1) );
 			rs.close();
 		}
-	}
+	}*/
 
-	public void testSelectSpecialCharacters6() throws SQLException {
+	/*public void testSelectSpecialCharacters6() throws SQLException {
 		ResultSet rs = connection6.prepareStatement( "SELECT firstName FROM Contacts.Contacts WHERE ID=234" ).executeQuery();
 		rs.next();
 		String dbValue = rs.getString( 1 );
 		System.out.println( dbValue );
 		assertTrue( dbValue.indexOf( "Õ") >= 0 );
-	}
+	}*/
 
 	/** When you do a search in FileMaker, all search fields must be on the layout, otherwise you get an error 102. However, sometimes for speed
 	 * or security reasons, you do not want to get all of the search fields returned in the result. If you specify your table name as 'searchLayout->displayLayout', 

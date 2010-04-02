@@ -167,11 +167,11 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 	}
 
 	public void clearParameters() throws SQLException {
-		for( Iterator iterator = params.iterator(); iterator.hasNext(); ) {
-			Object o = (Object)iterator.next();
-			o = null;
+		int size = params.size();
+		params.clear();
+		for( int n=0; n<size; n++ ) {
+			params.add( null );
 		}
-		//throw new AbstractMethodError( "clearParameters is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public void setObject( int i, Object o, int i1, int i2 ) throws SQLException {
@@ -285,5 +285,79 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 
 	public ParameterMetaData getParameterMetaData() throws SQLException {
 		throw new AbstractMethodError( "getParameterMetaData is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+	
+	// === These methods were added in JDK 1.5 ===
+
+	public void setRowId( int i, RowId id ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setNString( int i, String s ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setNCharacterStream( int i, Reader reader, long l ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setNClob( int i, NClob clob ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setClob( int i, Reader reader, long l ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setBlob( int i, InputStream stream, long l ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setNClob( int i, Reader reader, long l ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setSQLXML( int i, SQLXML sqlxml ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setAsciiStream( int i, InputStream stream, long l ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setBinaryStream( int i, InputStream stream, long l ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setCharacterStream( int i, Reader reader, long l ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setAsciiStream( int i, InputStream stream ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setBinaryStream( int i, InputStream stream ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setCharacterStream( int i, Reader reader ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setNCharacterStream( int i, Reader reader ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setClob( int i, Reader reader ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setBlob( int i, InputStream stream ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setNClob( int i, Reader reader ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 }
