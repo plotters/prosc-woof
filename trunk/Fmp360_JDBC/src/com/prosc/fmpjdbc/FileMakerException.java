@@ -37,6 +37,7 @@ public class FileMakerException extends SQLException {
 	//private StatementProcessor statementProcessor;
 	private String jdbcUrl;
 	private String sql;
+	private Object params;
 
 	static {
 		InputStream stream = FileMakerException.class.getResourceAsStream("ErrorCodes.txt");
@@ -63,7 +64,7 @@ public class FileMakerException extends SQLException {
 	}
 
 	public String getMessage() {
-		return super.getMessage() + " (JDBC URL: " + getJdbcUrl() + " / SQL statement: " + sql + " )";
+		return super.getMessage() + " (JDBC URL: " + getJdbcUrl() + " / SQL statement: " + sql + " / params: " + params + " )";
 	}
 
 	protected static String getErrorMessage(Integer errorCode) {
@@ -80,6 +81,7 @@ public class FileMakerException extends SQLException {
 		//this.statementProcessor = statemenProcessor;
 		jdbcUrl = ((FmConnection)statementProcessor.getStatement().getConnection()).getUrl();
 		sql = statementProcessor.getSQL();
+		params = statementProcessor.getParams();
 	}
 
 	public String getJdbcUrl() {

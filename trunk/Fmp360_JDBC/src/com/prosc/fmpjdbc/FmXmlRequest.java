@@ -52,12 +52,12 @@ public class FmXmlRequest extends FmRequest {
 	/**
 	 * Parser used to extract data from the filemaker response stream
 	 */
-	private SAXParser xParser;
+	private final SAXParser xParser;
 	private String authString;
 	private String postPrefix = "";
 	private String postArgs;
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
-	private boolean isStreamOpen = false;
+	private volatile boolean isStreamOpen = false;
 	private int recIdColumnIndex;
 	private long requestStartTime;
 
@@ -158,9 +158,9 @@ public class FmXmlRequest extends FmRequest {
 		//    foundCount = 0;
 		if (serverStream != null)
 			try {
-				serverStream.close();
 				//serverStream = null;
-				synchronized(this) {
+				synchronized( FmXmlRequest.this) {
+					serverStream.close();
 					if( isStreamOpen ) {
 						if( log.isLoggable( Level.CONFIG ) ) {
 							log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + theUrl + "?" + postArgs + " )" );
@@ -174,7 +174,7 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	protected void finalize() throws Throwable {
-		synchronized( this ) {
+		synchronized( FmXmlRequest.this ) {
 			if( isStreamOpen ) {
 				if( log.isLoggable( Level.FINE ) ) {
 					log.log( Level.FINE, "Warning - request was finalized without every being closed. The stack trace that follows shows the thread that created this request. (" + theUrl + "?" + postArgs + ")", creationStackTrace );
@@ -203,7 +203,7 @@ public class FmXmlRequest extends FmRequest {
 				} catch (IOException ioe) {
 					boolean ignore = false; //FIX!! Have the close() method set a thread-safe variable which is checked here, if it was closed then ignore the exception --jsb
 					if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") ) {
-						synchronized( this ) {
+						synchronized( FmXmlRequest.this ) {
 							if( ! isStreamOpen ) ignore = true;
 						}
 					}

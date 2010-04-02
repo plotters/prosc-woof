@@ -55,8 +55,8 @@ public class JDBCTestUtils {
 		log.info("use 360 driver is set to : " + use360driver );
 		dbUsername = System.getProperty("dbUsername", "wo");
 		dbPassword = System.getProperty("dbPassword", "wo");
-		fmServer= System.getProperty("fmServer", "artemis.360works.com");
-		xmlServer = System.getProperty("xmlServer", "artemis.360works.com" );
+		fmServer= System.getProperty("fmServer", "fms7.360works.com");
+		xmlServer = System.getProperty("xmlServer", "fms7.360works.com" );
 		dbName = System.getProperty( "dbName", "Contacts" );
 		port = Integer.valueOf(System.getProperty("portNumber", "80")).intValue();
 		Logger.getLogger(JDBCTestUtils.class.getName()).setLevel(Level.FINEST);
@@ -69,7 +69,8 @@ public class JDBCTestUtils {
 			driverClassName = "com.prosc.fmpjdbc.Driver";
 			if( port == 0 ) port = 80;
 		} else {
-			driverClassName = "com.ddtek.jdbc.sequelink.SequeLinkDriver";
+			//driverClassName = "com.ddtek.jdbc.sequelink.SequeLinkDriver";
+			driverClassName = "com.filemaker.jdbc.Driver";
 			if( port == 0 ) port = 2399;
 		}
 	}
@@ -85,7 +86,7 @@ public class JDBCTestUtils {
 			if( catalogSeparator != null ) result.append("&catalogseparator=" + catalogSeparator );
 			return result.toString();
 		}
-		else return "jdbc:sequelink://" + fmServer + ":" + port + ";serverDataSource=" + whichDatabase;
+		else return "jdbc:filemaker://" + fmServer + "/" + whichDatabase;
 	}
 
 
@@ -134,6 +135,7 @@ public class JDBCTestUtils {
 
 	public Connection getConnection(String whichDatabaseName, String username, String password) throws SQLException {
 		String jdbcUrl = getJdbcUrl(whichDatabaseName);
+		log.info( "Connecting to URL: " + jdbcUrl );
 		try {
 			Class.forName( driverClassName );
 			Connection result = DriverManager.getConnection( jdbcUrl, username, password );

@@ -526,6 +526,14 @@ public class StatementProcessor {
 	public ResultSet getGeneratedKeys() {
 		// generate a map of keys & values which have non-null values, but were not in the assignmentTerms for the SqlCommand.
 		// these are the auto-generated items.
+		
+		/*
+		Currently, we only support this for INSERT operations, not UPDATE. This is because INSERT is fairly simple, it is always a single record, and also any non-null item after an INSERT
+		is probably a primary key or an auto-enter value. If we want to support UPDATE, we will need to hold a reference to all of the raw record data for all updated records, which could potentially
+		be many records. Also, in an UPDATE, any existing values other than the ones set in the SQL will be returned, which means that you'll get a bunch of stuff other than auto-updated values.
+		I do think it would be useful though to support UPDATES, because that's the only efficient way to get back calculation fields that changed as a result of the update. It is also important
+		if we need to efficiently get the record modification count after each UPDATE (like for synchronization). --jsb
+		 */
 		Map resultMap = new LinkedHashMap( 3 );
 		FmFieldList resultFieldList = new FmFieldList();
 		FmConnection connection = (FmConnection)statement.getConnection();
@@ -577,5 +585,9 @@ public class StatementProcessor {
 
 	String getSQL() {
 		return command.getSql();
+	}
+
+	public Object getParams() {
+		return params;
 	}
 }

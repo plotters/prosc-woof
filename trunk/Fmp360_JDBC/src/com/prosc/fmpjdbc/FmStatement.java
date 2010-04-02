@@ -203,4 +203,26 @@ public class FmStatement implements Statement {
 	public int getResultSetHoldability() throws SQLException {
 		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
 	}
+	
+	// ==== New methods added in Java 1.5 ====
+
+	public boolean isClosed() throws SQLException {
+		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public void setPoolable( boolean b ) throws SQLException {
+		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public boolean isPoolable() throws SQLException {
+		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public <T> T unwrap( Class<T> aClass ) throws SQLException {
+		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
+	}
+
+	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
+		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
+	}
 }

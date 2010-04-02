@@ -56,7 +56,7 @@ public class FmConnectionTest extends TestCase {
 		}
 	}
 
-  public void testSQLParsingFM6() throws Exception {
+ /* public void testSQLParsingFM6() throws Exception {
     JDBCTestUtils testUtils = new JDBCTestUtils();
     FmConnection c;
     Statement statement;
@@ -126,7 +126,7 @@ public class FmConnectionTest extends TestCase {
     }
 
 
-  }
+  }*/
 
   public void testSQLParsingFM7() throws Exception {
     JDBCTestUtils testUtils = new JDBCTestUtils();

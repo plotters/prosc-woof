@@ -177,4 +177,12 @@ public class FmBlob implements Blob {
 	private InputStream getStream() throws IOException {
 		return getConnection().getInputStream();
 	}
+	
+	// ==== These methods were added in JDK 1.5 ====
+
+	public void free() throws SQLException {} //Nothing to do
+
+	public InputStream getBinaryStream( long l, long l1 ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
 }
