@@ -62,13 +62,14 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 		postArgs = postArgs.replaceAll("<script>", scriptName);
 
 		try {
+			request.setIgnoreResponse(true);
 			request.doRequest(postArgs);
 		} catch (IOException ioe) {
 			SQLException sqle = new SQLException(ioe.toString());
 			sqle.initCause(ioe);
 			throw sqle;
     } finally {
-      request.closeRequest();
+      //request.closeRequest();
     }
 
 		return true;

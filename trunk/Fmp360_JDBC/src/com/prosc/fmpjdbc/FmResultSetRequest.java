@@ -358,15 +358,15 @@ public class FmResultSetRequest extends FmRequest {
 	}
 
 
-	public static void main(String[] args) throws IOException, FileMakerException {
-		FmResultSetRequest request = new FmResultSetRequest("http", "orion.360works.com", "/fmi/xml/fmresultset.xml", 80, null, null);
-
-		try {
-			request.doRequest("-db=Contacts&-lay=Calc Test&-max=0&-findany");
-		}
-		finally {
-			request.closeRequest();
-		}
-	}
+	//public static void main(String[] args) throws IOException, FileMakerException {
+	//	FmResultSetRequest request = new FmResultSetRequest("http", "orion.360works.com", "/fmi/xml/fmresultset.xml", 80, null, null);
+	//
+	//	try {
+	//		request.doRequest("-db=Contacts&-lay=Calc Test&-max=0&-findany");
+	//	}
+	//	finally {
+	//		request.closeRequest();
+	//	}
+	//}
 
 }

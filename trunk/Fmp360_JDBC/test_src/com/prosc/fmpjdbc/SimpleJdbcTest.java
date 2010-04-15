@@ -29,11 +29,12 @@ public class SimpleJdbcTest extends TestCase {
 
 
 	private Connection connection7;
-	//private Connection connection6;
+	private Connection connection6;
 	private Statement statement7;
-	//private Statement statement6;
+	private Statement statement6;
 	private JDBCTestUtils jdbc7;
-	//private JDBCTestUtils jdbc6;
+	private JDBCTestUtils jdbc6;
+	private boolean test6 = JDBCTestUtils.TEST_6; // where's the FM 6 server?
 
 	protected void setUp() throws Exception {
 
@@ -41,10 +42,12 @@ public class SimpleJdbcTest extends TestCase {
 		connection7 = jdbc7.getConnection();
 		statement7 = connection7.createStatement();
 
-		//jdbc6 = new JDBCTestUtils();
-		//jdbc6.setFmVersion(6);
-		//connection6 = jdbc6.getConnection();
-		//statement6 = connection6.createStatement();
+		if (test6) {
+			jdbc6 = new JDBCTestUtils();
+			jdbc6.setFmVersion(6);
+			connection6 = jdbc6.getConnection();
+			statement6 = connection6.createStatement();
+		}
 
 		//jdbc = new JDBCTestUtils();
 		//connection = jdbc.getConnection();
@@ -54,8 +57,10 @@ public class SimpleJdbcTest extends TestCase {
 	protected void tearDown() throws Exception {
 		statement7.close();
 		connection7.close();
-		//statement6.close();
-		//connection6.close();
+		if (test6) {
+			statement6.close();
+			connection6.close();
+		}
 	}
 
 	/** This test passes. */
@@ -73,7 +78,7 @@ public class SimpleJdbcTest extends TestCase {
 			DriverManager.getConnection( "jdbc:fmp360://hercules.360works.com/Contacts", jdbc7.dbUsername, jdbc7.dbPassword );
 			fail( "This is the wrong host; should have failed." );
 		} catch( SQLException e ) {
-			assertTrue( e.getMessage().indexOf( "java.io.IOException: Server returned unexpected status code: 404" ) >= 0 );
+			assertTrue( e.getMessage().indexOf( "Server returned unexpected status code: 404" ) >= 0 );
 			//assertEquals( 802, e.getErrorCode() ); //802 means database is not open
 		}
 
@@ -103,8 +108,8 @@ public class SimpleJdbcTest extends TestCase {
 			rawConnection( rawUrl, authString );
 
 			//Try version 6
-			//rawUrl = "http://" + passwordString + jdbc6.xmlServer + ":" + jdbc6.port + "/FMPro?-format=-fmp_xml&-db=Contacts&-lay=Contacts&-findall";
-			//rawConnection( rawUrl, authString );
+			rawUrl = "http://" + passwordString + jdbc6.xmlServer + ":" + jdbc6.port + "/FMPro?-format=-fmp_xml&-db=Contacts&-lay=Contacts&-findall";
+			rawConnection( rawUrl, authString );
 		}
 	}
 
@@ -132,9 +137,11 @@ public class SimpleJdbcTest extends TestCase {
 		assertEquals( "firstName", resultSet.getMetaData().getColumnName(1) );
 
 		//Then try 6
-		//tableName = "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		//resultSet = statement6.executeQuery( "SELECT * FROM \""+tableName+"\"" );
-		//assertEquals( "firstName", resultSet.getMetaData().getColumnName(1) );
+		if (test6) {
+			tableName = "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+			resultSet = statement6.executeQuery( "SELECT * FROM \""+tableName+"\"" );
+			assertEquals( "firstName", resultSet.getMetaData().getColumnName(1) );
+		}
 	}
 
 	/** This test passes. */
@@ -146,42 +153,30 @@ public class SimpleJdbcTest extends TestCase {
 		assertEquals( 1, rowCount );
 
 		//Then try 6
-		//tableName = "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		//sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress) values('Al', 'Leong', 'kungfudude@mcgyver.com')";
-		//rowCount = statement6.executeUpdate( sql );
-		//assertEquals( 1, rowCount );
+		if (test6) {
+			tableName = "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+			//sql = "INSERT INTO \"Contact profiles\" LAYOUT WebObjects (Contact,Email,\"Active status\") values('Al Leong', 'kungfudude@mcgyver.com', 'Inactive')";
+			sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress) values('Al', 'Leong', 'kungfudude@mcgyver.com')";
+			rowCount = statement6.executeUpdate( sql );
+			assertEquals( 1, rowCount );
+		}
 	}
 
 	/** This test passes. */
 	public void testSimpleSelect() throws SQLException {
 		//First try 7
-		{
-			String tableName = "Contacts";
-			String sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al'";
-			DebugTimer dt = new DebugTimer( "Selecting all columns where lastName = 'Leong' and firstName='Al'");
-			ResultSet resultSet = statement7.executeQuery( sql );
-			dt.markTime( "Executed query" );
-			int resultCount = simpleSelectCheck( resultSet );
-			dt.markTime( "Retrieved " + resultCount + " results" );
-			dt.stop();
-		}
-		//First try 7
-		{
-			String tableName = "Contacts";
-			String sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al'";
-			DebugTimer dt = new DebugTimer( "Selecting all columns where lastName = 'Leong' and firstName='Al'");
-			ResultSet resultSet = statement7.executeQuery( sql );
-			dt.markTime( "Executed query" );
-			int resultCount = simpleSelectCheck( resultSet );
-			dt.markTime( "Retrieved " + resultCount + " results" );
-			dt.stop();
-		}
+		String tableName = "Contacts";
+		String sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al'";
+		ResultSet resultSet = statement7.executeQuery( sql );
+		simpleSelectCheck( resultSet );
 
 		//Then try 6
-		//tableName = "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		//sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al'";
-		//resultSet = statement6.executeQuery( sql );
-		//simpleSelectCheck( resultSet );
+		if (test6) {
+			tableName = "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+			sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al'";
+			resultSet = statement6.executeQuery( sql );
+			simpleSelectCheck( resultSet );
+		}
 	}
 
 	private int simpleSelectCheck( ResultSet resultSet ) throws SQLException {
@@ -203,10 +198,12 @@ public class SimpleJdbcTest extends TestCase {
 		sortedAssertion( statement7.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName desc" ), false );
 
 		//Then try 6
-		//tableName = "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		//sortedAssertion( statement6.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName" ), true );
-		//sortedAssertion( statement6.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName asc" ), true );
-		//sortedAssertion( statement6.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName desc" ), false );
+		if (test6) {
+			tableName = "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+			sortedAssertion( statement6.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName" ), true );
+			sortedAssertion( statement6.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName asc" ), true );
+			sortedAssertion( statement6.executeQuery( "SELECT * FROM " + tableName + " ORDER BY firstName desc" ), false );
+		}
 	}
 
 	private void sortedAssertion(ResultSet rs, boolean isAscending) throws SQLException {
@@ -226,7 +223,9 @@ public class SimpleJdbcTest extends TestCase {
 	/** This test passes. */
 	public void testSelectWithNamedAttributes() throws SQLException {
 		selectWithNamedAttributes( "Contacts", statement7 ); //First try 7
-		//selectWithNamedAttributes( "Contacts.Contacts", statement6 ); //Then try 6
+		if (test6) {
+			selectWithNamedAttributes( "Contacts.Contacts", statement6 ); //Then try 6
+		}
 	}
 
 	private void selectWithNamedAttributes( String tableName, Statement statement ) throws SQLException {
@@ -252,7 +251,9 @@ public class SimpleJdbcTest extends TestCase {
 	/** This test passes. */
 	public void testSimpleUpdate() throws SQLException {
 		simpleUpdate( "Contacts", statement7 );
-		//simpleUpdate( "Contacts.Contacts", statement6 );
+		if (test6) {
+			simpleUpdate( "Contacts.Contacts", statement6 );
+		}
 	}
 
 	private void simpleUpdate( String tableName, Statement statement ) throws SQLException {
@@ -271,7 +272,9 @@ public class SimpleJdbcTest extends TestCase {
 	 */
 	public void testRelationalSearch() throws SQLException {
 		relationalSearch( "Company", statement7 ); //Test 7
-		//relationalSearch( "Company.company", statement6 ); //Test 6
+		if (test6) {
+			relationalSearch( "Company.company", statement6 ); //Test 6
+		}
 	}
 
 	private void relationalSearch( String tableName, Statement statement ) throws SQLException {
@@ -307,7 +310,9 @@ public class SimpleJdbcTest extends TestCase {
 	/** This test passes. */
 	public void testSimpleDelete() throws SQLException {
 		simpleDelete( "Contacts", statement7 );
-		//simpleDelete( "Contacts.Contacts", statement6 );
+		if (test6) {
+			simpleDelete( "Contacts.Contacts", statement6 );
+		}
 	}
 
 	private void simpleDelete( String tableName, Statement statement ) throws SQLException {//int rowCount = statement.executeUpdate("INSERT INTO "+tableName+" ( FIRSTNAME, LASTNAME, \"COMPANY ID\") VALUES( 'Jesse', 'Barnum', 3)" );
@@ -330,9 +335,11 @@ public class SimpleJdbcTest extends TestCase {
 	}
 
 	/** This test fails for FM6, because the FM6 XML returns dates like this '2 pm' exactly as the user entered, without normalizing them. We can fix this but it will be some work. */
-	/*public void testTimestampParsing6() throws SQLException {
-		timestampParsing( "Contacts.Contacts", statement6 ); //Then test 6
-	}*/
+	public void testTimestampParsing6() throws SQLException {
+		if (test6) {
+			timestampParsing( "Contacts.Contacts", statement6 ); //Then test 6
+		}
+	}
 
 	private void timestampParsing( String tableName, Statement statement ) throws SQLException {
 		ResultSet rs = statement.executeQuery("SELECT * from "+tableName+" where ID='144'");
@@ -362,9 +369,9 @@ public class SimpleJdbcTest extends TestCase {
 	}
 
 	/** This test fails for FM6, because of date parsing problems with 6 */
-	/*public void testDataParsing6() throws SQLException {
+	public void testDataParsing6() throws SQLException {
 		dataParsing( "Portrait.portrait", statement6 ); //Then test 6
-	}*/
+	}
 
 	private void dataParsing( String tableName, Statement statement ) throws SQLException {
 		ResultSet rs = statement.executeQuery("SELECT * from " + tableName);
@@ -396,9 +403,11 @@ public class SimpleJdbcTest extends TestCase {
 
 
 	/** This test fails for FM6, because of date parsing problems with 6. */
-	/*public void testGetObjectParsing6() throws SQLException {
-		getObjectParsing( "Portrait.portrait", statement6 ); //Then test 6
-	}*/
+	public void testGetObjectParsing6() throws SQLException {
+		if (test6) {
+			getObjectParsing( "Portrait.portrait", statement6 ); //Then test 6
+		}
+	}
 
 	private void getObjectParsing( String tableName, Statement statement ) throws SQLException {
 		ResultSet rs = statement.executeQuery("SELECT * from " + tableName);
@@ -470,7 +479,9 @@ public class SimpleJdbcTest extends TestCase {
 	 */
 	public void testAutoGeneratedKeys() throws SQLException {
 		autoGeneratedKeys( "Contacts", statement7 ); //First test 7
-		//autoGeneratedKeys( "Contacts.Contacts", statement6 ); //Then test 6
+		if (test6) {
+			autoGeneratedKeys( "Contacts.Contacts", statement6 ); //Then test 6
+		}
 	}
 
 	private void autoGeneratedKeys( String tableName, Statement statement ) throws SQLException {//sql = "INSERT INTO \"Contact profiles\" LAYOUT WebObjects (Contact,Email,\"Active status\") values('Al Leong', 'kungfudude@mcgyver.com', 'Inactive')";
