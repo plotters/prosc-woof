@@ -416,6 +416,7 @@ public class FmResultSet implements ResultSet {
 	public Object getObject( int i ) throws SQLException {
 		checkResultSet();
 		Object result = currentRecord.getObject(i - 1, connection);
+		if (wasNull()) result = null;
 		if (logger.isLoggable(Level.FINER)) {
 			logger.log(Level.FINER, "getObject(" + i + ") is " + result);
 		}

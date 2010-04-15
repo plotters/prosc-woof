@@ -57,6 +57,7 @@ public class FmConnectionTest extends TestCase {
 	}
 
  /* public void testSQLParsingFM6() throws Exception {
+	  if (!JDBCTestUtils.TEST_6) fail("V6 testing is disabled");
     JDBCTestUtils testUtils = new JDBCTestUtils();
     FmConnection c;
     Statement statement;

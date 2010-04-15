@@ -47,6 +47,7 @@ public class JDBCTestUtils {
 	public int port;
 	public String driverClassName;
 	public String catalogSeparator;
+	public static final boolean TEST_6 = false;
 
 	public JDBCTestUtils() {
 		fmVersion = Integer.valueOf( System.getProperty("fmVersion", "7") ).intValue();
@@ -55,8 +56,8 @@ public class JDBCTestUtils {
 		log.info("use 360 driver is set to : " + use360driver );
 		dbUsername = System.getProperty("dbUsername", "wo");
 		dbPassword = System.getProperty("dbPassword", "wo");
-		fmServer= System.getProperty("fmServer", "fms7.360works.com");
-		xmlServer = System.getProperty("xmlServer", "fms7.360works.com" );
+		fmServer= System.getProperty("fmServer", "orion.360works.com");
+		xmlServer = System.getProperty("xmlServer", "orion.360works.com" );
 		dbName = System.getProperty( "dbName", "Contacts" );
 		port = Integer.valueOf(System.getProperty("portNumber", "80")).intValue();
 		Logger.getLogger(JDBCTestUtils.class.getName()).setLevel(Level.FINEST);
@@ -89,6 +90,9 @@ public class JDBCTestUtils {
 		else return "jdbc:filemaker://" + fmServer + "/" + whichDatabase;
 	}
 
+	public static void configureLogging() {
+		Logger.getLogger("com.prosc").setLevel(Level.FINE);
+	}
 
 	public void assertIsSpeedy(int maxAverageExecutionTime, Runnable runnable) {
 		int loopCount = 1000 / maxAverageExecutionTime;

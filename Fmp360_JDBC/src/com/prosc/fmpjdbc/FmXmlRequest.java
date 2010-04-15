@@ -64,6 +64,10 @@ public class FmXmlRequest extends FmRequest {
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set missingFields;
 	private RuntimeException creationStackTrace;
+	/**
+	 * If true, the response is not parsed. This is the case for UPDATE, SELECT, and a few other queries.
+	 */
+	private boolean ignoreResponse;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion)  {
 		try {
@@ -146,7 +150,9 @@ public class FmXmlRequest extends FmRequest {
 			}
 			else throw e;
 		}
-		readResult();
+		if (!ignoreResponse) {
+			readResult();
+		}
 	}
 
 	public void closeRequest() {
@@ -177,7 +183,7 @@ public class FmXmlRequest extends FmRequest {
 		synchronized( FmXmlRequest.this ) {
 			if( isStreamOpen ) {
 				if( log.isLoggable( Level.FINE ) ) {
-					log.log( Level.FINE, "Warning - request was finalized without every being closed. The stack trace that follows shows the thread that created this request. (" + theUrl + "?" + postArgs + ")", creationStackTrace );
+					log.log( Level.FINE, "Warning - request was finalized without ever being closed. The stack trace that follows shows the thread that created this request. (" + theUrl + "?" + postArgs + ")", creationStackTrace );
 				} else {
 					log.warning( "Warning - request was finalized without ever being closed. Set log level to FINE to get a stack trace of when this request was created. (" + theUrl + "?" + postArgs + " )" );
 				}
@@ -411,6 +417,15 @@ public class FmXmlRequest extends FmRequest {
 	private boolean foundCountIsSet = false;
 	private boolean recordIteratorIsSet = false;
 	private boolean errorCodeIsSet = false;
+
+
+	public boolean isIgnoreResponse() {
+		return ignoreResponse;
+	}
+
+	public void setIgnoreResponse(final boolean ignoreResponse) {
+		this.ignoreResponse = ignoreResponse;
+	}
 
 	/**
 	 * XML parsing SAX implementation.
@@ -765,22 +780,22 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 
-	public static void main(String[] args) throws IOException, FileMakerException {
-		FmXmlRequest request;
-		//request = new FmXmlRequest("http", "hercules.360works.com", "/fmi/xml/FMPXMLRESULT.xml", 80, null, null);
-		//request.doRequest("-db=Contacts&-lay=Contacts&-findall");
-		//FmXmlRequest fmXmlRequest = new FmXmlRequest("http", "fmp.360works.com", "/FMPro?-db=Names&-format=-fmp_xml&-findall", 4000);
-		//FmXmlRequest fmXmlRequest = new FmXmlRequest("http", "fmp.360works.com", "/FMPro?-db=Insertions&-lay=AMSLogic&-format=-fmp_xml&-findall", 4000, "exchange", "waffle");
-		//FmXmlRequest fmXmlRequest = new FmXmlRequest("http", "localhost", "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts&-lay=Contacts&-findall", 3000, null, null);
-
-		request = new FmXmlRequest("http", "orion.360works.com", "/fmi/xml/FMPXMLRESULT.xml", 80, null, null, 5);
-		for (int n = 1; n <= 10; n++) {
-			try {
-				request.doRequest("-db=Contacts&-lay=Calc Test&-max=100&-findany");
-			} finally {
-				request.closeRequest();
-			}
-		}
-	}
+	//public static void main(String[] args) throws IOException, FileMakerException {
+	//	FmXmlRequest request;
+	//	//request = new FmXmlRequest("http", "hercules.360works.com", "/fmi/xml/FMPXMLRESULT.xml", 80, null, null);
+	//	//request.doRequest("-db=Contacts&-lay=Contacts&-findall");
+	//	//FmXmlRequest fmXmlRequest = new FmXmlRequest("http", "fmp.360works.com", "/FMPro?-db=Names&-format=-fmp_xml&-findall", 4000);
+	//	//FmXmlRequest fmXmlRequest = new FmXmlRequest("http", "fmp.360works.com", "/FMPro?-db=Insertions&-lay=AMSLogic&-format=-fmp_xml&-findall", 4000, "exchange", "waffle");
+	//	//FmXmlRequest fmXmlRequest = new FmXmlRequest("http", "localhost", "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts&-lay=Contacts&-findall", 3000, null, null);
+	//
+	//	request = new FmXmlRequest("http", "orion.360works.com", "/fmi/xml/FMPXMLRESULT.xml", 80, null, null, 5);
+	//	for (int n = 1; n <= 10; n++) {
+	//		try {
+	//			request.doRequest("-db=Contacts&-lay=Calc Test&-max=100&-findany");
+	//		} finally {
+	//			request.closeRequest();
+	//		}
+	//	}
+	//}
 
 }

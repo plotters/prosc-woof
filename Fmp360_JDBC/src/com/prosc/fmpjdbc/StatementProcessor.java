@@ -273,18 +273,25 @@ public class StatementProcessor {
 						}
 						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+						actionHandler.setIgnoreResponse(false);
 						try {
-							actionHandler.doRequest( dbLayoutString + updateClause + "&-recid=" + recordId + "&-edit" );
+							actionHandler.doRequest( dbLayoutString + updateClause + "&-recid=" + recordId + "&-edit");
+							for (Iterator iterator = actionHandler.getRecordIterator(); iterator.hasNext();) {
+								Object o = (Object) iterator.next();
+								if (logger.isLoggable(Level.FINE)) {
+									logger.log(Level.FINE, "Record was updated: " + o);
+								}
+								rowCount++;
+							}
 							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 						} catch (RuntimeException e) {
-							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
+							//actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 							updateRowCount = 0;
 							throw e;
 						}
-						rowCount++;
 					}
 					updateRowCount = rowCount;
-					recIdHandler.closeRequest();
+					//recIdHandler.closeRequest();
 				}
 				break;
 
@@ -305,17 +312,18 @@ public class StatementProcessor {
 						}
 						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+						actionHandler.setIgnoreResponse(true); // FIX!! make this false, and parse the response from FMP, as in the UPDATE block above. Need to make sure things actually completed! -ssb
 						try {
 							actionHandler.doRequest( dbLayoutString + "&-recid=" + recordId + "&-delete" );
-							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
+							//actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 						} catch (RuntimeException e) {
-							actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
+							//actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 							throw e;
 						}
 						rowCount++;
 					}
 					updateRowCount = rowCount;
-					recIdHandler.closeRequest();
+					//recIdHandler.closeRequest();
 				}
 				break;
 
