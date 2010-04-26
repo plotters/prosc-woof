@@ -246,7 +246,7 @@ public class AdvancedDriverTests extends TestCase {
 				} finally {
 					in.close();
 				}
-				
+
 				url = new URL (rs.getString( 2 ) );
 				in = url.openStream();
 				try {
@@ -333,7 +333,7 @@ public class AdvancedDriverTests extends TestCase {
 		//Now test a deletion by the record ID
 		assertEquals( 1, statement7.executeUpdate( "DELETE FROM Contacts WHERE recId = " + recId ) );
 	}
-	
+
 	/*public void testGeneratedKeys() {
 		statement7.executeUpdate( "" )
 	}*/
@@ -756,6 +756,19 @@ public class AdvancedDriverTests extends TestCase {
 			fail("Should not be able to get zip column, it is not on the Contacts_minimal layout");
 		} catch(SQLException e) {
 			//This is correct
+		}
+	}
+
+	/** This tries to fetch 3 different records in a single query by their ID numbers */
+	public void testOrSearches() throws SQLException {
+		String sql = "SELECT * FROM Contacts where ID='2' or ID='3' or ID='4'";
+		ResultSet rs = statement7.executeQuery( sql );
+		try {
+			int count=0;
+			while( rs.next() ) count++;
+			assertEquals( 3, count );
+		} finally {
+			rs.close();
 		}
 	}
 }
