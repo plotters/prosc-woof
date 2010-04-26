@@ -273,7 +273,6 @@ public class StatementProcessor {
 						}
 						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-						actionHandler.setIgnoreResponse(false);
 						try {
 							actionHandler.doRequest( dbLayoutString + updateClause + "&-recid=" + recordId + "&-edit");
 							for (Iterator iterator = actionHandler.getRecordIterator(); iterator.hasNext();) {
@@ -312,7 +311,6 @@ public class StatementProcessor {
 						}
 						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-						actionHandler.setIgnoreResponse(true); // FIX!! make this false, and parse the response from FMP, as in the UPDATE block above. Need to make sure things actually completed! -ssb
 						try {
 							actionHandler.doRequest( dbLayoutString + "&-recid=" + recordId + "&-delete" );
 							//actionHandler.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long

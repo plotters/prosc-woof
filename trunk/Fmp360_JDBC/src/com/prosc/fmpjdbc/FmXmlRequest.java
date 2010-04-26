@@ -64,10 +64,6 @@ public class FmXmlRequest extends FmRequest {
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set missingFields;
 	private RuntimeException creationStackTrace;
-	/**
-	 * If true, the response is not parsed. This is the case for UPDATE, SELECT, and a few other queries.
-	 */
-	private boolean ignoreResponse;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion)  {
 		try {
@@ -150,9 +146,7 @@ public class FmXmlRequest extends FmRequest {
 			}
 			else throw e;
 		}
-		if (!ignoreResponse) {
-			readResult();
-		}
+		readResult();
 	}
 
 	public void closeRequest() {
@@ -417,15 +411,6 @@ public class FmXmlRequest extends FmRequest {
 	private boolean foundCountIsSet = false;
 	private boolean recordIteratorIsSet = false;
 	private boolean errorCodeIsSet = false;
-
-
-	public boolean isIgnoreResponse() {
-		return ignoreResponse;
-	}
-
-	public void setIgnoreResponse(final boolean ignoreResponse) {
-		this.ignoreResponse = ignoreResponse;
-	}
 
 	/**
 	 * XML parsing SAX implementation.
