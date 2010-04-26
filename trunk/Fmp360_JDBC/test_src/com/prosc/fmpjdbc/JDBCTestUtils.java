@@ -56,8 +56,8 @@ public class JDBCTestUtils {
 		log.info("use 360 driver is set to : " + use360driver );
 		dbUsername = System.getProperty("dbUsername", "wo");
 		dbPassword = System.getProperty("dbPassword", "wo");
-		fmServer= System.getProperty("fmServer", "orion.360works.com");
-		xmlServer = System.getProperty("xmlServer", "orion.360works.com" );
+		fmServer= System.getProperty("fmServer", "hermes.360works.com");
+		xmlServer = System.getProperty("xmlServer", "hermes.360works.com" );
 		dbName = System.getProperty( "dbName", "Contacts" );
 		port = Integer.valueOf(System.getProperty("portNumber", "80")).intValue();
 		Logger.getLogger(JDBCTestUtils.class.getName()).setLevel(Level.FINEST);

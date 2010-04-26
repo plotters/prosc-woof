@@ -18,7 +18,7 @@ public class FMScriptExecutionTest extends TestCase {
 	private FmXmlRequest request;
 	private static final String username = null;
 	private static final String password = null;
-	private static final String host = "orion.360works.com:80";
+	private static final String host = "hermes.360works.com:80";
 	private static final String driverClassName = "com.prosc.fmpjdbc.Driver";
 	private String jdbcUrl;
 	private FmStatement statement;
