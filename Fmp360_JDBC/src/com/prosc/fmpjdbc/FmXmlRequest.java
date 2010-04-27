@@ -124,10 +124,6 @@ public class FmXmlRequest extends FmRequest {
 			out.println(postArgs);
 			out.close();
 		}
-		isStreamOpen = true;
-		if( log.isLoggable( Level.FINE ) ) {
-			creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
-		}
 
 		try {
 			int httpStatusCode = theConnection.getResponseCode();
@@ -137,6 +133,10 @@ public class FmXmlRequest extends FmRequest {
 			else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
 			else throw new IOException("Server returned unexpected status code: " + httpStatusCode );
 			serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
+			isStreamOpen = true;
+			if( log.isLoggable( Level.FINE ) ) {
+				creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
+			}
 		} catch( IOException e ) {
 			if( e.getCause() instanceof FileNotFoundException ) {
 				String message = "Remote URL " + e.getCause().getMessage() + " could not be located.";
