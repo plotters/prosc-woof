@@ -180,7 +180,7 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	private ResultSet getTables( String catalog, String schemaPattern, String tableNamePattern, boolean testingConnection ) throws SQLException {
-		log.log( Level.FINE, "getTables stack trace (NOT AN ERROR)", new RuntimeException("Just a stack trace") );
+		//log.log( Level.FINE, "getTables stack trace (NOT AN ERROR)", new RuntimeException("Just a stack trace") );
 		if (logger.isLoggable(Level.FINE)) {
 			logger.log(Level.FINE, "getTables(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ")");
 		}

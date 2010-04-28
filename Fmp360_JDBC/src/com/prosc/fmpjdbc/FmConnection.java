@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URLEncoder;
 import java.io.IOException;
 
 /*
@@ -87,10 +88,35 @@ public class FmConnection implements Connection {
 
 		// lastly, check the username/pwd are valid by trying to access the db
 		if (catalog != null) {
-			((FmMetaData) getMetaData()).testUsernamePassword(); // this will throw a new SQLException(FmXmlRequest.HttpAuthenticationException)
+			testUsernamePassword();
+			//((FmMetaData) getMetaData()).testUsernamePassword(); // this will throw a new SQLException(FmXmlRequest.HttpAuthenticationException)
 			//FIX!! Right now, this is very inefficient and runs every time a connection is open. We shoudl 1) make it more efficient, 2) make it configurable whether to do this, and 3) perhaps skip it if the same credentials are applied multiple times --jsb
 		}
 		// Commented out until we switched to JDK 1.5: MBeanUtils.registerMBean( mBeanName, this );
+	}
+
+	private void testUsernamePassword() throws SQLException {
+		FmXmlRequest request = new FmXmlRequest(getProtocol(), getHost(), getFMVersionUrl(),
+				getPort(), getUsername(), getPassword(), getFmVersion() );
+		try {
+			String databaseName = getCatalog();
+			String encodedDBName = URLEncoder.encode(databaseName);
+			String postArgs = "-db=" + encodedDBName + "&-lay=ProscNoSuchTable&-view";
+			try {
+				request.doRequest( postArgs );
+			} catch( FmXmlRequest.HttpAuthenticationException e ) {
+				//Username and password are invalid
+				throw new SQLException( e.getMessage() );
+			} catch( IOException e ) {
+				throw new SQLException(e);
+			} catch( FileMakerException e ) {
+				if( request.getErrorCode() == 105 ) { //Success, our username/password is valid and there is no such layout
+					return;
+				} else throw e;
+			}
+		} finally {
+			request.closeRequest();
+		}
 	}
 
 	private volatile int resultSetCount = 0;
@@ -349,7 +375,7 @@ public class FmConnection implements Connection {
 	public PreparedStatement prepareStatement( String s, String[] strings ) throws SQLException {
 		throw new AbstractMethodError( "prepareStatement is not implemented yet." ); //FIX! Broken placeholder
 	}
-	
+
 	//---These methods were added to the interface in Java 1.5.... ? How bizarre that they would add methods to an existing interface???
 
 	public void setTypeMap( Map<String, Class<?>> map ) throws SQLException {
