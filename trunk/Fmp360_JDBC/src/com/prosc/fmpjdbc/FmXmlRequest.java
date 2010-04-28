@@ -232,7 +232,7 @@ public class FmXmlRequest extends FmRequest {
 		myThread.start();
 		if(hasError()) {
 			FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( new Integer(errorCode) );
-			log.log(Level.WARNING, fileMakerException.toString());
+			//log.log(Level.WARNING, fileMakerException.toString());
 			throw fileMakerException;
 		}
 
