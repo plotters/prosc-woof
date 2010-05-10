@@ -12,6 +12,7 @@ import java.net.URL;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -100,7 +101,12 @@ public class FmConnection implements Connection {
 				getPort(), getUsername(), getPassword(), getFmVersion() );
 		try {
 			String databaseName = getCatalog();
-			String encodedDBName = URLEncoder.encode(databaseName);
+			String encodedDBName;
+			try {
+				encodedDBName = URLEncoder.encode(databaseName, "utf-8");
+			} catch( UnsupportedEncodingException e ) {
+				throw new RuntimeException(e);
+			}
 			String postArgs = "-db=" + encodedDBName + "&-lay=ProscNoSuchTable&-view";
 			try {
 				request.doRequest( postArgs );
