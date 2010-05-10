@@ -250,7 +250,7 @@ public class StatementProcessor {
 					actionHandler.setSelectFields(command.getFields()); // Set the fields that are used in the select statement
 					actionHandler.doRequest( dbLayoutString + postArgs );
 
-					results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getFieldDefinitions(), (FmConnection)statement.getConnection() );
+					results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getFoundCount(), actionHandler.getFieldDefinitions(), (FmConnection)statement.getConnection() );
 					// DO NOT CLOSE the request since the result set needs to stream the records
 					break;
 
@@ -544,7 +544,7 @@ public class StatementProcessor {
 		FmFieldList resultFieldList = new FmFieldList();
 		FmConnection connection = (FmConnection)statement.getConnection();
 		if( insertedRecord == null ) { //Return an empty record set. FIX!! Right now won't work with updates, only inserts. --jsb
-			return new FmResultSet( Collections.EMPTY_LIST.iterator(), resultFieldList, connection );
+			return new FmResultSet( Collections.EMPTY_LIST.iterator(), 0, resultFieldList, connection );
 		}
 		FmFieldList fieldList = insertedRecord.getFieldList();
 		Set newFields = new LinkedHashSet( fieldList.getFields() ); // this contains FmField objects
@@ -575,7 +575,7 @@ public class StatementProcessor {
 			resultRecord.setRawValue( (String)resultMap.get( it.next() ), keysFound++ );
 		}
 
-		return new FmResultSet( Collections.singletonList( resultRecord ).iterator(), resultFieldList, connection );
+		return new FmResultSet( Collections.singletonList( resultRecord ).iterator(), 1, resultFieldList, connection );
 	}
 
 	public void setParams( Vector params ) {
