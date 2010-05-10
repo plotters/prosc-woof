@@ -161,7 +161,7 @@ public class FmMetaData implements DatabaseMetaData {
 					logger.log(Level.FINEST, String.valueOf(scriptObject));
 				}
 			}
-			return new FmResultSet( scripts.iterator(), scriptInfo, connection );
+			return new FmResultSet( scripts.iterator(), scripts.size(), scriptInfo, connection );
 		} catch (IOException e) {
 			SQLException sqle = new SQLException(e.toString());
 			sqle.initCause(e);
@@ -172,7 +172,7 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getProcedureColumns( String s, String s1, String s2, String s3 ) throws SQLException {
-		return new FmResultSet( null, null, connection );
+		return new FmResultSet( null, 0, null, connection );
 	}
 
 	public ResultSet getTables( String catalog, String schemaPattern, String tableNamePattern, String[] fieldTypes ) throws SQLException {
@@ -301,7 +301,7 @@ public class FmMetaData implements DatabaseMetaData {
 				log.fine( "FmMetaData call tracker: Closed -layoutnames request " + callCount );
 			}
 		}
-		return new FmResultSet( tables.iterator(), tableFormat, connection );
+		return new FmResultSet( tables.iterator(), tables.size(), tableFormat, connection );
 	}
 
 	/**
@@ -414,7 +414,7 @@ public class FmMetaData implements DatabaseMetaData {
 				logger.log(Level.FINEST, String.valueOf(fieldRecord ));
 			}
 		}
-		return new FmResultSet( columns.iterator(), fields, connection );
+		return new FmResultSet( columns.iterator(), columns.size(), fields, connection );
 	}
 
 	public ResultSet getVersionColumns( String s, String s1, String s2 ) throws SQLException {
@@ -422,11 +422,11 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getPrimaryKeys( String catalog, String schema, String table ) throws SQLException {
-		return new FmResultSet(null, null, connection);
+		return new FmResultSet(null, 0, null, connection );
 	}
 
 	public ResultSet getImportedKeys( String s, String s1, String s2 ) throws SQLException {
-		return new FmResultSet(null, null, connection);
+		return new FmResultSet(null, 0, null, connection );
 	}
 
 	public ResultSet getTypeInfo() throws SQLException {
@@ -442,7 +442,7 @@ public class FmMetaData implements DatabaseMetaData {
 			}
 			typesList.add( eachType );
 		}
-		return new FmResultSet( typesList.iterator(), FmFieldType.resultSetFormat, connection );
+		return new FmResultSet( typesList.iterator(), typesList.size(), FmFieldType.resultSetFormat, connection );
 	}
 
 	public Connection getConnection() throws SQLException {
@@ -582,7 +582,7 @@ public class FmMetaData implements DatabaseMetaData {
 			request.closeRequest(); // the parsing thread should take care of this... but just in case it's taking too long
 		}
 
-		ResultSet result = new FmResultSet(databases.iterator(), format, connection );
+		ResultSet result = new FmResultSet(databases.iterator(), databases.size(), format, connection );
 		return result;
 	}
 

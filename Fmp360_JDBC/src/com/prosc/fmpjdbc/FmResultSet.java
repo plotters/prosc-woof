@@ -49,17 +49,22 @@ public class FmResultSet implements ResultSet {
 	//private boolean isLast = false;
 	private Logger logger = Logger.getLogger( FmResultSet.class.getName() );
 	private int rowNum = -1;
+	private int foundCount;
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
-	public FmResultSet(Iterator fmRecordsIterator, FmFieldList fieldDefinitions, FmConnection connection) {
+	public FmResultSet( Iterator fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection ) {
 		this.connection = connection;
 		if( fmRecordsIterator == null ) this.fmRecords = Collections.EMPTY_LIST.iterator();
 		else this.fmRecords = fmRecordsIterator;
 		this.metaData = new FmResultSetMetaData( fieldDefinitions );
 		this.fieldDefinitions = fieldDefinitions;
+		this.foundCount = foundCount;
 		connection.notifyNewResultSet(this);
 	}
 
+	public int getFoundCount() {
+		return foundCount;
+	}
 	//OPTIMIZE make all methods final
 
 	private SQLException handleFormattingException(Exception e, int position) {
