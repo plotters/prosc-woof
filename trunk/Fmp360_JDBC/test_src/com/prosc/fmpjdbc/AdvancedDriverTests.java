@@ -7,8 +7,10 @@ import java.util.*;
 import java.util.logging.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.net.URLEncoder;
 
 import com.prosc.shared.IOUtils;
 
@@ -770,5 +772,13 @@ public class AdvancedDriverTests extends TestCase {
 		} finally {
 			rs.close();
 		}
+	}
+	
+	public void testJapaneseCharacters() throws SQLException, UnsupportedEncodingException {
+		//String japaneseName = "my_??????";
+		String japaneseName = "my_\u30a4\u30d9\u30f3\u30c8\u7ba1\u7406";
+		String urlEncodedVersion = URLEncoder.encode( japaneseName, "utf-8" );
+		Connection connection = jdbc7.getConnection( japaneseName, "Admin", "" );
+		connection.close();
 	}
 }
