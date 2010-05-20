@@ -438,7 +438,7 @@ public class FmXmlRequest extends FmRequest {
 		/**
 		 * Contains string data for the current data element being parsed
 		 */
-		private transient StringBuffer currentData = new StringBuffer(255);
+		private transient StringBuffer currentData = new StringBuffer(255); // OPTIMIZE! use a StringBuilder instead
 		private boolean foundDataForColumn;
 		private boolean foundColStart = false; // added to fix a bug with columns that only have an end element - mww
 		//private int columnDataIndex;
@@ -514,7 +514,7 @@ public class FmXmlRequest extends FmRequest {
 				}
 
 				//currentData.delete( 0, currentData.length() );
-				currentData = new StringBuffer( 255 );
+				currentData = new StringBuffer( 255 ); // OPTIMIZE! just call reset() on the existing currentData instead
 			} else if ("COL".equals(qName)) {
 				foundDataForColumn = false;
 				foundColStart = true; // added to fix a bug with columns that only have an end element - mww
