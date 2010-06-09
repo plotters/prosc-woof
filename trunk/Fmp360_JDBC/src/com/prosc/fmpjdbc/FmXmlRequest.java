@@ -73,6 +73,7 @@ public class FmXmlRequest extends FmRequest {
 			throw new RuntimeException(murle);
 		}
 		if (username != null || password != null) {
+			if( password == null ) password = ""; //Otherwise Java will use the word 'null' as the password
 			String tempString = username + ":" + password;
 			authString = new BASE64Encoder().encode(tempString.getBytes());
 		}
