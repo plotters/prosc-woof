@@ -1116,10 +1116,6 @@ public class FmMetaData implements DatabaseMetaData {
 
 	// === These are new methods added in Java 1.5 ===
 
-	public RowIdLifetime getRowIdLifetime() throws SQLException {
-		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public ResultSet getSchemas( String s, String s1 ) throws SQLException {
 		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
 	}
@@ -1151,4 +1147,10 @@ public class FmMetaData implements DatabaseMetaData {
 	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
 		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
 	}
+	
+	// === New methods added in Java 1.6. Commment them out to compile in Java 1.5. ===
+
+	/*public RowIdLifetime getRowIdLifetime() throws SQLException {
+		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+	}*/
 }
