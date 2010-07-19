@@ -114,7 +114,9 @@ public class FmConnection implements Connection {
 				//Username and password are invalid
 				throw new SQLException( e.getMessage() );
 			} catch( IOException e ) {
-				throw new SQLException(e);
+				SQLException sqlE = new SQLException();
+				sqlE.initCause( e );
+				throw sqlE;
 			} catch( FileMakerException e ) {
 				if( request.getErrorCode() == 105 ) { //Success, our username/password is valid and there is no such layout
 					return;
@@ -396,23 +398,7 @@ public class FmConnection implements Connection {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
-	public NClob createNClob() throws SQLException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}
-
-	public SQLXML createSQLXML() throws SQLException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}
-
 	public boolean isValid( int i ) throws SQLException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}
-
-	public void setClientInfo( String s, String s1 ) throws SQLClientInfoException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}
-
-	public void setClientInfo( Properties properties ) throws SQLClientInfoException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
@@ -439,4 +425,22 @@ public class FmConnection implements Connection {
 	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
+	
+	// === Java 6 stuff - this must be commented out to compile in Java 5. Screw you Sun! ===
+
+	/*public NClob createNClob() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public SQLXML createSQLXML() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setClientInfo( String s, String s1 ) throws SQLClientInfoException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setClientInfo( Properties properties ) throws SQLClientInfoException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}*/
 }

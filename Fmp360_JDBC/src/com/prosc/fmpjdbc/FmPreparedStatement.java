@@ -289,19 +289,11 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 	
 	// === These methods were added in JDK 1.5 ===
 
-	public void setRowId( int i, RowId id ) throws SQLException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}
-
 	public void setNString( int i, String s ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
 	public void setNCharacterStream( int i, Reader reader, long l ) throws SQLException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}
-
-	public void setNClob( int i, NClob clob ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
@@ -314,10 +306,6 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 	}
 
 	public void setNClob( int i, Reader reader, long l ) throws SQLException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}
-
-	public void setSQLXML( int i, SQLXML sqlxml ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
@@ -360,4 +348,18 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 	public void setNClob( int i, Reader reader ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
+	
+	// === Comment these methods out to compile in Java 1.5 ===
+
+	/*public void setRowId( int i, RowId id ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setNClob( int i, NClob clob ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void setSQLXML( int i, SQLXML sqlxml ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}*/
 }
