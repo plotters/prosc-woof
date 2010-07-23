@@ -428,7 +428,7 @@ public class FmConnection implements Connection {
 	
 	// === Java 6 stuff - this must be commented out to compile in Java 5. Screw you Sun! ===
 
-	/*public NClob createNClob() throws SQLException {
+	public NClob createNClob() throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
@@ -442,5 +442,5 @@ public class FmConnection implements Connection {
 
 	public void setClientInfo( Properties properties ) throws SQLClientInfoException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}*/
+	}
 }

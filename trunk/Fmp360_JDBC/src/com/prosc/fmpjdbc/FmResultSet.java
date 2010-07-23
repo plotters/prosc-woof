@@ -1031,7 +1031,7 @@ public class FmResultSet implements ResultSet {
 	// ===These methods were added in Java 6. Comment them out to compile in Java 1.5. ===
 	
 
-	/*public RowId getRowId( int i ) throws SQLException {
+	public RowId getRowId( int i ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
@@ -1077,5 +1077,5 @@ public class FmResultSet implements ResultSet {
 
 	public void updateSQLXML( String s, SQLXML sqlxml ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}*/
+	}
 }

@@ -1150,7 +1150,7 @@ public class FmMetaData implements DatabaseMetaData {
 	
 	// === New methods added in Java 1.6. Commment them out to compile in Java 1.5. ===
 
-	/*public RowIdLifetime getRowIdLifetime() throws SQLException {
+	public RowIdLifetime getRowIdLifetime() throws SQLException {
 		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
-	}*/
+	}
 }

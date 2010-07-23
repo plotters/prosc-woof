@@ -351,7 +351,7 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 	
 	// === Comment these methods out to compile in Java 1.5 ===
 
-	/*public void setRowId( int i, RowId id ) throws SQLException {
+	public void setRowId( int i, RowId id ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
@@ -361,5 +361,5 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 
 	public void setSQLXML( int i, SQLXML sqlxml ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}*/
+	}
 }
