@@ -489,7 +489,7 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 	// === Comment these out to compile in Java 1.5 ===
 	
 
-	/*public RowId getRowId( int i ) throws SQLException {
+	public RowId getRowId( int i ) throws SQLException {
 		throw new AbstractMethodError( "This feature has not been implemented yet." ); //FIX!!! Broken placeholder
 	}
 
@@ -523,5 +523,5 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 
 	public SQLXML getSQLXML( String s ) throws SQLException {
 		throw new AbstractMethodError( "This feature has not been implemented yet." ); //FIX!!! Broken placeholder
-	}*/
+	}
 }
