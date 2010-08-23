@@ -4,6 +4,7 @@ import junit.framework.TestCase;
 
 import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.logging.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -171,13 +172,14 @@ public class AdvancedDriverTests extends TestCase {
 		String tableName = jdbc7.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
 		statement7.executeUpdate( "DELETE FROM " + tableName + " WHERE \"Alternate Mime Type\"='JDBC testing' "); // cleanup
 		//
-		PreparedStatement insertStatement = connection7.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\") values(?,?,'JDBC testing',?,?,?)");
+		PreparedStatement insertStatement = connection7.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\", \"Date created\") values(?,?,'JDBC testing',?,?,?,?)");
 		java.util.Date now = new java.util.Date();
 		insertStatement.setString( 1, "100");
 		insertStatement.setString( 2, "video/mpeg" );
 		insertStatement.setDate( 3, new java.sql.Date( now.getTime() ) );
 		insertStatement.setTime( 4, new java.sql.Time( now.getTime() ) );
 		insertStatement.setTimestamp( 5, new Timestamp( now.getTime() ) );
+		insertStatement.setDate( 6, new java.sql.Date( System.currentTimeMillis() ) );
 		insertStatement.execute(); // insert #1.  dtek driver fails with Date objects in prepared statements
 		ResultSet rs = insertStatement.getGeneratedKeys();
 		rs.next();

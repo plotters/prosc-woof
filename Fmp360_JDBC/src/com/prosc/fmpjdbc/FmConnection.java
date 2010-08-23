@@ -96,6 +96,10 @@ public class FmConnection implements Connection {
 		// Commented out until we switched to JDK 1.5: MBeanUtils.registerMBean( mBeanName, this );
 	}
 
+	public String toString() {
+		return "FmConnection [" + url + "]";
+	}
+
 	private void testUsernamePassword() throws SQLException {
 		FmXmlRequest request = new FmXmlRequest(getProtocol(), getHost(), getFMVersionUrl(),
 				getPort(), getUsername(), getPassword(), getFmVersion() );
@@ -114,7 +118,7 @@ public class FmConnection implements Connection {
 				//Username and password are invalid
 				throw new SQLException( e.getMessage() );
 			} catch( IOException e ) {
-				SQLException sqlE = new SQLException();
+				SQLException sqlE = new SQLException( "Could not connect to database: " + e.toString() );
 				sqlE.initCause( e );
 				throw sqlE;
 			} catch( FileMakerException e ) {
