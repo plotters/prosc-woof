@@ -120,6 +120,7 @@ public class FmXmlRequest extends FmRequest {
 			postArgs = postPrefix + postArgs;
 			log.log(Level.CONFIG, "Starting request: " + theUrl + "?" + postArgs);
 			theConnection.setDoOutput(true);
+			theConnection.setConnectTimeout( 10000 ); //Time out after 10 seconds. FIX!! Make this a configurable property.
 			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 			out.print(postPrefix);
 			out.println(postArgs);
@@ -203,7 +204,7 @@ public class FmXmlRequest extends FmRequest {
 					xParser.parse( input, xmlHandler );
 				} catch (IOException ioe) {
 					boolean ignore = false; //FIX!! Have the close() method set a thread-safe variable which is checked here, if it was closed then ignore the exception --jsb
-					if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") ) {
+					if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") || ioe.getMessage().equalsIgnoreCase( "Socket closed" )) {
 						synchronized( FmXmlRequest.this ) {
 							if( ! isStreamOpen ) ignore = true;
 						}
