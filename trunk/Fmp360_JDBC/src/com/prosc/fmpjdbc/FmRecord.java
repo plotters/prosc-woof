@@ -1,8 +1,10 @@
 package com.prosc.fmpjdbc;
 
 import java.util.logging.Logger;
+import java.util.*;
 import java.math.BigDecimal;
 import java.sql.*;
+import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -289,7 +291,9 @@ public class FmRecord {
 		} else fieldList.wasNull = false;
 		try {
 			DateFormat format = (DateFormat)dateFormat.get();
-			return new java.sql.Date( format.parse(rawValue).getTime() );
+			java.util.Date date = format.parse( rawValue );
+			log.fine( "Return date " + date + " for raw value " + rawValue );
+			return new java.sql.Date( date.getTime() );
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
