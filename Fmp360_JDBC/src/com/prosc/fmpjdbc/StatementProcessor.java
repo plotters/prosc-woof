@@ -1,14 +1,14 @@
 package com.prosc.fmpjdbc;
 
-import java.sql.*;
-import java.util.*;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -36,6 +36,7 @@ import java.text.*;
 //FIX!!! Search WHERE x LIKE '=' to not appear to work either; you need to do x LIKE '==' to find null values.
 public class StatementProcessor {
 	private final static String DISPLAY_LAYOUT_MARKER="^^";
+	private final static TimeZone defaultTimeZone = TimeZone.getDefault();
 	private SqlCommand command;
 	private FmStatement statement;
 	private int updateRowCount = 0;
@@ -393,12 +394,20 @@ public class StatementProcessor {
 			if (applyFormatter ) {
 				// all the things we were checking for subclass java.util.Date, just check once.
 				// FIX!!! need to URLEncode formatted values too -ssb
-				if (value instanceof Time) {
+				if (value instanceof java.sql.Time) {
 					value = ((DateFormat)FmRecord.timeFormat.get()).format(value);
-				} else if (value instanceof Timestamp) {
+				} else if (value instanceof java.sql.Timestamp) {
 					value = ((DateFormat)FmRecord.timestampFormat.get()).format(value);
-				} else if ( value instanceof Date ) {
-					value = ((DateFormat) FmRecord.dateFormat.get()).format(value);
+				} else if ( value instanceof java.sql.Date ) {
+					DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
+					dateFormat.setTimeZone( defaultTimeZone );
+					value = dateFormat.format(value);
+				} else if( value instanceof DateWithZone ) {
+					Date date = ( (DateWithZone)value ).date;
+					TimeZone tz = ( (DateWithZone)value ).timeZone;
+					DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
+					dateFormat.setTimeZone( tz );
+					value = ((DateFormat) FmRecord.dateFormat.get()).format(date);
 				}
 			}
 			if (wildcardsToEscape != null) {

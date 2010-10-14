@@ -34,6 +34,8 @@ import java.net.URL;
  */
 public class FmRecord {
 	private static final Logger log = Logger.getLogger( FmRecord.class.getName() );
+	private static final TimeZone defaultTimeZone = TimeZone.getDefault();
+	
 	private Integer recordId;
 	private Integer modCount;
 	private FmFieldList fieldList;
@@ -291,6 +293,7 @@ public class FmRecord {
 		} else fieldList.wasNull = false;
 		try {
 			DateFormat format = (DateFormat)dateFormat.get();
+			format.setTimeZone( defaultTimeZone );
 			java.util.Date date = format.parse( rawValue );
 			log.fine( "Return date " + date + " for raw value " + rawValue );
 			return new java.sql.Date( date.getTime() );
