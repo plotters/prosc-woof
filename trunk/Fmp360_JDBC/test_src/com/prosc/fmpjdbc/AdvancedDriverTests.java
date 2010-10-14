@@ -176,7 +176,8 @@ public class AdvancedDriverTests extends TestCase {
 		java.util.Date now = new java.util.Date();
 		insertStatement.setString( 1, "100");
 		insertStatement.setString( 2, "video/mpeg" );
-		insertStatement.setDate( 3, new java.sql.Date( now.getTime() ) );
+		Calendar cal = GregorianCalendar.getInstance(  );
+		insertStatement.setDate( 3, new java.sql.Date( now.getTime() ), cal );
 		insertStatement.setTime( 4, new java.sql.Time( now.getTime() ) );
 		insertStatement.setTimestamp( 5, new Timestamp( now.getTime() ) );
 		insertStatement.setDate( 6, new java.sql.Date( System.currentTimeMillis() ) );
