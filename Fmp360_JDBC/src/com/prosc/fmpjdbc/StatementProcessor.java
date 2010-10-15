@@ -407,6 +407,16 @@ public class StatementProcessor {
 					TimeZone tz = ( (DateWithZone)value ).timeZone;
 					DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
 					dateFormat.setTimeZone( tz );
+					try {
+						value = ((DateFormat) FmRecord.dateFormat.get()).format(date);
+					} catch( Exception e ) {
+						e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+					}
+				} else if( value instanceof TimeWithZone ) {
+					Date date = ( (TimeWithZone)value ).time;
+					TimeZone tz = ( (TimeWithZone)value ).timeZone;
+					DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
+					dateFormat.setTimeZone( tz );
 					value = ((DateFormat) FmRecord.dateFormat.get()).format(date);
 				}
 			}
