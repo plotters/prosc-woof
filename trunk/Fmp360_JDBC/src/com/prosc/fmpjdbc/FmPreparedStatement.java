@@ -142,6 +142,10 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 		setParam( i, time );
 	}
 
+	public void setTime( int i, Time time, Calendar calendar ) throws SQLException {
+		setParam( i, new TimeWithZone( time, calendar.getTimeZone() ) );
+	}
+
 	public void setTimestamp( int i, Timestamp timestamp ) throws SQLException {
 		setParam( i, timestamp );
 	}
@@ -265,10 +269,6 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 
 	public ResultSetMetaData getMetaData() throws SQLException {
 		throw new AbstractMethodError( "getMetaData is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public void setTime( int i, Time time, Calendar calendar ) throws SQLException {
-		throw new AbstractMethodError( "setTime is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public void setTimestamp( int i, Timestamp timestamp, Calendar calendar ) throws SQLException {

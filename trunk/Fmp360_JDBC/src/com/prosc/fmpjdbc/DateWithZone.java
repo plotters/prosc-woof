@@ -11,6 +11,10 @@ class DateWithZone {
 	TimeZone timeZone;
 
 	public DateWithZone( java.sql.Date date, TimeZone zone ) {
+		if( date == null ) throw new IllegalArgumentException("date cannot be null");
+		if( zone == null ) {
+			throw new IllegalArgumentException("zone cannot be null");
+		}
 		this.date = date;
 		this.timeZone = zone;
 	}
