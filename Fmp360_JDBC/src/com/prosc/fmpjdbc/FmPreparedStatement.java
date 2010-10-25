@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Vector;
 import java.util.Iterator;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Filter;
 import java.util.logging.Logger;
@@ -47,7 +48,6 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 		super( connection );
 		this.sql = sql;
 		int size = 0;
-		params = new Vector();
 		SqlCommand command = new SqlCommand( sql );
 		setProcessor( new StatementProcessor( this, command ) );
 		for( Iterator it = command.getSearchTerms().iterator(); it.hasNext(); ) {
@@ -58,9 +58,7 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 			AssignmentTerm eachTerm = (AssignmentTerm)it.next();
 			if( eachTerm.isPlaceholder() ) size++;
 		}
-		for( int i = 0; i < size; i++ ) { //initializes the params vector to the number of parameters
-			params.add( null );
-		}
+		params = new Vector(Arrays.asList(new Object[size]));
 	}
 
 	public boolean execute() throws SQLException {
