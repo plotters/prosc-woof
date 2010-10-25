@@ -415,9 +415,9 @@ public class StatementProcessor {
 				} else if( value instanceof TimeWithZone ) {
 					Date date = ( (TimeWithZone)value ).time;
 					TimeZone tz = ( (TimeWithZone)value ).timeZone;
-					DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
-					dateFormat.setTimeZone( tz );
-					value = ((DateFormat) FmRecord.dateFormat.get()).format(date);
+					DateFormat timeFormat = (DateFormat)FmRecord.timeFormat.get();
+					timeFormat.setTimeZone( tz );
+					value = timeFormat.format(date);
 				}
 			}
 			if (wildcardsToEscape != null) {
