@@ -76,7 +76,7 @@ public class FmConnection implements Connection {
 			packageLogger.setLevel(Level.parse(logLevel));
 		}
 		log.log(Level.CONFIG, "Connecting to " + url);
-		fmVersion = Float.valueOf( properties.getProperty("fmversion", "7") ).floatValue();
+		fmVersion = Float.valueOf( properties.getProperty( "fmversion", "7" ) );
 		if( fmVersion >= 7 ) {
 			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
 			//recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword(), fmVersion );
