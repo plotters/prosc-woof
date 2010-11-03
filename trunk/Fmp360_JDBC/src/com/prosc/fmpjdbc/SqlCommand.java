@@ -344,6 +344,9 @@ public class SqlCommand {
 				currentAssignmentField = null;
 			} else if (queryPart == WHERE_CLAUSE) {
 				//FmField field = new FmField(table, currentSearchTermFieldName, null, FmFieldType.TEXT, true);
+				if( currentSearchTermFieldName == null ) {
+					throw new IllegalArgumentException("Invalid WHERE clause. Check for mis-quoted identifiers: " + sql );
+				}
 				FmField field = getFieldWithNameOrAlias(currentSearchTermFieldName);
 				addSearchTerm( field, currentSearchTermOperator, null, true );
 				currentSearchTermFieldName = null;
