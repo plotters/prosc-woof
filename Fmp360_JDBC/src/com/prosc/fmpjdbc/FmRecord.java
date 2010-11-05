@@ -1,6 +1,7 @@
 package com.prosc.fmpjdbc;
 
 import java.util.logging.Logger;
+import java.util.logging.Level;
 import java.util.*;
 import java.math.BigDecimal;
 import java.sql.*;
@@ -286,6 +287,11 @@ public class FmRecord {
 	};
 
 	public Date getDate(int i) throws IllegalArgumentException {
+		final TimeZone zone = defaultTimeZone;
+		return getDate(i, zone);
+	}
+
+	public Date getDate(final int i, final TimeZone zone) {
 		String rawValue = getRawValue(i);
 		if( rawValue == null || rawValue.length() == 0 || "?".equals(rawValue) ) { //FIX! I don't know if ignoring "?" is the best policy --jsb
 			fieldList.wasNull = true;
@@ -293,10 +299,12 @@ public class FmRecord {
 		} else fieldList.wasNull = false;
 		try {
 			DateFormat format = (DateFormat)dateFormat.get();
-			format.setTimeZone( defaultTimeZone );
+			format.setTimeZone(zone);
 			java.util.Date date = format.parse( rawValue );
-			log.fine( "Return date " + date + " for raw value " + rawValue );
-			return new java.sql.Date( date.getTime() );
+			if (log.isLoggable(Level.FINE)) {
+				log.fine( "Return date " + date + " for raw value " + rawValue );
+			}
+			return new Date( date.getTime() );
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
@@ -308,6 +316,11 @@ public class FmRecord {
 	}
 
 	public Time getTime(int i) throws IllegalArgumentException {
+		final TimeZone timeZone = defaultTimeZone;
+		return getTime(i, timeZone);
+	}
+
+	public Time getTime(final int i, final TimeZone timeZone) {
 		String rawValue = getRawValue(i);
 		if( rawValue == null || rawValue.length() == 0 || "?".equals(rawValue) ) { //FIX! I don't know if ignoring "?" is the best policy --jsb
 			fieldList.wasNull = true;
@@ -315,7 +328,8 @@ public class FmRecord {
 		} else fieldList.wasNull = false;
 		try {
 			DateFormat format = (DateFormat)timeFormat.get();
-			return new java.sql.Time( format.parse(rawValue).getTime() );
+			format.setTimeZone(timeZone);
+			return new Time( format.parse(rawValue).getTime() );
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
