@@ -554,19 +554,41 @@ public class FmResultSet implements ResultSet {
 	}
 
 	public Date getDate( int i, Calendar calendar ) throws SQLException {
-		throw handleMissingMethod( "getDate is not implemented yet." ); //FIX!!! Broken placeholder
+		checkResultSet();
+		try {
+			return currentRecord.getDate(i - 1, calendar.getTimeZone());
+		} catch (IllegalArgumentException e) {
+			throw handleFormattingException(e, i);
+		}
 	}
 
 	public Date getDate( String s, Calendar calendar ) throws SQLException {
-		throw handleMissingMethod( "getDate is not implemented yet." ); //FIX!!! Broken placeholder
+		int i = fieldDefinitions.indexOfFieldWithAlias(s);
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getDate(i, calendar.getTimeZone());
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public Time getTime( int i, Calendar calendar ) throws SQLException {
-		throw handleMissingMethod( "getTime is not implemented yet." ); //FIX!!! Broken placeholder
+		checkResultSet();
+		try {
+			return currentRecord.getTime(i - 1, calendar.getTimeZone());
+		} catch (IllegalArgumentException e) {
+			throw handleFormattingException(e, i);
+		}
 	}
 
 	public Time getTime( String s, Calendar calendar ) throws SQLException {
-		throw handleMissingMethod( "getTime is not implemented yet." ); //FIX!!! Broken placeholder
+		int i = fieldDefinitions.indexOfFieldWithAlias(s);
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getTime(i, calendar.getTimeZone());
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public Timestamp getTimestamp( int i, Calendar calendar ) throws SQLException {
