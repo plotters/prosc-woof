@@ -138,10 +138,15 @@ public class FmResultSet implements ResultSet {
 //      actionHandler = ( (FmConnection)statement.getConnection7() ).getXmlRequestHandler();
 		//}
 	}
+	
+	public Integer getModCount() {
+		checkResultSet();
+		return currentRecord.getModCount();
+	}
 
 
 	public String getString( int i ) throws SQLException {
-		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		checkResultSet();
 		String result;
 		if( Types.BLOB == fieldDefinitions.get( i - 1 ).getType().getSqlDataType() ) {
 			FmBlob fmBlob = (FmBlob)getBlob( i );
