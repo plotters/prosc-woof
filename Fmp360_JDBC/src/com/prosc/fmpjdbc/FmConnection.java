@@ -1,6 +1,7 @@
 package com.prosc.fmpjdbc;
 
 import com.prosc.shared.MBeanUtils;
+import com.prosc.sql.ErrorCodes;
 
 import java.sql.*;
 import java.util.Map;
@@ -116,7 +117,7 @@ public class FmConnection implements Connection {
 				request.doRequest( postArgs );
 			} catch( FmXmlRequest.HttpAuthenticationException e ) {
 				//Username and password are invalid
-				throw new SQLException( e.getMessage() );
+				throw new SQLException( e.getMessage(), ErrorCodes.AUTH_INVALID );
 			} catch( IOException e ) {
 				SQLException sqlE = new SQLException( "Could not connect to database: " + e.toString() );
 				sqlE.initCause( e );
