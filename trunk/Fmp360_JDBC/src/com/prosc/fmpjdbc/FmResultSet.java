@@ -284,7 +284,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			if (i == -1) throw new SQLException( "'" + s + "' is not a field on the requested layout.");
 			return currentRecord.getString(i);
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
