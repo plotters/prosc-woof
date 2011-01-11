@@ -34,7 +34,7 @@ public class FmStatement implements Statement {
 		this.connection = connection;
 	}
 
-	protected StatementProcessor processor() { return processor; }
+	protected StatementProcessor getProcessor() { return processor; }
 
 	protected void setProcessor( StatementProcessor processor ) {
 		this.processor = processor;
@@ -49,10 +49,7 @@ public class FmStatement implements Statement {
 	}
 
 	public int executeUpdate( String s ) throws SQLException {
-		SqlCommand command = new SqlCommand(s);
-		processor = new StatementProcessor(this, command);
-		processor.execute();
-		return processor.getUpdateRowCount();
+		return executeUpdate( s, Statement.NO_GENERATED_KEYS );
 	}
 
 	public boolean execute( String s ) throws SQLException {
@@ -73,6 +70,10 @@ public class FmStatement implements Statement {
 	}
 
 	public void close() throws SQLException {
+		ResultSet rs = getResultSet();
+		if( rs != null ) {
+			rs.close();
+		}
 		processor = null; //Assist garbage collection
 	}
 
@@ -113,7 +114,13 @@ public class FmStatement implements Statement {
 
 
 	public int executeUpdate( String s, int i ) throws SQLException {
-		return executeUpdate(s);
+		SqlCommand command = new SqlCommand(s);
+		processor = new StatementProcessor(this, command);
+		if( i == Statement.RETURN_GENERATED_KEYS ) {
+			processor.setReturnGeneratedKeys( true );
+		}
+		processor.execute();
+		return processor.getUpdateRowCount();
 	}
 
 	public int executeUpdate( String s, int[] ints ) throws SQLException {

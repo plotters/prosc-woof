@@ -264,7 +264,7 @@ public class FmConnection implements Connection {
 	}
 
 	public PreparedStatement prepareStatement( String s ) throws SQLException {
-		return new FmPreparedStatement( this, s);
+		return prepareStatement( s, Statement.NO_GENERATED_KEYS );
 	}
 
 	public CallableStatement prepareCall( String s ) throws SQLException {
@@ -378,7 +378,7 @@ public class FmConnection implements Connection {
 	}
 
 	public PreparedStatement prepareStatement( String s, int i ) throws SQLException {
-		return prepareStatement( s + "" );
+		return new FmPreparedStatement( this, s, i );
 	}
 
 	public PreparedStatement prepareStatement( String s, int[] ints ) throws SQLException {
