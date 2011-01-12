@@ -33,14 +33,15 @@ import java.util.logging.Logger;
  */
 public class ResultQueue implements Iterator {
 	private static final Logger log = Logger.getLogger( ResultQueue.class.getName() );
+	
+	private final long resumeSize; // this is when we'll start adding items again
+	private final LinkedList objects; // LinkedLists are un-synchronized
+	private final LinkedList sizes;
+	
+	private volatile Throwable storedError;
 	private long maxSize; // this is the max size of the queue
-	private long resumeSize; // this is when we'll start adding items again
 	private long currentSize; // this is the currentSize of the queue
 	private boolean finished;
-	private LinkedList objects; // LinkedLists are un-synchronized
-	private LinkedList sizes;
-	private volatile Throwable storedError;
-
 	private int rowsReturned = 0;
 	private int rowsReceived = 0;
 	private int errorRow = -1;
