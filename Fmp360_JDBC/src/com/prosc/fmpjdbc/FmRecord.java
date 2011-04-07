@@ -329,7 +329,7 @@ public class FmRecord {
 		try {
 			DateFormat format = (DateFormat)timeFormat.get();
 			format.setTimeZone(timeZone);
-			return new Time( format.parse(rawValue).getTime() );
+			return new Time( format.parse(rawValue).getTime() ); //This is where it fails
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);

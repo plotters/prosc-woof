@@ -38,6 +38,7 @@ public class FileMakerException extends SQLException {
 	private String jdbcUrl;
 	private String sql;
 	private Object params;
+	private boolean ssl;
 
 	static {
 		InputStream stream = FileMakerException.class.getResourceAsStream("ErrorCodes.txt");
@@ -55,7 +56,7 @@ public class FileMakerException extends SQLException {
 		}
 	}
 
-	private FileMakerException(Integer errorCode, String errorMessage) {
+	protected FileMakerException(Integer errorCode, String errorMessage) {
 		super( errorMessage, null, errorCode.intValue() );
 	}
 
@@ -64,7 +65,26 @@ public class FileMakerException extends SQLException {
 	}
 
 	public String getMessage() {
-		return super.getMessage() + " (JDBC URL: " + getJdbcUrl() + " / SQL statement: " + sql + " / params: " + params + " )";
+		StringBuffer msg = new StringBuffer( super.getMessage().length() + 512 );
+		msg.append( super.getMessage() );
+		boolean extraParams = false;
+		if( jdbcUrl != null ) {
+			extraParams = true;
+			msg.append( " (" );
+		}
+		if( jdbcUrl != null ) {
+			msg.append( "JDBC URL: " + jdbcUrl + ", SSL: " + ssl );
+		}
+		if( sql != null ) {
+			msg.append( " / SQL statement: " + sql );
+		}
+		if( params != null ) {
+			msg.append( " / SQL params: " + params );
+		}
+		if( extraParams ) {
+			msg.append( ")" );
+		}
+		return msg.toString();
 	}
 
 	protected static String getErrorMessage(Integer errorCode) {
@@ -79,10 +99,19 @@ public class FileMakerException extends SQLException {
 
 	public void setStatementProcessor( StatementProcessor statementProcessor ) {
 		//this.statementProcessor = statemenProcessor;
-		jdbcUrl = ((FmConnection)statementProcessor.getStatement().getConnection()).getUrl();
+		//jdbcUrl = ((FmConnection)statementProcessor.getStatement().getConnection()).getUrl();
 		sql = statementProcessor.getSQL();
 		params = statementProcessor.getParams();
 	}
+
+	public void setConnection( FmConnection connection ) {
+		this.jdbcUrl = connection.getUrl();
+		ssl = Boolean.valueOf( connection.getProperties().getProperty( "ssl", "false" ) );
+	}
+	
+	/*public void setDatabase( String dbName ) {
+		this.dbName = dbName;
+	}*/
 
 	public String getJdbcUrl() {
 		return jdbcUrl;

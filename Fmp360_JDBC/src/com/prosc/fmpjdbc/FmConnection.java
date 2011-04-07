@@ -9,9 +9,7 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.net.URLEncoder;
+import java.net.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
@@ -117,15 +115,33 @@ public class FmConnection implements Connection {
 				request.doRequest( postArgs );
 			} catch( FmXmlRequest.HttpAuthenticationException e ) {
 				//Username and password are invalid
-				throw new SQLException( e.getMessage(), ErrorCodes.AUTH_INVALID );
+				e.setConnection( this );
+				SQLException sqle = new SQLException( e.getMessage(), ErrorCodes.AUTH_INVALID );
+				sqle.initCause( e );
+				throw sqle;
+			} catch( UnknownHostException e ) {
+				SQLException sqlE = new SQLException( "Could not determine the IP address for " + getHost() );
+				sqlE.initCause( e );
+				throw sqlE;
+			} catch( ConnectException e ) {
+				URL url = null;
+				try {
+					url = new URL( getProtocol(), getHost(), getPort(), "" );
+				} catch( MalformedURLException e1 ) {}
+				SQLException sqlE = new SQLException( "There does not seem to be a web server running at " + url + ". Check to make sure that Apache or IIS is running on the Web Publishing Engine." );
+				sqlE.initCause( e );
+				throw sqlE;
 			} catch( IOException e ) {
-				SQLException sqlE = new SQLException( "Could not connect to database: " + e.toString() );
+				SQLException sqlE = new SQLException( "Could not connect to database: " + e.getMessage() );
 				sqlE.initCause( e );
 				throw sqlE;
 			} catch( FileMakerException e ) {
 				if( request.getErrorCode() == 105 ) { //Success, our username/password is valid and there is no such layout
 					return;
-				} else throw e;
+				} else {
+					e.setConnection( this );
+					throw e;
+				}
 			}
 		} finally {
 			request.closeRequest();
@@ -230,6 +246,14 @@ public class FmConnection implements Connection {
 		return new FmStatement(this);
 	}
 
+	public Statement createStatement( int resultSetType, int resultSetConcurrency ) throws SQLException {
+		return createStatement();
+	}
+
+	public Statement createStatement( int resultSetType, int resultSetConcurrency, int resultSetHoldability ) throws SQLException {
+		return createStatement( resultSetType, resultSetConcurrency );
+	}
+
 	public void setTransactionIsolation( int i ) throws SQLException {
 		if( i != Connection.TRANSACTION_NONE ) throw new SQLException("Transactions are not supported by FileMaker.");
 	}
@@ -323,10 +347,6 @@ public class FmConnection implements Connection {
 		//FIX! Should I be doing something here?
 	}
 
-	public Statement createStatement( int i, int i1 ) throws SQLException {
-		throw new AbstractMethodError( "createStatement is not implemented yet." ); //FIX! Broken placeholder
-	}
-
 	public PreparedStatement prepareStatement( String s, int resultSetType, int resultSetConcurrency ) throws SQLException {
 		if( resultSetType != ResultSet.TYPE_FORWARD_ONLY ) throw new UnsupportedOperationException("Forward-only is the only type of supported ResultSet" );
 		if( resultSetConcurrency != ResultSet.CONCUR_READ_ONLY ) throw new UnsupportedOperationException("Read-only is the only type of concurrency supported" );
@@ -363,10 +383,6 @@ public class FmConnection implements Connection {
 
 	public void releaseSavepoint( Savepoint savepoint ) throws SQLException {
 		throw new AbstractMethodError( "releaseSavepoint is not implemented yet." ); //FIX! Broken placeholder
-	}
-
-	public Statement createStatement( int i, int i1, int i2 ) throws SQLException {
-		throw new AbstractMethodError( "createStatement is not implemented yet." ); //FIX! Broken placeholder
 	}
 
 	public PreparedStatement prepareStatement( String s, int i, int i1, int i2 ) throws SQLException {
@@ -430,7 +446,7 @@ public class FmConnection implements Connection {
 	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
-	
+
 	// === Java 6 stuff - this must be commented out to compile in Java 5. Screw you Sun! ===
 
 	public NClob createNClob() throws SQLException {
