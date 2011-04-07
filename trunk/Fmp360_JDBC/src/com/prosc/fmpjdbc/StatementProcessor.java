@@ -358,6 +358,7 @@ public class StatementProcessor {
 			e1.initCause( e );
 			throw e1;
 		} catch( FileMakerException e ) {
+			e.setConnection( (FmConnection)statement.getConnection() );
 			e.setStatementProcessor( this );
 			throw e;
 		} finally {
