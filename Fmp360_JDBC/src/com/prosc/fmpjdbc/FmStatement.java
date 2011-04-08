@@ -65,7 +65,7 @@ public class FmStatement implements Statement {
 	}
 
 	public int getUpdateCount() throws SQLException {
-		if( processor == null || !processor.hasResultSet() ) return -1;
+		if( processor == null || processor.hasResultSet() ) return -1;
 		return processor.getUpdateRowCount();
 	}
 

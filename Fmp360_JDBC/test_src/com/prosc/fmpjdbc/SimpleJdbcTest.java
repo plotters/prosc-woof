@@ -151,6 +151,7 @@ public class SimpleJdbcTest extends TestCase {
 		String sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress) values('Al', 'Leong', 'kungfudude@mcgyver.com')";
 		int rowCount = statement7.executeUpdate( sql );
 		assertEquals( 1, rowCount );
+		assertEquals( 1, statement7.getUpdateCount() );
 
 		//Then try 6
 		if (test6) {
@@ -159,6 +160,7 @@ public class SimpleJdbcTest extends TestCase {
 			sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress) values('Al', 'Leong', 'kungfudude@mcgyver.com')";
 			rowCount = statement6.executeUpdate( sql );
 			assertEquals( 1, rowCount );
+			assertEquals( 1, statement7.getUpdateCount() );
 		}
 	}
 
