@@ -785,7 +785,7 @@ public class FmXmlRequest extends FmRequest {
 
 	public static class HttpAuthenticationException extends FileMakerException {
 		public HttpAuthenticationException(String message, String username) {
-			super(212, "Invalid user account and/or password. Please try again - username '" + username + "'" );
+			super(212, "Invalid FileMaker user account and/or password. Please try again - username '" + username + "'" );
 		}
 	}
 
