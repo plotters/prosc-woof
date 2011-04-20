@@ -62,6 +62,12 @@ public class FmResultSet implements ResultSet {
 		connection.notifyNewResultSet(this);
 	}
 
+	/** This returns the total number of records found in the query. This is a FileMaker-specific attribute which is not part of the JDBC
+	 * spec, so cast the ResultSet to this class if you need to access this attribute. This found count includes records not viewable based
+	 * on record-level security restrictions, so if you need to get an accurate count of the visible records, the only way is to repeatedly
+	 * call next() and count the results.
+	 * @return
+	 */
 	public int getFoundCount() {
 		return foundCount;
 	}
