@@ -784,4 +784,20 @@ public class AdvancedDriverTests extends TestCase {
 		Connection connection = jdbc7.getConnection( japaneseName, "Admin", "" );
 		connection.close();
 	}
+	
+	/** Records that are restricted in FileMaker privilege sets should be skipped over when iterating the rows of the ResultSet. */
+	public void testRecordLevelSecurity() throws SQLException {
+		jdbc7 = new JDBCTestUtils();
+		connection7 = jdbc7.getConnection( jdbc7.dbName, "limited", "limited");
+		statement7 = connection7.createStatement();
+
+		ResultSet rs = statement7.executeQuery( "SELECT * FROM Company" );
+		int totalRecords = ((FmResultSet)rs).getFoundCount();
+		int visibleRecords = 0;
+		while( rs.next() ) {
+			visibleRecords++;
+		}
+		assertTrue( "Visisble records and totalRecords are both " + totalRecords + "; visible records should be less because of record-level privilege set restrictions.", visibleRecords < totalRecords );
+		System.out.println( "Success! Visible records: " + visibleRecords + "; total records: " + totalRecords );
+	}
 }

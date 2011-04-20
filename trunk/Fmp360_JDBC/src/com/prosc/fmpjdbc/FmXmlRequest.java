@@ -465,6 +465,7 @@ public class FmXmlRequest extends FmRequest {
 		 */
 		private transient StringBuffer currentData = new StringBuffer(255); // OPTIMIZE! use a StringBuilder instead
 		private boolean foundDataForColumn;
+		private boolean foundDataForRow;
 		private boolean foundColStart = false; // added to fix a bug with columns that only have an end element - mww
 		//private int columnDataIndex;
 
@@ -536,6 +537,7 @@ public class FmXmlRequest extends FmRequest {
 				} else {
 					// this is the first <DATA> element in the <COL>
 					foundDataForColumn = true;
+					foundDataForRow = true;
 				}
 
 				//currentData.delete( 0, currentData.length() );
@@ -551,6 +553,7 @@ public class FmXmlRequest extends FmRequest {
 					columnIndex++;
 				}
 			} else if ("ROW".equals(qName)) {
+				foundDataForRow = false;
 				//dt.markTime("  Starting row");
 				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
 				currentRow = new FmRecord(fieldDefinitions, Integer.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
@@ -658,7 +661,9 @@ public class FmXmlRequest extends FmRequest {
 				}
 			}
 			if ("ROW".equals(qName)) {
-				recordIterator.add(currentRow, (long) sizeEstimate);
+				if( foundDataForRow ) { //If this is false, then record-level privileges prevented us from seeing this record; don't add it to the list of records.
+					recordIterator.add(currentRow, (long) sizeEstimate);
+				}
 				sizeEstimate = 0; // set it to 0 and start estimating again
 				if( columnIndex == recIdColumnIndex ) { //This is necessary in case the record id is the last selected field; it won't be caught in the begin of the <COL> element.
 					currentRow.setRawValue(currentRow.getRecordId().toString(), columnIndex);
