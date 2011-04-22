@@ -14,7 +14,6 @@ import java.util.logging.Logger;
 import java.sql.SQLException;
 
 import org.xml.sax.*;
-import com.sun.xml.internal.bind.v2.util.ByteArrayOutputStreamEx;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -144,7 +143,7 @@ public class FmXmlRequest extends FmRequest {
 			else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
 			else {
 				InputStream err = theConnection.getErrorStream();
-				ByteArrayOutputStream baos = new ByteArrayOutputStreamEx( err.available() );
+				ByteArrayOutputStream baos = new ByteArrayOutputStream( err.available() );
 				try {
 					byte[] buffer = new byte[1024];
 					int bytesRead;
