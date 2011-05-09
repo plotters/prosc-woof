@@ -116,7 +116,7 @@ public class FmConnection implements Connection {
 			} catch( FmXmlRequest.HttpAuthenticationException e ) {
 				//Username and password are invalid
 				e.setConnection( this );
-				SQLException sqle = new SQLException( e.getMessage(), ErrorCodes.AUTH_INVALID );
+				SQLException sqle = new SQLException( e.getMessage(), ErrorCodes.AUTH_INVALID, e.getErrorCode() );
 				sqle.initCause( e );
 				throw sqle;
 			} catch( UnknownHostException e ) {
