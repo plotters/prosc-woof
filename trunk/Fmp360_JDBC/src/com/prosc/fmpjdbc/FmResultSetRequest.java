@@ -45,19 +45,25 @@ import org.xml.sax.helpers.DefaultHandler;
  * To change this template use File | Settings | File Templates.
  */
 public class FmResultSetRequest extends FmRequest {
+	private static final Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 	private static final int SERVER_STREAM_BUFFERSIZE = 16384;
-	private URL theUrl;
+	
+	private final URL theUrl;
+	private final SAXParser xParser;
+	private final String username;
+	private final String authString;
+	
 	private InputStream serverStream;
-	private SAXParser xParser;
-	private String authString;
 	private String postPrefix = "";
-	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 
 	public FmResultSetRequest(String protocol, String host, String url, int portNumber, String username, String password) throws MalformedURLException {
 		this.theUrl = new URL(protocol, host, portNumber, url);
+		this.username = username;
 		if (username != null || password != null) {
 			String tempString = username + ":" + password;
 			authString = new BASE64Encoder().encode(tempString.getBytes());
+		} else {
+			authString = null;
 		}
 		try {
 			xParser = javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser();
@@ -100,7 +106,7 @@ public class FmResultSetRequest extends FmRequest {
 			out.close();
 		}
 
-		if( theConnection.getResponseCode() == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage() );
+		if( theConnection.getResponseCode() == 401 ) throw new FmXmlRequest.HttpAuthenticationException( theConnection.getResponseMessage(), username );
 		serverStream = new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
 		try {
 			readResult();
@@ -351,11 +357,11 @@ public class FmResultSetRequest extends FmRequest {
 		}
 	};
 
-	public static class HttpAuthenticationException extends IOException {
+	/*public static class HttpAuthenticationException extends IOException {
 		public HttpAuthenticationException(String s) {
 			super(s);
 		}
-	}
+	}*/
 
 
 	//public static void main(String[] args) throws IOException, FileMakerException {
