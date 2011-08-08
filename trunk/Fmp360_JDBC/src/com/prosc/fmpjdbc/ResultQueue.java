@@ -72,17 +72,13 @@ public class ResultQueue implements Iterator {
 	 * @param toAdd - The item (Object) to add to the queue
 	 * @param size - An estimate of the size of toAdd
 	 */
-	public synchronized void add(Object toAdd, long size) {
+	public synchronized void add(Object toAdd, long size) throws InterruptedException {
 		// keep track of total size and only blocks until it can add new elements when
 		// what about when the first item you try to add to the list is LARGER than the max size?
 		// INCREASE THE MAX SIZE AND ADD IT ANYWAY
 		if (!(currentSize >= maxSize && objects.size() == 0)) {
 			while (currentSize >= maxSize) {
-				try {
-					wait();
-				} catch (InterruptedException ie) { // interrupted exceptions are thrown when interupt() is called
-					throw new RuntimeException(ie);
-				}
+				wait();
 			} // now it's ok to add something to the queue
 		} else {
 			// increase the current size because i'm trying to add the first object to the queue, and it's
@@ -145,13 +141,13 @@ public class ResultQueue implements Iterator {
 
 		if( storedError != null && errorRow == rowsReturned ) {
 			if( storedError instanceof RuntimeException ) throw (RuntimeException)storedError;
-			else throw new RuntimeException("Error while trying to access field '" + errorFieldName + "' in zero-indexed row " + errorRow, storedError);
+			else throw new RuntimeException("Error while trying to access field '" + errorFieldName + "' in zero-indexed row " + errorRow + ": " + storedError.toString(), storedError);
 		}
 
 		Object toReturn = objects.removeFirst();
 		Object toReturnSize = sizes.removeFirst();
 
-		currentSize -= ((Long) toReturnSize).longValue();
+		currentSize -= (Long)toReturnSize;
 		if (currentSize < resumeSize) {
 			notifyAll();
 		}

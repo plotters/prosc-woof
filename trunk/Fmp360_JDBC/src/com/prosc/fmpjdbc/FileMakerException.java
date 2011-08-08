@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.Properties;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -33,12 +34,14 @@ import java.util.logging.Logger;
  */
 public class FileMakerException extends SQLException {
 	private final static Logger log = Logger.getLogger( FileMakerException.class.getName() );
+	
 	private static final Properties errorMessages = new Properties();
 	//private StatementProcessor statementProcessor;
 	private String jdbcUrl;
 	private String sql;
 	private Object params;
 	private boolean ssl;
+	private String requestUrl;
 
 	static {
 		InputStream stream = FileMakerException.class.getResourceAsStream("ErrorCodes.txt");
@@ -46,7 +49,7 @@ public class FileMakerException extends SQLException {
 		else try {
 			errorMessages.load(stream);
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.log( Level.SEVERE, "Could not load error messages resource ErrorCodes.txt", e );
 		} finally {
 			try {
 				stream.close();
@@ -57,18 +60,28 @@ public class FileMakerException extends SQLException {
 	}
 
 	protected FileMakerException(Integer errorCode, String errorMessage) {
-		super( errorMessage, null, errorCode.intValue() );
+		this( errorCode, errorMessage, null );
+	}
+
+
+	protected FileMakerException(Integer errorCode, String errorMessage, String requestUrl ) {
+		super( errorMessage, null, errorCode );
+		this.requestUrl = requestUrl;
 	}
 
 	public static FileMakerException exceptionForErrorCode(Integer errorCode) {
-		return new FileMakerException(errorCode, getErrorMessage(errorCode) );
+		return exceptionForErrorCode(errorCode, null );
+	}
+
+	public static FileMakerException exceptionForErrorCode( Integer errorCode, String requestUrl ) {
+		return new FileMakerException(errorCode, getErrorMessage(errorCode), requestUrl );
 	}
 
 	public String getMessage() {
 		StringBuffer msg = new StringBuffer( super.getMessage().length() + 512 );
 		msg.append( super.getMessage() );
 		boolean extraParams = false;
-		if( jdbcUrl != null ) {
+		if( jdbcUrl != null || sql != null || params != null || requestUrl != null ) {
 			extraParams = true;
 			msg.append( " (" );
 		}
@@ -80,6 +93,9 @@ public class FileMakerException extends SQLException {
 		}
 		if( params != null ) {
 			msg.append( " / SQL params: " + params );
+		}
+		if( requestUrl != null ) {
+			msg.append( " / request URL: " + requestUrl );
 		}
 		if( extraParams ) {
 			msg.append( ")" );
