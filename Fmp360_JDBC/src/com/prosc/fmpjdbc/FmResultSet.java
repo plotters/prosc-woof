@@ -1,5 +1,7 @@
 package com.prosc.fmpjdbc;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.sql.*;
 import java.math.BigDecimal;
 import java.io.InputStream;
@@ -50,9 +52,15 @@ public class FmResultSet implements ResultSet {
 	private Logger logger = Logger.getLogger( FmResultSet.class.getName() );
 	private int rowNum = -1;
 	private int foundCount;
+	private FmXmlRequest xmlRequest;
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
 	public FmResultSet( Iterator fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection ) {
+		this( fmRecordsIterator, foundCount, fieldDefinitions, connection, null );
+	}
+
+	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
+	public FmResultSet( Iterator fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection, @Nullable FmXmlRequest xmlRequest ) {
 		this.connection = connection;
 		if( fmRecordsIterator == null ) this.fmRecords = Collections.EMPTY_LIST.iterator();
 		else this.fmRecords = fmRecordsIterator;
@@ -60,6 +68,7 @@ public class FmResultSet implements ResultSet {
 		this.fieldDefinitions = fieldDefinitions;
 		this.foundCount = foundCount;
 		connection.notifyNewResultSet(this);
+		this.xmlRequest = xmlRequest;
 	}
 
 	/** This returns the total number of records found in the query. This is a FileMaker-specific attribute which is not part of the JDBC
@@ -128,7 +137,8 @@ public class FmResultSet implements ResultSet {
 
 	private void checkResultSet() {
 		//if( currentRecord == null ) throw new IllegalStateException("You must call next() before trying to work with this ResultSet." );
-		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
+		if( rowNum == -1 ) throw new IllegalStateException("The ResultSet is not positioned on a valid row - call next() before trying to read.");
+		else if( isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row - rowNum is " + rowNum + "; which is after the last row.");
 	}
 
 
@@ -139,10 +149,9 @@ public class FmResultSet implements ResultSet {
 		fieldDefinitions = null;
 		isOpen = false;
 		connection.notifyClosedResultSet( this );
-		//try {
-		// need to close the FmXmlResult here!!!
-//      actionHandler = ( (FmConnection)statement.getConnection7() ).getXmlRequestHandler();
-		//}
+		if( xmlRequest != null ) {
+			xmlRequest.closeRequest();
+		}
 	}
 	
 	public Integer getModCount() {

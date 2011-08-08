@@ -41,7 +41,7 @@ import org.xml.sax.*;
  * Time: 2:22:20 PM
  */
 public class FmXmlRequest extends FmRequest {
-	private static final int READ_TIMEOUT = 15 * 1000;
+	//private static final int READ_TIMEOUT = 15 * 1000;
 	private static final int CONNECT_TIMEOUT = 60 * 1000;
 	
 	/**
@@ -68,6 +68,8 @@ public class FmXmlRequest extends FmRequest {
 	private Set missingFields;
 	private RuntimeException creationStackTrace;
 	private String username;
+	private String fullUrl;
+	private Thread parsingThread;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion) {
 		try {
@@ -118,14 +120,15 @@ public class FmXmlRequest extends FmRequest {
 		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
 		theConnection.setInstanceFollowRedirects( false );
 		theConnection.setUseCaches(false);
-		theConnection.setConnectTimeout( CONNECT_TIMEOUT );
-		theConnection.setReadTimeout( READ_TIMEOUT );
+		theConnection.setConnectTimeout( CONNECT_TIMEOUT ); //FIX!! Make this a configurable connection property
+		//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
 		if (authString != null) {
 			theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		}
 		if (postArgs != null) {
 			postArgs = postPrefix + postArgs;
-			log.log(Level.FINE, "Starting request: " + theUrl + "?" + postArgs);
+			fullUrl = theUrl + "?" + postArgs;
+			log.log(Level.FINE, "Starting request: " + fullUrl );
 			theConnection.setDoOutput(true);
 			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 			out.print(postPrefix);
@@ -180,6 +183,7 @@ public class FmXmlRequest extends FmRequest {
 		//allFieldNames = new ArrayList();
 		//fmTable = null;
 		//    foundCount = 0;
+		parsingThread.interrupt();
 		if (serverStream != null)
 			try {
 				//serverStream = null;
@@ -187,7 +191,7 @@ public class FmXmlRequest extends FmRequest {
 					serverStream.close();
 					if( isStreamOpen ) {
 						if( log.isLoggable( Level.CONFIG ) ) {
-							log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + theUrl + "?" + postArgs + " )" );
+							log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + fullUrl + " )" );
 						}
 						isStreamOpen = false;
 					}
@@ -213,7 +217,7 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	private void readResult() throws FileMakerException {
-		Thread myThread = new Thread("Parsing Thread") {
+		parsingThread = new Thread("Parsing Thread") {
 			public void run() {
 				InputStream streamToParse;
 				streamToParse = serverStream;
@@ -253,11 +257,9 @@ public class FmXmlRequest extends FmRequest {
 
 
 		};
-		myThread.start();
+		parsingThread.start();
 		if(hasError()) {
-			FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( new Integer(errorCode) );
-			//log.log(Level.WARNING, fileMakerException.toString());
-			throw fileMakerException;
+			throw FileMakerException.exceptionForErrorCode( errorCode, fullUrl );
 		}
 
 	}
@@ -484,16 +486,17 @@ public class FmXmlRequest extends FmRequest {
 
 		public void fatalError(SAXParseException e) throws SAXException {
 			//We don't need to log, because we're throwing the exception to the ResultQueue : log.log(Level.SEVERE, e.toString(), e );
+			log.log( Level.SEVERE, "fatalError for request: " + fullUrl + "; " + e.toString() );
 			super.fatalError(e);
 		}
 
 		public void warning( SAXParseException e ) throws SAXException {
-			log.warning( e.toString() );
+			log.log( Level.WARNING, "warning for request: " + fullUrl + "; " + e.toString() );
 			super.warning( e );	//To change body of overridden methods use File | Settings | File Templates.
 		}
 
 		public void error( SAXParseException e ) throws SAXException {
-			log.warning( e.toString() );
+			log.log( Level.SEVERE, "error for request: " + fullUrl + "; " + e.toString() );
 			super.error( e );	//To change body of overridden methods use File | Settings | File Templates.
 		}
 
@@ -512,7 +515,10 @@ public class FmXmlRequest extends FmRequest {
 			nodeType = 0;
 		}
 
-		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) {
+		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) throws SAXException {
+			if( Thread.interrupted() ) {
+				throw new SAXException( "Parsing thread was interrupted" );
+			}
 			if( debugMode ) {
 				requestContent.append( "<" + qName);
 				for( int n=0; n<attributes.getLength(); n++ ) {
@@ -652,7 +658,7 @@ public class FmXmlRequest extends FmRequest {
 			recordIterator.setFinished();
 		}
 
-		public void endElement(String uri, String localName, String qName) {
+		public void endElement(String uri, String localName, String qName) throws SAXException {
 			if( debugMode ) requestContent.append( "</" + qName + ">" );
 			if( "DATA".equals(qName) ) {
 				if (fieldPositionPointer != null) {
@@ -661,7 +667,13 @@ public class FmXmlRequest extends FmRequest {
 			}
 			if ("ROW".equals(qName)) {
 				if( foundDataForRow ) { //If this is false, then record-level privileges prevented us from seeing this record; don't add it to the list of records.
-					recordIterator.add(currentRow, (long) sizeEstimate);
+					try {
+						recordIterator.add(currentRow, (long) sizeEstimate);
+					} catch( InterruptedException e ) {
+						throw new SAXException( "Parsing thread was interrupted while waiting to add more objects to the result queue" );
+					}
+				} else {
+					log.config( "Skipped an empty row, record ID " + currentRow.getRecordId() );
 				}
 				sizeEstimate = 0; // set it to 0 and start estimating again
 				if( columnIndex == recIdColumnIndex ) { //This is necessary in case the record id is the last selected field; it won't be caught in the begin of the <COL> element.
