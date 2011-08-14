@@ -183,7 +183,9 @@ public class FmXmlRequest extends FmRequest {
 		//allFieldNames = new ArrayList();
 		//fmTable = null;
 		//    foundCount = 0;
-		parsingThread.interrupt();
+		if( parsingThread != null && parsingThread.isAlive() ) {
+			parsingThread.interrupt();
+		}
 		if (serverStream != null)
 			try {
 				//serverStream = null;
