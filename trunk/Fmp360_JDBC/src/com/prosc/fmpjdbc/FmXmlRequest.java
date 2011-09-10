@@ -43,7 +43,7 @@ import org.xml.sax.*;
 public class FmXmlRequest extends FmRequest {
 	//private static final int READ_TIMEOUT = 15 * 1000;
 	private static final int CONNECT_TIMEOUT = 60 * 1000;
-	
+
 	/**
 	 * The URL (not including post data) where the response is retrieved from
 	 */
@@ -114,66 +114,79 @@ public class FmXmlRequest extends FmRequest {
 
 
 	public void doRequest(String input) throws IOException, FileMakerException {
-		postArgs = input;
 		if (serverStream != null) throw new IllegalStateException("You must call closeRequest() before sending another request.");
 		requestStartTime = System.currentTimeMillis();
-		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
-		theConnection.setInstanceFollowRedirects( false );
-		theConnection.setUseCaches(false);
-		theConnection.setConnectTimeout( CONNECT_TIMEOUT ); //FIX!! Make this a configurable connection property
-		//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
-		if (authString != null) {
-			theConnection.addRequestProperty("Authorization", "Basic " + authString);
-		}
-		if (postArgs != null) {
-			postArgs = postPrefix + postArgs;
-			fullUrl = theUrl + "?" + postArgs;
-			log.log(Level.FINE, "Starting request: " + fullUrl );
-			theConnection.setDoOutput(true);
-			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
-			out.print(postPrefix);
-			out.println(postArgs);
-			out.close();
-		}
+		postArgs = input;
 
-		try {
-			int httpStatusCode = theConnection.getResponseCode();
-			if( httpStatusCode >= 200 && httpStatusCode < 300 ) {} //Fine, no problem
-			else if( httpStatusCode >= 300 && httpStatusCode < 400 ) throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
-			else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username );
-			else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. Check and make sure that the FileMaker Web Publishing Engine is running at " + theUrl );
-			else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
-			else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
-			else {
-				InputStream err = theConnection.getErrorStream();
-				ByteArrayOutputStream baos = new ByteArrayOutputStream( err.available() );
-				try {
-					byte[] buffer = new byte[1024];
-					int bytesRead;
-					while( (bytesRead=err.read(buffer)) != -1 ) {
-						baos.write( buffer, 0, bytesRead );
+		int retryCount = 3; //This is how many times to retry the attempt, in case FileMaker returns an error code 16 / retry. This will hopefully fix Zulu-195 Contact Syncing
+		for( int n=1; n<=retryCount; n++ ) {
+			HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
+			theConnection.setInstanceFollowRedirects( false );
+			theConnection.setUseCaches(false);
+			theConnection.setConnectTimeout( CONNECT_TIMEOUT ); //FIX!! Make this a configurable connection property
+			//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
+			if (authString != null) {
+				theConnection.addRequestProperty("Authorization", "Basic " + authString);
+			}
+			if (postArgs != null) {
+				//postArgs = postPrefix + postArgs;
+				fullUrl = theUrl + "?" + postPrefix + postArgs;
+				log.log(Level.FINE, "Starting request: " + fullUrl );
+				theConnection.setDoOutput(true);
+				PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
+				out.print(postPrefix);
+				out.println(postArgs);
+				out.close();
+			}
+
+			try {
+				int httpStatusCode = theConnection.getResponseCode();
+				if( httpStatusCode >= 200 && httpStatusCode < 300 ) {} //Fine, no problem
+				else if( httpStatusCode >= 300 && httpStatusCode < 400 ) throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
+				else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username );
+				else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. Check and make sure that the FileMaker Web Publishing Engine is running at " + theUrl );
+				else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
+				else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
+				else {
+					InputStream err = theConnection.getErrorStream();
+					ByteArrayOutputStream baos = new ByteArrayOutputStream( err.available() );
+					try {
+						byte[] buffer = new byte[1024];
+						int bytesRead;
+						while( (bytesRead=err.read(buffer)) != -1 ) {
+							baos.write( buffer, 0, bytesRead );
+						}
+						String message = new String( baos.toByteArray(), "utf-8" );
+						throw new IOException("Server returned unexpected status code: " + httpStatusCode + "; message: " + message );
+					} finally {
+						err.close();
 					}
-					String message = new String( baos.toByteArray(), "utf-8" );
-					throw new IOException("Server returned unexpected status code: " + httpStatusCode + "; message: " + message );
-				} finally {
-					err.close();
 				}
+				serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
+				isStreamOpen = true;
+				if( log.isLoggable( Level.CONFIG ) ) {
+					creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
+				}
+			} catch( IOException e ) {
+				if( e.getCause() instanceof FileNotFoundException ) {
+					String message = "Remote URL " + e.getCause().getMessage() + " could not be located.";
+					String missingFileName = e.getCause().getMessage();
+					if( missingFileName.endsWith("FMPXMLRESULT.xml") ) message += " If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.";
+					throw new IOException(message);
+				}
+				else throw e;
 			}
-			serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
-			isStreamOpen = true;
-			if( log.isLoggable( Level.CONFIG ) ) {
-				creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
+			try {
+				readResult();
+			} catch( FileMakerException e ) {
+				if( e.getErrorCode() == 16 && n < retryCount ) { //Error code 16 means retry
+					log.warning( "Received an error 16 retry message from FileMaker Server on attempt " + n + ", will try again" );
+					continue;
+				}
+				throw e;
 			}
-		} catch( IOException e ) {
-			if( e.getCause() instanceof FileNotFoundException ) {
-				String message = "Remote URL " + e.getCause().getMessage() + " could not be located.";
-				String missingFileName = e.getCause().getMessage();
-				if( missingFileName.endsWith("FMPXMLRESULT.xml") ) message += " If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.";
-				throw new IOException(message);
-			}
-			else throw e;
+			break;
 		}
-		readResult();
 	}
 
 	public void closeRequest() {
