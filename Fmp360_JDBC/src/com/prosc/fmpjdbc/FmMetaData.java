@@ -244,10 +244,13 @@ public class FmMetaData implements DatabaseMetaData {
 				request.doRequest( postArgs );
 				for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
 					FmRecord rawRecord = (FmRecord)it.next();
-					FmRecord processedRecord = new FmRecord( tableFormat, null, null );
 					tableName = rawRecord.getRawValue(0);
 					mark = tableName.toLowerCase().indexOf(".fp");
 					if( mark != -1 ) tableName = tableName.substring(0, mark);
+					if (tableNamePattern != null && !tableNamePattern.equalsIgnoreCase(tableName) && !tableNamePattern.equalsIgnoreCase(databaseName + "|" + tableName)) {
+						continue;
+					}
+					FmRecord processedRecord = new FmRecord( tableFormat, null, null );
 
 					//FIX!!! Just here for experimentation
 					//tableName = "dbName." + tableName + ".someLayoutName";
