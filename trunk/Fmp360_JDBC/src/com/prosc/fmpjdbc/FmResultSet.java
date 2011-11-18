@@ -53,14 +53,16 @@ public class FmResultSet implements ResultSet {
 	private int rowNum = -1;
 	private int foundCount;
 	private FmXmlRequest xmlRequest;
+	private FmStatement statement;
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
 	public FmResultSet( Iterator fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection ) {
-		this( fmRecordsIterator, foundCount, fieldDefinitions, connection, null );
+		this( fmRecordsIterator, foundCount, fieldDefinitions, null, connection, null );
 	}
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
-	public FmResultSet( Iterator fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection, @Nullable FmXmlRequest xmlRequest ) {
+	public FmResultSet( Iterator fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, @Nullable FmStatement statement, FmConnection connection, @Nullable FmXmlRequest xmlRequest ) {
+		this.statement = statement;
 		this.connection = connection;
 		if( fmRecordsIterator == null ) this.fmRecords = Collections.EMPTY_LIST.iterator();
 		else this.fmRecords = fmRecordsIterator;
@@ -542,7 +544,7 @@ public class FmResultSet implements ResultSet {
 	}
 
 	public Statement getStatement() throws SQLException {
-		throw handleMissingMethod( "getStatement is not implemented yet." ); //FIX!!! Broken placeholder
+		return statement;
 	}
 
 	public byte[] getBytes( String s ) throws SQLException {
