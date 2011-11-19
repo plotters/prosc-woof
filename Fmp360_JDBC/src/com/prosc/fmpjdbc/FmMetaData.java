@@ -425,7 +425,7 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getPrimaryKeys( String catalog, String schema, String table ) throws SQLException {
-		return new FmResultSet(null, 0, null, connection );
+		return new FmResultSet(null, 0, null, connection ); //FIX!!! Read primary keys here. Keep in mind that table names can be like '360StoreSync|SHOPPING_CART', not sure why --jsb
 	}
 
 	public ResultSet getImportedKeys( String s, String s1, String s2 ) throws SQLException {
