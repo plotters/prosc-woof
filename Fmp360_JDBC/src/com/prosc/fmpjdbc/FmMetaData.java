@@ -39,13 +39,18 @@ public class FmMetaData implements DatabaseMetaData {
 	private int dbMinorVersion;
 	private FmConnection connection;
 	//private List databaseNames;
-	
+
 	private static AtomicInteger counter = new AtomicInteger(0);
 
 	private String anyTableName;
 	private int fieldCount;
 	private String catalogSeparator;
 	private Logger logger = Logger.getLogger( FmMetaData.class.getName() );
+
+	private String lastTable;
+	private String lastFile;
+	private List<FmRecord> lastColumns;
+	private FmFieldList lastRawFields;
 
 	public FmMetaData(FmConnection connection) throws IOException, FileMakerException {
 		this.connection = connection;
@@ -122,7 +127,7 @@ public class FmMetaData implements DatabaseMetaData {
 		if( dbName == null ) dbName = catalog;
 		if( dbName == null ) dbName = connection.getCatalog();
 		try {
-			Iterator scriptIterator;
+			Iterator<FmRecord> scriptIterator;
 			if( dbName == null ) {
 				logger.warning( "Cannot read stored procedures unless a database name is specified." );
 				scriptIterator = Collections.EMPTY_LIST.iterator();
@@ -149,10 +154,10 @@ public class FmMetaData implements DatabaseMetaData {
 				logger.log(Level.FINEST, String.valueOf(scriptInfo));
 			}
 
-			List scripts = new LinkedList();
+			List<FmRecord> scripts = new LinkedList<FmRecord>();
 			FmRecord scriptObject;
 			while( scriptIterator.hasNext() ) {
-				FmRecord scriptRecord = (FmRecord)scriptIterator.next();
+				FmRecord scriptRecord = scriptIterator.next();
 				scriptObject = new FmRecord( scriptInfo, null, null );
 				scriptObject.setRawValue( (String)scriptRecord.getValue(0), 2 );
 				scriptObject.setRawValue( "" + DatabaseMetaData.procedureNoResult, 7 );
@@ -189,7 +194,7 @@ public class FmMetaData implements DatabaseMetaData {
 		String tableName;
 		String databaseName;
 		int mark;
-		List databaseNames = new LinkedList();
+		List<String> databaseNames = new LinkedList<String>();
 		if( catalog == null ) catalog = connection.getCatalog();
 		if( catalog != null ) {
 			databaseNames.add( catalog );
@@ -231,9 +236,9 @@ public class FmMetaData implements DatabaseMetaData {
 		if (logger.isLoggable(Level.FINEST)) {
 			logger.log(Level.FINEST, String.valueOf(tableFormat));
 		}
-		List tables = new LinkedList();
-		for( Iterator dbIterator=databaseNames.iterator(); dbIterator.hasNext(); ) {
-			databaseName = (String)dbIterator.next();
+		List<FmRecord> tables = new LinkedList<FmRecord>();
+		for( Iterator<String> dbIterator=databaseNames.iterator(); dbIterator.hasNext(); ) {
+			databaseName = dbIterator.next();
 			String encodedDBName = URLEncoder.encode(databaseName);
 			postArgs = "-db=" + encodedDBName + "&-layoutnames"; //fixed hard-coded test value -bje
 			FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
@@ -242,7 +247,7 @@ public class FmMetaData implements DatabaseMetaData {
 			log.fine( "FmMetaData call tracker: Created -layoutnames request " + callCount );
 			try {
 				request.doRequest( postArgs );
-				for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
+				for( Iterator<FmRecord> it = request.getRecordIterator(); it.hasNext(); ) {
 					FmRecord rawRecord = (FmRecord)it.next();
 					tableName = rawRecord.getRawValue(0);
 					mark = tableName.toLowerCase().indexOf(".fp");
@@ -321,43 +326,6 @@ public class FmMetaData implements DatabaseMetaData {
 			logger.log(Level.FINE, "getColumns(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + columnNamePattern + ")");
 		}
 
-//		FmResultSetRequest handler = null;
-		FmRequest handler;
-		if( connection.getFmVersion() >= 7 ) {
-			try {
-				handler = new FmResultSetRequest(connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml",
-						connection.getPort(), connection.getUsername(), connection.getPassword());
-			} catch (MalformedURLException e) {
-				throw new RuntimeException(e);
-			}
-		} else {
-			handler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-		}
-		FmFieldList rawFields;
-		try {
-			String dbName;
-			if( tableNamePattern != null && tableNamePattern.indexOf( getCatalogSeparator() ) >= 0 ) {
-				int mark = tableNamePattern.indexOf(getCatalogSeparator());
-				dbName = tableNamePattern.substring(0, mark);
-				tableNamePattern = tableNamePattern.substring( mark+1 );
-			} else {
-				dbName = schemaPattern;
-				if( dbName == null ) dbName = catalog;
-				if( dbName == null ) dbName = connection.getCatalog();
-			}
-			//FIX!! What do we do if it's still null?
-			String postArgs = "-db=" + dbName + "&-lay=" + tableNamePattern + "&-max=0&-findany";
-			handler.doRequest(postArgs);
-			rawFields = handler.getFieldDefinitions();
-		} catch (IOException e) {
-			SQLException sqle = new SQLException(e.toString());
-			sqle.initCause(e);
-			throw sqle;
-		} finally {
-			handler.closeRequest();
-		}
-
 		FmFieldList fields = new FmFieldList();
 		FmTable dummyTable = new FmTable("Field definitions");
 		fields.add( new FmField(dummyTable, "TABLE_CAT", null, FmFieldType.TEXT, true) ); //0
@@ -378,54 +346,191 @@ public class FmMetaData implements DatabaseMetaData {
 		fields.add( new FmField(dummyTable, "CHAR_OCTET_LENGTH", null, FmFieldType.NUMBER, false) ); //15
 		fields.add( new FmField(dummyTable, "ORDINAL_POSITION", null, FmFieldType.NUMBER, false) ); //16
 		fields.add( new FmField(dummyTable, "IS_NULLABLE", null, FmFieldType.TEXT, false) ); //17
-		fields.add( new FmField(dummyTable, "SCOPE_CATLOG", null, FmFieldType.TEXT, true) ); //18
+		fields.add( new FmField(dummyTable, "SCOPE_CATALOG", null, FmFieldType.TEXT, true) ); //18
 		fields.add( new FmField(dummyTable, "SCOPE_SCHEMA", null, FmFieldType.TEXT, true) ); //19
 		fields.add( new FmField(dummyTable, "SCOPE_TABLE", null, FmFieldType.TEXT, true) ); //20
 		fields.add( new FmField(dummyTable, "SOURCE_DATA_TYPE", null, FmFieldType.NUMBER, true) ); //21
+		fields.add( new FmField(dummyTable, "IS_AUTOINCREMENT", null, FmFieldType.TEXT, true ) ); //22
 
 		if (logger.isLoggable(Level.FINEST)) {
 			logger.log(Level.FINEST, String.valueOf(fields ));
 		}
 
-
-		List columns = new LinkedList();
-		fieldCount = rawFields.getFields().size();
-		FmField eachField;
-		FmRecord fieldRecord;
-		for( int n=0; n<fieldCount; n++ ) {
-			eachField = rawFields.get(n);
-			fieldRecord = new FmRecord( fields, null, null );
-			fieldRecord.setRawValue( tableNamePattern, 2 ); //FIX! Is this the right param to pass in? --jsb
-			fieldRecord.setRawValue( eachField.getAlias(), 3 );
-			try {
-				eachField.getType().getSqlDataType();
-			} catch(NullPointerException e) {
-				log.log( Level.SEVERE, "NPE while trying to get the SQL data type", e); //FIX! Brian wrote this code - are we supposed to do something here? Are we expecting this to fail? --jsb
+		if( lastColumns == null || lastFile == null || !lastFile.equals( catalog ) || lastTable == null || !lastTable.equals( tableNamePattern ) ) {
+//		FmResultSetRequest handler = null;
+			FmRequest handler;
+			if( connection.getFmVersion() >= 7 ) {
+				try {
+					handler = new FmResultSetRequest(connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml",
+							connection.getPort(), connection.getUsername(), connection.getPassword());
+				} catch (MalformedURLException e) {
+					throw new RuntimeException(e);
+				}
+			} else {
+				handler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+						connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
 			}
-			fieldRecord.setRawValue( "" + eachField.getType().getSqlDataType(), 4 );
-			fieldRecord.setRawValue( eachField.getType().getTypeName(), 5 );
-			fieldRecord.setRawValue( "" + eachField.getType().getPrecision(), 6 );
-			fieldRecord.setRawValue( "" + 17, 8 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
-			fieldRecord.setRawValue( "" + 10, 9 );
-			fieldRecord.setRawValue( "" + (eachField.isNullable() ?  DatabaseMetaData.columnNullable : DatabaseMetaData.columnNoNulls), 10 );
-			fieldRecord.setRawValue(eachField.isReadOnly() ? "readonly" : "", 11);
-			fieldRecord.setRawValue( "" + eachField.getType().getPrecision(), 15 ); //FIX! What's the difference between this and COLUMN_SIZE?
-			fieldRecord.setRawValue( "" + n+1, 16 );
-			fieldRecord.setRawValue( eachField.isNullable() ? "YES" : "NO", 17 );
-			columns.add( fieldRecord );
-			if (logger.isLoggable(Level.FINEST)) {
-				logger.log(Level.FINEST, String.valueOf(fieldRecord ));
+			try {
+				String dbName;
+				if( tableNamePattern != null && getCatalogSeparator() != null && tableNamePattern.contains( getCatalogSeparator() ) ) {
+					int mark = tableNamePattern.indexOf(getCatalogSeparator());
+					dbName = tableNamePattern.substring(0, mark);
+					tableNamePattern = tableNamePattern.substring( mark+1 );
+				} else {
+					dbName = schemaPattern;
+					if( dbName == null ) dbName = catalog;
+					if( dbName == null ) dbName = connection.getCatalog();
+				}
+				//FIX!! What do we do if it's still null?
+				String postArgs = "-db=" + dbName + "&-lay=" + tableNamePattern + "&-max=0&-findany";
+				handler.doRequest(postArgs);
+				lastRawFields = handler.getFieldDefinitions();
+			} catch (IOException e) {
+				SQLException sqle = new SQLException(e.toString());
+				sqle.initCause(e);
+				throw sqle;
+			} finally {
+				handler.closeRequest();
+			}
+
+
+			lastColumns = new LinkedList<FmRecord>();
+			lastFile = catalog;
+			lastTable = tableNamePattern;
+			
+			fieldCount = lastRawFields.getFields().size();
+			FmField eachField;
+			FmRecord fieldRecord;
+			for( int n=0; n<fieldCount; n++ ) {
+				eachField = lastRawFields.get( n );
+				fieldRecord = new FmRecord( fields, null, null );
+				fieldRecord.setRawValue( tableNamePattern, 2 ); //FIX! Is this the right param to pass in? --jsb
+				fieldRecord.setRawValue( eachField.getAlias(), 3 );
+				try {
+					eachField.getType().getSqlDataType();
+				} catch(NullPointerException e) {
+					log.log( Level.SEVERE, "NPE while trying to get the SQL data type", e); //FIX! Brian wrote this code - are we supposed to do something here? Are we expecting this to fail? --jsb
+				}
+				fieldRecord.setRawValue( "" + eachField.getType().getSqlDataType(), 4 );
+				fieldRecord.setRawValue( eachField.getType().getTypeName(), 5 );
+				fieldRecord.setRawValue( "" + eachField.getType().getPrecision(), 6 );
+				fieldRecord.setRawValue( "" + 17, 8 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
+				fieldRecord.setRawValue( "" + 10, 9 );
+				fieldRecord.setRawValue( "" + (eachField.isNullable() ?  DatabaseMetaData.columnNullable : DatabaseMetaData.columnNoNulls), 10 );
+				fieldRecord.setRawValue(eachField.isReadOnly() ? "readonly" : "", 11);
+				fieldRecord.setRawValue( "" + eachField.getType().getPrecision(), 15 ); //FIX! What's the difference between this and COLUMN_SIZE?
+				fieldRecord.setRawValue( "" + n+1, 16 );
+				fieldRecord.setRawValue( eachField.isNullable() ? "YES" : "NO", 17 );
+				fieldRecord.setRawValue( "", 22 ); //Can't tell whether a column is auto-incremented or not
+				lastColumns.add( fieldRecord );
+				if (logger.isLoggable(Level.FINEST)) {
+					logger.log(Level.FINEST, String.valueOf(fieldRecord ));
+				}
 			}
 		}
-		return new FmResultSet( columns.iterator(), columns.size(), fields, connection );
+		return new FmResultSet( lastColumns.iterator(), lastColumns.size(), fields, connection );
 	}
 
-	public ResultSet getVersionColumns( String s, String s1, String s2 ) throws SQLException {
-		throw new AbstractMethodError( "getVersionColumns is not implemented yet." ); //FIX!!! return modid column here
+	public ResultSet getVersionColumns( String catalog, String schema, String table ) throws SQLException {
+		getColumns( catalog, schema, table, null );
+		List<FmField> versionCandidates = new ArrayList<FmField>(3);
+		for( FmField field : lastRawFields.getFields() ) {
+			if( field.isModstampCandidate() ) {
+				versionCandidates.add( field );
+			}
+		}
+		Comparator<? super FmField> modstampComparator = new Comparator<FmField>() {
+			public int compare( FmField o1, FmField o2 ) {
+
+				//If one field contains 'mod' then it's probably a mod stamp
+				String name1 = o1.getColumnName().toLowerCase();
+				if( name1.contains( "mod" ) ) return -1;
+				String name2 = o2.getColumnName().toLowerCase();
+				if( name2.contains( "mod" ) ) return 1;
+
+				//No clue, treat them the same
+				return 0;
+			}
+		};
+		Collections.sort( versionCandidates, modstampComparator );
+		if( versionCandidates.size() == 0 ) {
+			return new FmResultSet(null, 0, null, connection );
+		} else {
+			FmFieldList rsColumns = new FmFieldList();
+			FmTable dummyTable = new FmTable("Field definitions");
+
+			rsColumns.add( new FmField(dummyTable, "SCOPE", null, FmFieldType.TEXT, true) ); //0 SCOPE short => is not used
+			rsColumns.add( new FmField(dummyTable, "COLUMN_NAME", null, FmFieldType.TEXT, false) ); //1 COLUMN_NAME String => column name
+			rsColumns.add( new FmField(dummyTable, "DATA_TYPE", null, FmFieldType.NUMBER, false) ); //2 DATA_TYPE int => SQL data type from java.sql.Types
+			rsColumns.add( new FmField(dummyTable, "TYPE_NAME", null, FmFieldType.TEXT, false) ); //3 TYPE_NAME String => Data source-dependent type name
+			rsColumns.add( new FmField(dummyTable, "COLUMN_SIZE", null, FmFieldType.NUMBER, false) ); //4 COLUMN_SIZE int => precision
+			rsColumns.add( new FmField(dummyTable, "BUFFER_LENGTH", null, FmFieldType.NUMBER, true) ); //5 BUFFER_LENGTH int => length of column value in bytes
+			rsColumns.add( new FmField(dummyTable, "DECIMAL_DIGITS", null, FmFieldType.NUMBER, false) ); //6 DECIMAL_DIGITS short => scale - Null is returned for data types where DECIMAL_DIGITS is not applicable.
+			rsColumns.add( new FmField(dummyTable, "PSEUDO_COLUMN", null, FmFieldType.NUMBER, false) ); //7 PSEUDO_COLUMN short => whether this is pseudo column like an Oracle ROWID
+
+			FmRecord result = new FmRecord( rsColumns, 0, 0 );
+
+			FmField versionField = versionCandidates.get( 0 );
+			result.setRawValue( "" + versionField.getColumnName(), 1 );
+			result.setRawValue( "" + versionField.getType().getSqlDataType(), 2 );
+			result.setRawValue( versionField.getType().getTypeName(), 3 );
+			result.setRawValue( "" + versionField.getType().getPrecision(), 4 );
+			result.setRawValue( "" + 17, 6 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
+			result.setRawValue( "NO", 7 );
+
+			Iterator<FmRecord> it = Collections.singleton( result ).iterator();
+			return new FmResultSet( it, 1, rsColumns, connection );
+		}
 	}
 
 	public ResultSet getPrimaryKeys( String catalog, String schema, String table ) throws SQLException {
-		return new FmResultSet(null, 0, null, connection ); //FIX!!! Read primary keys here. Keep in mind that table names can be like '360StoreSync|SHOPPING_CART', not sure why --jsb
+		getColumns( catalog, schema, table, null );
+		List<FmField> pkCandidates = new ArrayList<FmField>(3);
+		for( FmField field : lastRawFields.getFields() ) {
+			if( field.isPrimaryKeyCandidate() ) {
+				pkCandidates.add( field );
+			}
+		}
+		Comparator<? super FmField> pkComparator = new Comparator<FmField>() {
+			public int compare( FmField o1, FmField o2 ) {
+				String name1 = o1.getColumnName().toLowerCase();
+
+				//If one field contains 'pk' or starts with 'id' then it's probably a primary key.
+				if( name1.startsWith( "id" ) || name1.contains( "pk" ) ) return -1;
+				String name2 = o2.getColumnName().toLowerCase();
+				if( name2.startsWith( "id" ) || name2.contains( "pk" ) ) return 1;
+
+				//If one of the fields is a number and the other one is not, the numeric field is probably the primary key
+				if( o1.getType() == FmFieldType.NUMBER && o2.getType() != FmFieldType.NUMBER ) return -1;
+				if( o2.getType() == FmFieldType.NUMBER && o1.getType() != FmFieldType.NUMBER ) return 1;
+
+				//No clue, treat them the same
+				return 0;
+			}
+		};
+		Collections.sort( pkCandidates, pkComparator );
+		if( pkCandidates.size() == 0 ) {
+			return new FmResultSet(null, 0, null, connection );
+		} else {
+			FmFieldList rsColumns = new FmFieldList();
+			FmTable dummyTable = new FmTable("Field definitions");
+			rsColumns.add( new FmField(dummyTable, "TABLE_CAT", null, FmFieldType.TEXT, true) ); //0
+			rsColumns.add( new FmField(dummyTable, "TABLE_SCHEM", null, FmFieldType.TEXT, true) ); //1
+			rsColumns.add( new FmField(dummyTable, "TABLE_NAME", null, FmFieldType.TEXT, false) ); //2
+			rsColumns.add( new FmField(dummyTable, "COLUMN_NAME", null, FmFieldType.TEXT, false) ); //3
+			rsColumns.add( new FmField(dummyTable, "KEY_SEQ", null, FmFieldType.NUMBER, false) ); //3
+			rsColumns.add( new FmField(dummyTable, "PK_NAME", null, FmFieldType.TEXT, false) ); //3
+
+			FmRecord result = new FmRecord( rsColumns, 0, 0 );
+			//TABLE_CAT String => table catalog (may be null)
+			//TABLE_SCHEM String => table schema (may be null)
+			result.setRawValue( table, 2 ); //TABLE_NAME String => table name
+			result.setRawValue( pkCandidates.get(0).getColumnName(), 3 ); //COLUMN_NAME String => column name
+			result.setRawValue( "1", 4 ); //KEY_SEQ short => sequence number within primary key( a value of 1 represents the first column of the primary key, a value of 2 would represent the second column within the primary key).
+			result.setRawValue( pkCandidates.get(0).getColumnName(), 5 ); //PK_NAME String => primary key name (may be null)
+			Iterator<FmRecord> it = Collections.singleton( result ).iterator();
+			return new FmResultSet( it, 1, rsColumns, connection );
+		}
 	}
 
 	public ResultSet getImportedKeys( String s, String s1, String s2 ) throws SQLException {
@@ -1150,7 +1255,7 @@ public class FmMetaData implements DatabaseMetaData {
 	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
 		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
 	}
-	
+
 	// === New methods added in Java 1.6. Commment them out to compile in Java 1.5. ===
 
 	public RowIdLifetime getRowIdLifetime() throws SQLException {

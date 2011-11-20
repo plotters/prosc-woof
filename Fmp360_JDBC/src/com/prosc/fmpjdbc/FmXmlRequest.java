@@ -264,7 +264,8 @@ public class FmXmlRequest extends FmRequest {
 					//log.fine("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading " + "variables to true and notifying all threads.");
 					onErrorSetAllVariables(e);
 					//throw new RuntimeException(e);
-
+				} catch( Error e ) {
+					onErrorSetAllVariables( e );
 				} finally {
 					closeRequest();
 				}
@@ -353,7 +354,7 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 
-	public synchronized Iterator getRecordIterator() {
+	public synchronized Iterator<FmRecord> getRecordIterator() {
 		while (!recordIteratorIsSet) {
 			try {
 				wait();
@@ -361,7 +362,6 @@ public class FmXmlRequest extends FmRequest {
 
 			}
 		}
-
 		return recordIterator;
 	}
 
@@ -465,8 +465,8 @@ public class FmXmlRequest extends FmRequest {
 	 * If the former, the next fieldPositionPointer is gotten, and data is set.  If the latter, any data is ignored.
 	 */
 	private class FmXmlHandler extends org.xml.sax.helpers.DefaultHandler {
-		private StringBuffer requestContent = new StringBuffer();
-		private static final boolean debugMode = false; //If true, then the content of the XML will be stored in requestContent
+		//private StringBuffer requestContent = new StringBuffer();
+		//private static final boolean debugMode = false; //If true, then the content of the XML will be stored in requestContent
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
 		private int sizeEstimate;
 		/** Incremented as metadata fields are parsed */
@@ -524,7 +524,7 @@ public class FmXmlRequest extends FmRequest {
 		}
 
 		public void startDocument() {
-			if( debugMode ) requestContent.append( "Starting document\n" );
+			//if( debugMode ) requestContent.append( "Starting document\n" );
 			log.log(Level.FINEST, "Start parsing response");
 			setRecordIterator(new ResultQueue(256*1024, 64*1024));  // FIX! is this a good size? -britt
 			nodeType = 0;
@@ -534,13 +534,13 @@ public class FmXmlRequest extends FmRequest {
 			if( Thread.interrupted() ) {
 				throw new SAXException( "Parsing thread was interrupted" );
 			}
-			if( debugMode ) {
+			/*if( debugMode ) {
 				requestContent.append( "<" + qName);
 				for( int n=0; n<attributes.getLength(); n++ ) {
 					requestContent.append( " " + attributes.getQName(n) + "=" + attributes.getValue(n) );
 				}
 				requestContent.append( ">");
-			}
+			}*/
 			// Frequently repeated nodes
 			if (log.isLoggable(Level.FINEST)) {
 				log.finest("Starting element qName = " + qName + " for " + this);
@@ -674,7 +674,7 @@ public class FmXmlRequest extends FmRequest {
 		}
 
 		public void endElement(String uri, String localName, String qName) throws SAXException {
-			if( debugMode ) requestContent.append( "</" + qName + ">" );
+			//if( debugMode ) requestContent.append( "</" + qName + ">" );
 			if( "DATA".equals(qName) ) {
 				if (fieldPositionPointer != null) {
 					fieldPositionPointer.setDataInRow(currentData, currentRow);
@@ -746,7 +746,7 @@ public class FmXmlRequest extends FmRequest {
 		}
 
 		public void characters(char ch[], int start, int length) {
-			if( debugMode ) requestContent.append( ch, start, length );
+			//if( debugMode ) requestContent.append( ch, start, length );
 			sizeEstimate += length;
 			switch(nodeType) {
 				case 0:

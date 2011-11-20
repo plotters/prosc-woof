@@ -38,7 +38,7 @@ import java.net.URL;
  */
 public class FmResultSet implements ResultSet {
 	private static final Logger log = Logger.getLogger( FmResultSet.class.getName() );
-	private Iterator fmRecords;
+	private Iterator<FmRecord> fmRecords;
 	private FmResultSetMetaData metaData;
 	private FmRecord currentRecord;
 	private FmFieldList fieldDefinitions;
@@ -56,12 +56,12 @@ public class FmResultSet implements ResultSet {
 	private FmStatement statement;
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
-	public FmResultSet( Iterator fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection ) {
+	public FmResultSet( Iterator<FmRecord> fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection ) {
 		this( fmRecordsIterator, foundCount, fieldDefinitions, null, connection, null );
 	}
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
-	public FmResultSet( Iterator fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, @Nullable FmStatement statement, FmConnection connection, @Nullable FmXmlRequest xmlRequest ) {
+	public FmResultSet( Iterator<FmRecord> fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, @Nullable FmStatement statement, FmConnection connection, @Nullable FmXmlRequest xmlRequest ) {
 		this.statement = statement;
 		this.connection = connection;
 		if( fmRecordsIterator == null ) this.fmRecords = Collections.EMPTY_LIST.iterator();
@@ -108,7 +108,7 @@ public class FmResultSet implements ResultSet {
 		if( ! isOpen ) throw new IllegalStateException("The ResultSet has been closed; you cannot read any more records from it." );
 		if( fmRecords.hasNext() ) {
 			try {
-				currentRecord = (FmRecord) fmRecords.next();
+				currentRecord = fmRecords.next();
 			} catch( RuntimeException e ) {
 				log.log( Level.SEVERE, "Got an exception while trying to fetch next row from database.", e );
 				SQLException e1 = new SQLException( e.getMessage() );

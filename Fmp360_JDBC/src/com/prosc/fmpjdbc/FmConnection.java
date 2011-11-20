@@ -265,7 +265,8 @@ public class FmConnection implements Connection {
 	public DatabaseMetaData getMetaData() throws SQLException {
 		try {
 			if( metaData == null ) metaData = new FmMetaData( this );
-			metaData.setCatalogSeparator( properties.getProperty("catalogseparator", "|") ); //This used to default to ".", changed it to "|" to fix duplicate entity names in EOF. Needs testing! --jsb
+			//metaData.setCatalogSeparator( properties.getProperty("catalogseparator", "|") ); //This used to default to ".", changed it to "|" to fix duplicate entity names in EOF. Needs testing! --jsb
+			metaData.setCatalogSeparator( properties.getProperty("catalogseparator", null) ); //This used to default to ".", changed it to "|" to fix duplicate entity names in EOF. Needs testing! --jsb
 		} catch (IOException e) {
 			SQLException sqle = new SQLException(e.toString());
 			sqle.initCause(e);

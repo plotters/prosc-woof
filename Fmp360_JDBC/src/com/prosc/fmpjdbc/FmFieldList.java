@@ -28,11 +28,11 @@ import java.util.ArrayList;
  * @author sbarnum
  */
 public class FmFieldList {
-	private List fields;
+	private List<FmField> fields;
 	public boolean wasNull;
 
 	public FmFieldList() {
-		this.fields = new ArrayList();
+		this.fields = new ArrayList<FmField>();
 	}
 
 	public void add(FmField field) {
@@ -40,11 +40,11 @@ public class FmFieldList {
 	}
 
 	public FmField get(int index) {
-		return (FmField) fields.get(index);
+		return fields.get(index);
 	}
 
 	/** Returns the FmField objects contained in this FmFieldList. */
-	public List getFields() {
+	public List<FmField> getFields() {
 		return fields;
 	}
 
@@ -55,9 +55,8 @@ public class FmFieldList {
 	//OPTIMIZE This could be faster
 	public int indexOfFieldWithAlias(String alias) {
 		int i=0;
-		for (Iterator iterator = fields.iterator(); iterator.hasNext();) {
-			FmField fmField = (FmField) iterator.next();
-			if (fmField.getAlias().equalsIgnoreCase(alias)) return i;
+		for( FmField fmField : fields ) {
+			if( fmField.getAlias().equalsIgnoreCase( alias ) ) return i;
 			else i++;
 		}
 		//throw new IllegalArgumentException("No such field '" + alias + "'");
@@ -73,13 +72,13 @@ public class FmFieldList {
 	public int indexOfFieldWithColumnName(String columnName, int startingIndex) {
 		int fieldCount = fields.size();
 		for( int n=startingIndex; n< fieldCount; n++ ) {
-			FmField fmField = (FmField)fields.get( n );
+			FmField fmField = fields.get( n );
 			if( fmField.getColumnName().equalsIgnoreCase( columnName ) ) return n;
 		}
 		return -1;
 	}
 
-	public Iterator iterator() {
+	public Iterator<FmField> iterator() {
 		return fields.iterator();
 	}
 

@@ -290,8 +290,9 @@ public class FmResultSetRequest extends FmRequest {
 				FmFieldType fieldType = (FmFieldType) FmFieldType.typesByName.get(fieldTypeName.toUpperCase());
 				boolean allowsNulls = "no".equals(attributes.getValue("not-empty"));
 				boolean readOnly = "calculation".equals(attributes.getValue("type"));
+				boolean autoEnter = "yes".equals( attributes.getValue( "auto-enter" ) );
 
-				FmField field = new FmField(fmTable, fieldName, fieldName, fieldType, allowsNulls, readOnly);
+				FmField field = new FmField(fmTable, fieldName, fieldName, fieldType, allowsNulls, readOnly, autoEnter );
 				fieldDefinitions.add(field);
 			}
 			else if ("resultset".equals(qName)) {
