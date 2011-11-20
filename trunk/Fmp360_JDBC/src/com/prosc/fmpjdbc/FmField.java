@@ -39,6 +39,7 @@ public class FmField {
 	private boolean isNullable = true;
 	/** Whether the field is read-only. */
 	private boolean readOnly = false;
+	private boolean autoEnter;
 
 	/** Creates an FMField without any metadata.
 	 * This method is usually called by SqlCommand, during parsing of SQL query strings.
@@ -61,7 +62,7 @@ public class FmField {
 	 * @param isNullable Whether null values are allowed.
 	 */
 	public FmField(FmTable table, String name, String alias, FmFieldType type, boolean isNullable) {
-		this(table, name, alias, type, isNullable, false);
+		this(table, name, alias, type, isNullable, false, false);
 	}
 
 	/**
@@ -73,13 +74,14 @@ public class FmField {
 	 * @param isNullable Whether null values are allowed.
 	 * @param readOnly Whether the field is readonly (calculation)
 	 */
-	public FmField(FmTable table, String name, String alias, FmFieldType type, boolean isNullable, boolean readOnly) {
+	public FmField(FmTable table, String name, String alias, FmFieldType type, boolean isNullable, boolean readOnly, boolean autoEnter ) {
 		this.table = table;
 		this.columnName = name;
 		this.alias = alias;
 		this.type = type;
 		this.isNullable = isNullable;
 		this.readOnly = readOnly;
+		this.autoEnter = autoEnter;
 	}
 
 	/**
@@ -114,6 +116,24 @@ public class FmField {
 
 	public boolean isNullable() {
 		return isNullable;
+	}
+
+	public boolean isAutoEnter() {
+		return autoEnter;
+	}
+	
+	/** A field is a primary key candidate if it has an auto-enter value and is validated. 
+	 * It would be more conclusive if we also checked for a unique value validation, but FileMaker's XML web publishing doesn't tell us that. */ 
+	public boolean isPrimaryKeyCandidate() {
+		return autoEnter && !isNullable;
+	}
+
+	/** A field is a modification timestamp candidate if it has an auto-enter value and is a timestamp. This could definitely be wrong (for example, it could be a creation timestamp), but it's the best
+	 * we can do given the limited information we get from FileMaker's XML. It would be a good idea to check for the word 'mod' somewhere in the field name.
+	 * @return
+	 */
+	public boolean isModstampCandidate() {
+		return autoEnter && type == FmFieldType.TIMESTAMP;
 	}
 
 	public void setNullable(boolean nullable) {
