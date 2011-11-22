@@ -45,28 +45,28 @@ public class FmFieldType implements Cloneable {
 	static final FmFieldType TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP, CONTAINER;
 
 	static {
-		TEXT = new FmFieldType("TEXT", Types.VARCHAR, Integer.MAX_VALUE, String.class); //Used to be LONGVARCHAR, but then EOModeler models that as a 'C' CharacterStream instead of 'S' String
+		TEXT = new FmFieldType("TEXT", "LONGTEXT", Types.LONGVARCHAR, 0, String.class); //Used to be LONGVARCHAR, but then EOModeler models that as a 'C' CharacterStream instead of 'S' String
 		TEXT.setAutoIncrement(true);
 
-		NUMBER = new FmFieldType("NUMBER", Types.DECIMAL, 400, BigDecimal.class);
+		NUMBER = new FmFieldType("NUMBER", "DECIMAL", Types.DECIMAL, 32, BigDecimal.class);
 		NUMBER.setLiteralPrefix(null);
 		NUMBER.setLiteralSuffix(null);
 		NUMBER.setFixedPrecisionScale(true);
 		NUMBER.setAutoIncrement(true);
 
-		RECID = new FmFieldType( "RECID", Types.INTEGER, 400, Integer.class ); //FIX!! Don't know what to put for precision for integers
+		RECID = new FmFieldType( "RECID", "BIGINT", Types.INTEGER, 0, Integer.class ); //FIX!! Don't know what to put for precision for integers
 		RECID.setLiteralPrefix( null );
 		RECID.setLiteralSuffix( null );
 		RECID.setFixedPrecisionScale( false ); //FIX!! I don't really know what goes here; just guessing
 		RECID.setAutoIncrement( true ); //FIX!! I don't really know what goes here; just copied from previous
 
-		DATE = new FmFieldType("DATE", Types.DATE, 32, java.sql.Date.class );
+		DATE = new FmFieldType("DATE", "DATE", Types.DATE, 0, java.sql.Date.class );
 
-		TIME = new FmFieldType("TIME", Types.TIME, 32, java.sql.Time.class );
+		TIME = new FmFieldType("TIME", "TIME", Types.TIME, 0, java.sql.Time.class );
 
-		TIMESTAMP = new FmFieldType("TIMESTAMP", Types.TIMESTAMP, 64, java.sql.Timestamp.class ); //FIX!! Don't publish this type if the connnection is FM6
+		TIMESTAMP = new FmFieldType("TIMESTAMP", "TIMESTAMP", Types.TIMESTAMP, 0, java.sql.Timestamp.class ); //FIX!! Don't publish this type if the connnection is FM6
 
-		CONTAINER = new FmFieldType("BLOB", Types.BLOB, Integer.MAX_VALUE, Blob.class );
+		CONTAINER = new FmFieldType("BLOB", "BLOB", Types.BLOB, 0, Blob.class );
 		CONTAINER.setSearchable( (short)DatabaseMetaData.typePredNone);
 		
 		FmFieldType[] types = new FmFieldType[] { TEXT, NUMBER, DATE, TIME, TIMESTAMP };
@@ -150,7 +150,8 @@ public class FmFieldType implements Cloneable {
 		resultSetFormat.add( new FmField(metaDataTable, "NUM_PREC_RADIX", null, types[1], false) );
 	}
 
-	private String typeName;
+	private String internalTypeName;
+	private String externalTypeName;
 	private int sqlDataType;
 	private int precision;
 	private Class javaClass;
@@ -168,8 +169,9 @@ public class FmFieldType implements Cloneable {
 	private short maximumScale = 100; //FIX!!! I don't really know what this is asking for --jsb
 	private int numberPrecisionRadix = 10;
 
-	private FmFieldType(String typeName, int sqlDataType, int precision, Class javaClass) {
-		this.typeName = typeName;
+	private FmFieldType(String internalTypeName, String externalTypeName, int sqlDataType, int precision, Class javaClass) {
+		this.internalTypeName = internalTypeName;
+		this.externalTypeName = externalTypeName;
 		this.sqlDataType = sqlDataType;
 		this.precision = precision;
 		this.javaClass = javaClass;
@@ -177,7 +179,7 @@ public class FmFieldType implements Cloneable {
 
 	public FmRecord getInResultSetFormat() {
 		FmRecord result = new FmRecord( resultSetFormat, null, null );
-		result.setRawValue( typeName, 0 );
+		result.setRawValue( externalTypeName, 0 );
 		result.setRawValue( "" + sqlDataType, 1 );
 		result.setRawValue( "" + precision, 2 );
 		result.setRawValue( literalPrefix, 3 );
@@ -199,11 +201,11 @@ public class FmFieldType implements Cloneable {
 	}
 
 	public String getTypeName() {
-		return typeName;
+		return internalTypeName;
 	}
 
 	public void setTypeName(String typeName) {
-		this.typeName = typeName;
+		this.internalTypeName = typeName;
 	}
 
 	public int getSqlDataType() {
@@ -328,5 +330,9 @@ public class FmFieldType implements Cloneable {
 
 	public void setNumberPrecisionRadix(int numberPrecisionRadix) {
 		this.numberPrecisionRadix = numberPrecisionRadix;
+	}
+
+	public String getExternalTypeName() {
+		return externalTypeName;
 	}
 }
