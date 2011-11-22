@@ -412,9 +412,9 @@ public class FmMetaData implements DatabaseMetaData {
 					log.log( Level.SEVERE, "NPE while trying to get the SQL data type", e); //FIX! Brian wrote this code - are we supposed to do something here? Are we expecting this to fail? --jsb
 				}
 				fieldRecord.setRawValue( "" + eachField.getType().getSqlDataType(), 4 );
-				fieldRecord.setRawValue( eachField.getType().getTypeName(), 5 );
+				fieldRecord.setRawValue( eachField.getType().getExternalTypeName(), 5 );
 				fieldRecord.setRawValue( "" + eachField.getType().getPrecision(), 6 );
-				fieldRecord.setRawValue( "" + 17, 8 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
+				fieldRecord.setRawValue( "" + 16, 8 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
 				fieldRecord.setRawValue( "" + 10, 9 );
 				fieldRecord.setRawValue( "" + (eachField.isNullable() ?  DatabaseMetaData.columnNullable : DatabaseMetaData.columnNoNulls), 10 );
 				fieldRecord.setRawValue(eachField.isReadOnly() ? "readonly" : "", 11);
@@ -473,7 +473,7 @@ public class FmMetaData implements DatabaseMetaData {
 			FmField versionField = versionCandidates.get( 0 );
 			result.setRawValue( "" + versionField.getColumnName(), 1 );
 			result.setRawValue( "" + versionField.getType().getSqlDataType(), 2 );
-			result.setRawValue( versionField.getType().getTypeName(), 3 );
+			result.setRawValue( versionField.getType().getExternalTypeName(), 3 );
 			result.setRawValue( "" + versionField.getType().getPrecision(), 4 );
 			result.setRawValue( "" + 17, 6 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
 			result.setRawValue( "NO", 7 );

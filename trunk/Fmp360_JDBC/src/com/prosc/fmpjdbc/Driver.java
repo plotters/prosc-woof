@@ -37,6 +37,9 @@ public class Driver implements java.sql.Driver {
 
 	/** Creates a new {@link FmConnection} by passing the parameters into the constructor of the Connection. */
 	public Connection connect( String url, Properties properties ) throws SQLException {
+		if( properties.getProperty( "password" ) == null ) {
+			properties.setProperty( "password", "" ); //FileMaker JDBC driver can't handle null passwords, treat them as an empty string instead
+		}
 		if( acceptsURL( url ) ) {
 			try {
 				return new FmConnection(url, properties);

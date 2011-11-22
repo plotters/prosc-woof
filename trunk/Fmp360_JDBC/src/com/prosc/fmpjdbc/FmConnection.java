@@ -228,7 +228,7 @@ public class FmConnection implements Connection {
 	}
 
 	public String getPassword() { //FIX! Should this be public? It's needed by FmBlob
-		return properties.getProperty("password");
+		return properties.getProperty("password", "");
 	}
 
 	public Properties getProperties() {
