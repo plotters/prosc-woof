@@ -100,6 +100,9 @@ public class FmConnection implements Connection {
 	}
 
 	private void testUsernamePassword() throws SQLException {
+		if( getCatalog() == null ) { //Don't check for username and password if no database is specified, because there is no way to do this with WPE
+			return;
+		}
 		FmXmlRequest request = new FmXmlRequest(getProtocol(), getHost(), getFMVersionUrl(),
 				getPort(), getUsername(), getPassword(), getFmVersion() );
 		try {
