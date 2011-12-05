@@ -113,7 +113,7 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 
-	public void doRequest(String input) throws IOException, FileMakerException {
+	public void doRequest(String input) throws IOException, SQLException {
 		if (serverStream != null) throw new IllegalStateException("You must call closeRequest() before sending another request.");
 		requestStartTime = System.currentTimeMillis();
 		postArgs = input;
@@ -235,7 +235,7 @@ public class FmXmlRequest extends FmRequest {
 		super.finalize();
 	}
 
-	private void readResult() throws FileMakerException {
+	private void readResult() throws SQLException {
 		parsingThread = new Thread("Parsing Thread") {
 			public void run() {
 				InputStream streamToParse;
@@ -307,12 +307,15 @@ public class FmXmlRequest extends FmRequest {
 		notifyAll();
 	}
 
-	public synchronized String getProductVersion() {
+	public synchronized String getProductVersion() throws SQLException {
 		while (!productVersionIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+				Thread.currentThread().interrupt();
+				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
+				sqle.initCause( e );
+				throw sqle;
 			}
 		}
 		return productVersion;
@@ -325,12 +328,15 @@ public class FmXmlRequest extends FmRequest {
 		notifyAll();
 	}
 
-	public synchronized String getDatabaseName() {
+	public synchronized String getDatabaseName() throws SQLException {
 		while (!databaseNameIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+				Thread.currentThread().interrupt();
+				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
+				sqle.initCause( e );
+				throw sqle;
 			}
 		}
 		return databaseName;
@@ -343,12 +349,15 @@ public class FmXmlRequest extends FmRequest {
 		notifyAll();
 	}
 
-	public synchronized int getFoundCount() {
+	public synchronized int getFoundCount() throws SQLException {
 		while (!foundCountIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+				Thread.currentThread().interrupt();
+				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
+				sqle.initCause( e );
+				throw sqle;
 			}
 		}
 		return foundCount;
@@ -362,12 +371,15 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 
-	public synchronized Iterator<FmRecord> getRecordIterator() {
+	public synchronized Iterator<FmRecord> getRecordIterator() throws SQLException {
 		while (!recordIteratorIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-
+				Thread.currentThread().interrupt();
+				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
+				sqle.initCause( e );
+				throw sqle;
 			}
 		}
 		return recordIterator;
@@ -385,7 +397,10 @@ public class FmXmlRequest extends FmRequest {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+				Thread.currentThread().interrupt();
+				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
+				sqle.initCause( e );
+				throw sqle;
 			}
 		}
 		if( getErrorCode() == 0 && missingFields != null && missingFields.size() > 0 ) {
@@ -408,18 +423,21 @@ public class FmXmlRequest extends FmRequest {
 
 	}
 
-	public synchronized int getErrorCode() {
+	public synchronized int getErrorCode() throws SQLException {
 		while(!errorCodeIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				throw new RuntimeException(e);
+				Thread.currentThread().interrupt();
+				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
+				sqle.initCause( e );
+				throw sqle;
 			}
 		}
 		return errorCode;
 	}
 
-	public boolean hasError() {
+	public boolean hasError() throws SQLException {
 		// 0 is ok
 		// 401 is no results
 		int error = getErrorCode();
@@ -540,6 +558,7 @@ public class FmXmlRequest extends FmRequest {
 
 		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) throws SAXException {
 			if( Thread.interrupted() ) {
+				Thread.currentThread().interrupt();
 				throw new StopParsingException( "Parsing thread was interrupted" );
 			}
 			/*if( debugMode ) {
@@ -693,6 +712,7 @@ public class FmXmlRequest extends FmRequest {
 					try {
 						recordIterator.add(currentRow, (long) sizeEstimate);
 					} catch( InterruptedException e ) {
+						Thread.currentThread().interrupt();
 						throw new SAXException( "Parsing thread was interrupted while waiting to add more objects to the result queue" );
 					}
 				} else {
