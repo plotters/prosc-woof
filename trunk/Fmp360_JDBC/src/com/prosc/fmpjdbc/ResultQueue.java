@@ -141,6 +141,7 @@ public class ResultQueue implements Iterator {
 
 		if( storedError != null && errorRow == rowsReturned ) {
 			if( storedError instanceof RuntimeException ) throw (RuntimeException)storedError;
+			else if( storedError instanceof Error ) throw (Error)storedError;
 			else throw new RuntimeException("Error while trying to access field '" + errorFieldName + "' in zero-indexed row " + errorRow + ": " + storedError.toString(), storedError);
 		}
 

@@ -22,15 +22,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library name="FileMaker 11 JDBC driver">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../jars_development/FM11_driver/fmjdbc.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="IntellijAnnotations" level="application" />
   </component>
 </module>

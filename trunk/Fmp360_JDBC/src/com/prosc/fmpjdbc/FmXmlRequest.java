@@ -55,7 +55,7 @@ public class FmXmlRequest extends FmRequest {
 	/**
 	 * Parser used to extract data from the filemaker response stream
 	 */
-	private final SAXParser xParser;
+	private SAXParser xParser;
 	private String authString;
 	private String postPrefix = "";
 	private String postArgs;
@@ -78,7 +78,7 @@ public class FmXmlRequest extends FmRequest {
 			log.severe("Trying to create the url " + protocol + host + ":" + portNumber + "/" + url + " threw this exception" + murle);
 			throw new RuntimeException(murle);
 		}
-		if (username != null || password != null) {
+		if ( (username != null && username.length() > 0) || (password != null && password.length() > 0 ) ) {
 			if( password == null ) password = ""; //Otherwise Java will use the word 'null' as the password
 			String tempString = username + ":" + password;
 			authString = new BASE64Encoder().encode(tempString.getBytes());
@@ -91,7 +91,7 @@ public class FmXmlRequest extends FmRequest {
 			xParser = javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser();
 			setFeature( "http://xml.org/sax/features/validation", false );
 			setFeature( "http://xml.org/sax/features/namespaces", false );
-			setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
+			//setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
 			log.finest( "Created an XML parser; class is: " + xParser.getClass() );
 		} catch( ParserConfigurationException e ) {
 			throw new RuntimeException( e );
@@ -214,6 +214,10 @@ public class FmXmlRequest extends FmRequest {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
+		if( xParser != null ) {
+			xParser.reset();
+			xParser = null;
+		}
 	}
 
 	protected void finalize() throws Throwable {
@@ -282,10 +286,14 @@ public class FmXmlRequest extends FmRequest {
 
 	private synchronized void onErrorSetAllVariables(Throwable t) {
 		String fieldName = null;
-		try {
-			fieldName = (String)columnNames.get( columnIndex + 1 );
-		} catch( Exception e ) {
-			log.info( "Error occured while parsing XML data; couldn't tell which field caused the error." );
+		if( t instanceof StopParsingException ) {
+			//We were stopped normally, parsing thread was intentionally interrupted
+		} else {
+			try {
+				fieldName = (String)columnNames.get( columnIndex + 1 );
+			} catch( Exception e ) {
+				log.info( "Error occured while parsing XML data; couldn't tell which field caused the error." );
+			}
 		}
 		recordIterator.setStoredError(t, fieldName );
 		productVersionIsSet = true;
@@ -532,7 +540,7 @@ public class FmXmlRequest extends FmRequest {
 
 		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) throws SAXException {
 			if( Thread.interrupted() ) {
-				throw new SAXException( "Parsing thread was interrupted" );
+				throw new StopParsingException( "Parsing thread was interrupted" );
 			}
 			/*if( debugMode ) {
 				requestContent.append( "<" + qName);

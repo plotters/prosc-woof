@@ -651,12 +651,12 @@ public class AdvancedDriverTests extends TestCase {
 	}
 
 	/** Tests a download of 500,000 records. You can try setting the -Xmx8m JVM param to set the max size to 8 megs, to ensure
-	 * that this runs out of memory. The point of this test is to make sure that the results are being streamed instead of
+	 * that this runs in a low memory environment. The point of this test is to make sure that the results are being streamed instead of
 	 * downloaded at one pass. The current test stops after reading 1000 rows; you could take off this max to really stress-test
 	 * the memory handling.
 	 * @throws Exception
 	 */
-	/*public void testLargeResultSet() throws Exception {
+	public void testLargeResultSet() throws Exception {
 		FmConnection fmConnection = new FmConnection(jdbc7.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
 		Statement statement = fmConnection.createStatement();
 
@@ -664,10 +664,10 @@ public class AdvancedDriverTests extends TestCase {
 		long startTime = System.currentTimeMillis();
 		//A single record: ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" where counter=1" );
 		ResultSet resultSet = statement.executeQuery( "select * from \"" + tableName + "\" " );
-		assertTrue("Query should complete in less than 3 seconds", System.currentTimeMillis() - startTime < 3000 );
+//		assertTrue("Query should complete in less than 3 seconds", System.currentTimeMillis() - startTime < 3000 );
 		System.out.println("Done with the query");
 		int rowCount = 0;
-		while( resultSet.next() && rowCount < 1000 ) { //Get the first 1000 rows
+		while( resultSet.next() ) { // && rowCount < 1000 ) { //Get the first 1000 rows
 			rowCount++;
 			System.out.println( rowCount + ": " + resultSet.getObject(1) + " / " + resultSet.getObject(2) + " / " + resultSet.getObject(3) + " / " + resultSet.getObject(4) );
 		}
@@ -680,7 +680,7 @@ public class AdvancedDriverTests extends TestCase {
 		} catch(IllegalStateException ex) {
 			System.out.println( "Expected this exception: " + ex );
 		}
-	}*/
+	}
 
 	/** This passes 10/2/2006 --jsb */
 	public void testInsertSpecialCharacters7() throws IOException, SQLException {
@@ -705,7 +705,7 @@ public class AdvancedDriverTests extends TestCase {
 		}
 	}
 
-	/** This test fails 10/2/2006 - I can't figure out how to insert a curly quote (Õ) into FileMaker 6. --jsb */
+	/** This test fails 10/2/2006 - I can't figure out how to insert a curly quote (ï¿½) into FileMaker 6. --jsb */
 	/*public void testInsertSpecialCharacters6() throws IOException, SQLException {
 		InputStream stream = getClass().getResourceAsStream( "InsertText.txt" );
 		byte[] buffer = new byte[stream.available()];
@@ -733,7 +733,7 @@ public class AdvancedDriverTests extends TestCase {
 		rs.next();
 		String dbValue = rs.getString( 1 );
 		System.out.println( dbValue );
-		assertTrue( dbValue.indexOf( "Õ") >= 0 );
+		assertTrue( dbValue.indexOf( "ï¿½") >= 0 );
 	}*/
 
 	/** When you do a search in FileMaker, all search fields must be on the layout, otherwise you get an error 102. However, sometimes for speed
