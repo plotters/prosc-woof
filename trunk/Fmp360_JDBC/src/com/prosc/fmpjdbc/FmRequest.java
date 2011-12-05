@@ -16,5 +16,5 @@ public abstract class FmRequest {
 
 	public abstract void closeRequest();
 
-	public abstract void doRequest(String postArgs) throws IOException, FileMakerException;
+	public abstract void doRequest(String postArgs) throws IOException, SQLException;
 }

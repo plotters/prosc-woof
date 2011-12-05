@@ -36,7 +36,7 @@ public class FMScriptExecutionTest extends TestCase {
 		connection.close();
 	}
 
-	public void testFMScriptExecution() throws IOException, FileMakerException {
+	public void testFMScriptExecution() throws Exception {
 		//-db=employees&-lay=departments&-script=myscript&-findany
 		if ( new JDBCTestUtils().use360driver ) {
 			try {
