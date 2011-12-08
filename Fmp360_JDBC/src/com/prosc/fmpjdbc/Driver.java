@@ -37,10 +37,10 @@ public class Driver implements java.sql.Driver {
 
 	/** Creates a new {@link FmConnection} by passing the parameters into the constructor of the Connection. */
 	public Connection connect( String url, Properties properties ) throws SQLException {
-		if( properties.getProperty( "password" ) == null ) {
-			properties.setProperty( "password", "" ); //FileMaker JDBC driver can't handle null passwords, treat them as an empty string instead
-		}
 		if( acceptsURL( url ) ) {
+			if( properties.getProperty( "password" ) == null ) {
+				properties.setProperty( "password", "" ); //FileMaker JDBC driver can't handle null passwords, treat them as an empty string instead
+			}
 			try {
 				return new FmConnection(url, properties);
 			} catch( MalformedURLException e ) {
@@ -49,7 +49,7 @@ public class Driver implements java.sql.Driver {
 				throw sqlException;
 			}
 		} else {
-			throw new SQLException("The 360Works FileMaker JDBC driver does not support this URL: " + url );
+			return null;
 		}
 	}
 
