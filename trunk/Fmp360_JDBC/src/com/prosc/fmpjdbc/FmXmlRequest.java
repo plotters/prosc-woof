@@ -55,7 +55,7 @@ public class FmXmlRequest extends FmRequest {
 	/**
 	 * Parser used to extract data from the filemaker response stream
 	 */
-	private SAXParser xParser;
+	private final SAXParser xParser;
 	private String authString;
 	private String postPrefix = "";
 	private String postArgs;
@@ -216,7 +216,6 @@ public class FmXmlRequest extends FmRequest {
 			}
 		if( xParser != null ) {
 			xParser.reset();
-			xParser = null;
 		}
 	}
 
@@ -329,15 +328,17 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	public synchronized String getDatabaseName() throws SQLException {
+		boolean resetInterrupt = false;
 		while (!databaseNameIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
-				sqle.initCause( e );
-				throw sqle;
+				log.log( Level.WARNING, "Interrupted while getting database name" );
+				resetInterrupt = true;
 			}
+		}
+		if( resetInterrupt ) {
+			Thread.currentThread().interrupt();
 		}
 		return databaseName;
 	}
@@ -350,15 +351,17 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	public synchronized int getFoundCount() throws SQLException {
+		boolean resetInterrupt = false;
 		while (!foundCountIsSet) {
 			try {
 				wait();
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
-				sqle.initCause( e );
-				throw sqle;
+			} catch( InterruptedException e ) {
+				log.log( Level.WARNING, "Interrupted while waiting for found count" );
+				resetInterrupt = true;
 			}
+		}
+		if( resetInterrupt ) {
+			Thread.currentThread().interrupt();
 		}
 		return foundCount;
 	}
@@ -372,15 +375,17 @@ public class FmXmlRequest extends FmRequest {
 
 
 	public synchronized Iterator<FmRecord> getRecordIterator() throws SQLException {
+		boolean resetInterrupt = false;
 		while (!recordIteratorIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
-				sqle.initCause( e );
-				throw sqle;
+				log.log( Level.WARNING, "Interrupted while waiting for record iterator" );
+				resetInterrupt = true; //We can't bail from this method on interruption, because that would break transactions (if we have already inserted an object, we can't throw an exception).
 			}
+		}
+		if( resetInterrupt ) {
+			Thread.currentThread().interrupt();
 		}
 		return recordIterator;
 	}
@@ -393,15 +398,17 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	public synchronized FmFieldList getFieldDefinitions() throws SQLException {
+		boolean resetInterrupt = false;
 		while (!fieldDefinitionsListIsSet) {
 			try {
 				wait();
 			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
-				sqle.initCause( e );
-				throw sqle;
+				log.log( Level.WARNING, "Interrupted while getting field definitions" );
+				resetInterrupt = true;
 			}
+		}
+		if( resetInterrupt ) {
+			Thread.currentThread().interrupt();
 		}
 		if( getErrorCode() == 0 && missingFields != null && missingFields.size() > 0 ) {
 			List missingFieldNames = new LinkedList();
@@ -428,10 +435,13 @@ public class FmXmlRequest extends FmRequest {
 			try {
 				wait();
 			} catch (InterruptedException e) {
+				log.log( Level.WARNING, "Thread was interrupted while waiting for error code from last operation; assuming success and resetting interrupt flag." );
 				Thread.currentThread().interrupt();
-				SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
-				sqle.initCause( e );
-				throw sqle;
+				errorCode = 0;
+				errorCodeIsSet = true;
+				//SQLException sqle = new SQLException( "Thread was interrupted while parsing FileMaker XML response from Web Publishing Engine" );
+				//sqle.initCause( e );
+				//throw sqle;
 			}
 		}
 		return errorCode;

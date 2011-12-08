@@ -133,9 +133,9 @@ public class FmMetaData implements DatabaseMetaData {
 				scriptIterator = Collections.EMPTY_LIST.iterator();
 			} else {
 				handler.doRequest("-db=" + dbName +"&-scriptnames"); //fixed hard-coded database columnName -bje
-				if (logger.isLoggable(Level.FINEST)) {
-					logger.log(Level.FINEST, "Script count: " + handler.getFoundCount() );
-				}
+				//if (logger.isLoggable(Level.FINEST)) {
+				//	logger.log(Level.FINEST, "Script count: " + handler.getFoundCount() );
+				//}
 				scriptIterator = handler.getRecordIterator();
 			}
 

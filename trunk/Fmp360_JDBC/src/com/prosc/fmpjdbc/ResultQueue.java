@@ -3,6 +3,7 @@ package com.prosc.fmpjdbc;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /*
@@ -33,11 +34,11 @@ import java.util.logging.Logger;
  */
 public class ResultQueue implements Iterator {
 	private static final Logger log = Logger.getLogger( ResultQueue.class.getName() );
-	
+
 	private final long resumeSize; // this is when we'll start adding items again
 	private final LinkedList objects; // LinkedLists are un-synchronized
 	private final LinkedList sizes;
-	
+
 	private volatile Throwable storedError;
 	private long maxSize; // this is the max size of the queue
 	private long currentSize; // this is the currentSize of the queue
@@ -101,15 +102,20 @@ public class ResultQueue implements Iterator {
 	 */
 	public synchronized boolean hasNext() {
 		// might not be finished, but nothing ready now so wait...
+		boolean resetInterrupt = false;
 		while (objects.size() <= 0 && !finished) {
 			if( storedError != null ) return true; //This will be thrown in the next() method
 			try {
 				wait();
 				if( storedError != null ) return true; //We neeed to check before and after the call to wait()
 			} catch (InterruptedException ie) {
-				throw new RuntimeException(ie);
+				log.log( Level.WARNING, "Interrupted while waiting for next item in ResultQueue" );
+				resetInterrupt = true;
 			}
 		} // end of while, ready to decide
+		if( resetInterrupt ) {
+			Thread.currentThread().interrupt();
+		}
 
 		return objects.size() > 0;
 	}
@@ -131,10 +137,14 @@ public class ResultQueue implements Iterator {
 				// somebody forgot to check for hasNext before calling next!!!!
 				throw new NoSuchElementException("There are no elements left in the ResultQueue");
 			} else {
+				boolean resetInterrupt = false;
 				try {
 					wait();
 				} catch (InterruptedException e) {
-					throw new RuntimeException(e);
+					resetInterrupt = true;
+				}
+				if( resetInterrupt ) {
+					Thread.currentThread().interrupt();
 				}
 			}
 		} // now there's something in the queue
