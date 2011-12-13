@@ -114,7 +114,11 @@ public class FmXmlRequest extends FmRequest {
 
 
 	public void doRequest(String input) throws IOException, SQLException {
-		if (serverStream != null) throw new IllegalStateException("You must call closeRequest() before sending another request.");
+		synchronized( FmXmlRequest.this ) {
+			if (serverStream != null) {
+				throw new IllegalStateException("You must call closeRequest() before sending another request.");
+			}
+		}
 		requestStartTime = System.currentTimeMillis();
 		postArgs = input;
 
@@ -162,8 +166,10 @@ public class FmXmlRequest extends FmRequest {
 						err.close();
 					}
 				}
-				serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
-				isStreamOpen = true;
+				synchronized( FmXmlRequest.this ) {
+					serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
+					isStreamOpen = true;
+				}
 				if( log.isLoggable( Level.CONFIG ) ) {
 					creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
 				}
@@ -196,26 +202,27 @@ public class FmXmlRequest extends FmRequest {
 		//allFieldNames = new ArrayList();
 		//fmTable = null;
 		//    foundCount = 0;
-		if( parsingThread != null && parsingThread.isAlive() ) {
-			parsingThread.interrupt();
-		}
-		if (serverStream != null)
-			try {
-				//serverStream = null;
-				synchronized( FmXmlRequest.this) {
-					serverStream.close();
-					if( isStreamOpen ) {
-						if( log.isLoggable( Level.CONFIG ) ) {
-							log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + fullUrl + " )" );
-						}
-						isStreamOpen = false;
-					}
-				}
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+		synchronized( FmXmlRequest.this) {
+			if( parsingThread != null && parsingThread.isAlive() ) {
+				log.fine( "closeRequest: interrupting parsing thread" );
+				parsingThread.interrupt();
 			}
-		if( xParser != null ) {
-			xParser.reset();
+			if (serverStream != null)
+				//try {
+				//serverStream = null;
+				//Don't close the serverStream - this is automatically done by the parser. This was causing deadlocks before. --jsb : serverStream.close();
+				if( isStreamOpen ) {
+					if( log.isLoggable( Level.CONFIG ) ) {
+						log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + fullUrl + " )" );
+					}
+					isStreamOpen = false;
+				}
+			//} catch (IOException e) {
+			//	throw new RuntimeException(e);
+			//}
+			if( xParser != null ) {
+				xParser.reset();
+			}
 		}
 	}
 
@@ -235,48 +242,52 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	private void readResult() throws SQLException {
-		parsingThread = new Thread("Parsing Thread") {
-			public void run() {
-				InputStream streamToParse;
-				streamToParse = serverStream;
-				InputSource input = new InputSource(streamToParse);
-//				input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() + "/fmi/xml/" );
-				//input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() );
-				input.setSystemId("http://");
-				FmXmlHandler xmlHandler = new FmXmlHandler();
-				try {
-					xParser.parse( input, xmlHandler );
-				} catch (IOException ioe) {
-					boolean ignore = false; //FIX!! Have the close() method set a thread-safe variable which is checked here, if it was closed then ignore the exception --jsb
-					if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") || ioe.getMessage().equalsIgnoreCase( "Socket closed" )) {
-						synchronized( FmXmlRequest.this ) {
-							if( ! isStreamOpen ) ignore = true;
+		synchronized( FmXmlRequest.this ) {
+			parsingThread = new Thread("FileMaker JDBC Parsing Thread") {
+				public void run() {
+					final InputStream streamToParse;
+					synchronized( FmXmlRequest.this ) {
+						streamToParse = serverStream;
+					}
+					InputSource input = new InputSource(streamToParse);
+					//				input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() + "/fmi/xml/" );
+					//input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() );
+					input.setSystemId("http://");
+					FmXmlHandler xmlHandler = new FmXmlHandler();
+					try {
+						xParser.parse( input, xmlHandler );
+					} catch (IOException ioe) {
+						boolean ignore = false; //FIX!! Have the close() method set a thread-safe variable which is checked here, if it was closed then ignore the exception --jsb
+						if (ioe.getMessage().equals("stream is closed") || ioe.getMessage().equalsIgnoreCase("stream closed") || ioe.getMessage().equalsIgnoreCase( "Socket closed" )) {
+							synchronized( FmXmlRequest.this ) {
+								if( ! isStreamOpen ) ignore = true;
+							}
 						}
+						if( ! ignore ) {
+							log.log(Level.WARNING, "The parsing thread was in the middle of parsing data from FM when an IOException occurred.", ioe );
+							//log.info("There was an error, so i'm setting all of the variables and continuing");
+							onErrorSetAllVariables(ioe);
+							//throw new RuntimeException(ioe);
+						}
+					} catch (SAXException e) {
+						//log.fine("There was SAXException: " + e.getMessage() + ", so the parsing thread is setting all of the threading variables to true and notifying all threads.\n Here's the stack trace: ");
+						onErrorSetAllVariables(e);
+						//throw new RuntimeException(e);
+					} catch (RuntimeException e) {
+						//log.fine("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading " + "variables to true and notifying all threads.");
+						onErrorSetAllVariables(e);
+						//throw new RuntimeException(e);
+					} catch( Error e ) {
+						onErrorSetAllVariables( e );
+					} finally {
+						closeRequest();
 					}
-					if( ! ignore ) {
-						log.log(Level.WARNING, "The parsing thread was in the middle of parsing data from FM when an IOException occurred.", ioe );
-						//log.info("There was an error, so i'm setting all of the variables and continuing");
-						onErrorSetAllVariables(ioe);
-						//throw new RuntimeException(ioe);
-					}
-				} catch (SAXException e) {
-					//log.fine("There was SAXException: " + e.getMessage() + ", so the parsing thread is setting all of the threading variables to true and notifying all threads.\n Here's the stack trace: ");
-					onErrorSetAllVariables(e);
-					//throw new RuntimeException(e);
-				} catch (RuntimeException e) {
-					//log.fine("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading " + "variables to true and notifying all threads.");
-					onErrorSetAllVariables(e);
-					//throw new RuntimeException(e);
-				} catch( Error e ) {
-					onErrorSetAllVariables( e );
-				} finally {
-					closeRequest();
 				}
-			}
 
 
-		};
-		parsingThread.start();
+			};
+			parsingThread.start();
+		}
 		if(hasError()) {
 			throw FileMakerException.exceptionForErrorCode( errorCode, fullUrl );
 		}
@@ -430,7 +441,7 @@ public class FmXmlRequest extends FmRequest {
 
 	}
 
-	public synchronized int getErrorCode() throws SQLException {
+	public synchronized int getErrorCode() {
 		while(!errorCodeIsSet) {
 			try {
 				wait();
@@ -447,7 +458,7 @@ public class FmXmlRequest extends FmRequest {
 		return errorCode;
 	}
 
-	public boolean hasError() throws SQLException {
+	public boolean hasError() {
 		// 0 is ok
 		// 401 is no results
 		int error = getErrorCode();
