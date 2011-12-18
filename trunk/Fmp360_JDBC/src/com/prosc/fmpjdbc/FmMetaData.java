@@ -51,6 +51,8 @@ public class FmMetaData implements DatabaseMetaData {
 	private String lastFile;
 	private List<FmRecord> lastColumns;
 	private FmFieldList lastRawFields;
+	private Map<String,Set<String>> writeableFields = new HashMap<String, Set<String>>();
+	private Map<String,Set<String>> readableFields = new HashMap<String, Set<String>>();
 
 	public FmMetaData(FmConnection connection) throws IOException, FileMakerException {
 		this.connection = connection;
@@ -397,7 +399,7 @@ public class FmMetaData implements DatabaseMetaData {
 			lastColumns = new LinkedList<FmRecord>();
 			lastFile = catalog;
 			lastTable = tableNamePattern;
-			
+
 			fieldCount = lastRawFields.getFields().size();
 			FmField eachField;
 			FmRecord fieldRecord;
@@ -430,6 +432,139 @@ public class FmMetaData implements DatabaseMetaData {
 		}
 		return new FmResultSet( lastColumns.iterator(), lastColumns.size(), fields, connection );
 	}
+
+	public ResultSet getColumnPrivileges( String catalog, String schema, String table, String columnNamePattern ) throws SQLException {
+		getColumns( catalog, schema, table,columnNamePattern ); //Do this first so that we know that internal caches are correct
+
+		FmFieldList fields = new FmFieldList();
+		FmTable dummyTable = new FmTable("Field definitions");
+		fields.add( new FmField(dummyTable, "TABLE_CAT", null, FmFieldType.TEXT, true) ); //0
+		fields.add( new FmField(dummyTable, "TABLE_SCHEM", null, FmFieldType.TEXT, true) ); //1
+		fields.add( new FmField(dummyTable, "TABLE_NAME", null, FmFieldType.TEXT, false) ); //2
+		fields.add( new FmField(dummyTable, "COLUMN_NAME", null, FmFieldType.TEXT, false) ); //3
+		fields.add( new FmField(dummyTable, "GRANTOR", null, FmFieldType.TEXT, false) ); //4
+		fields.add( new FmField(dummyTable, "GRANTEE", null, FmFieldType.TEXT, false) ); //5
+		fields.add( new FmField(dummyTable, "PRIVILEGE", null, FmFieldType.TEXT, false) ); //6
+		fields.add( new FmField(dummyTable, "IS_GRANTABLE", null, FmFieldType.TEXT, false) ); //7
+
+		List<String> privileges = getFieldPrivileges( catalog, table, columnNamePattern );
+
+		List<FmRecord> result = new LinkedList<FmRecord>();
+		for( String privilege : privileges ) {
+			FmRecord record = new FmRecord( fields, null, null );
+			record.setRawValue( catalog, 0 );
+			record.setRawValue( table, 2 );
+			record.setRawValue( columnNamePattern, 3 );
+			record.setRawValue( connection.getUsername(), 5 );
+			record.setRawValue( privilege, 6 );
+			record.setRawValue( "NO", 7 );
+			result.add( record );
+		}
+		return new FmResultSet( result.iterator(), result.size(), fields, connection );
+	}
+
+	private List<String> getFieldPrivileges( String dbName, String tableName, String fieldName ) throws SQLException {
+		FmField fieldDefinition = null;
+
+		for( FmField column : lastRawFields.getFields() ) {
+			if( column.getColumnName().equalsIgnoreCase( fieldName ) ) {
+				fieldDefinition = column;
+				break;
+			}
+		}
+		if( fieldDefinition == null ) {
+			throw new SQLException( "No such field '" + fieldName + "' exists in database '" + dbName + "' table '" + tableName + "'.", null, 102 );
+		}
+
+		/*if( ! fieldDefinition.isAutoEnter() ) {
+			return true; //If a field is neither a calc nor auto-enter, assume it's writeable
+		}*/
+
+		String lookup = dbName + "~" + tableName;
+		Set<String> writeable = writeableFields.get( lookup );
+		Set<String> readable = readableFields.get( lookup );
+		if( writeable == null ) {
+			writeable = new HashSet<String>();
+			readable = new HashSet<String>();
+			
+			//List<FmField> candidateField = new ArrayList( lastRawFields.size() );
+			//for( FmField field : lastRawFields.getFields() ) {
+			//	if( ! fieldDefinition.isReadOnly() ) {
+			//		candidateField.add( field );
+			//	}
+			//}
+			Statement stmt = getConnection().createStatement();
+			boolean insertWorked = true;
+			try {
+				stmt.executeUpdate( "INSERT INTO '" + tableName + "'(b), VALUES(3)", Statement.RETURN_GENERATED_KEYS );
+				ResultSet rs = stmt.getGeneratedKeys();
+				if( rs.next() ) {
+					long recid = rs.getLong( "recid" ); //which field is the primary key? How will we delete this row when we're done?
+					try {
+						for( FmField field : lastRawFields.getFields() ) {
+							try {
+								Object value;
+								if( field.getType() == FmFieldType.DATE ) {
+									value = "1/1/2000";
+								} else if( field.getType() == FmFieldType.TIMESTAMP ) {
+									value = "1/1/2000 11:08am";
+								} else if( field.getType() == FmFieldType.TIME ) {
+									value = "11:07am";
+								} else if( field.getType() == FmFieldType.CONTAINER ) {
+									continue; //Can't write to container fields
+								} else {
+									value = "42";
+								}
+								String sql = "UPDATE \"" + tableName + "\" SET \"" + field.getColumnName() + "\"= \"" + value + "\" WHERE recid=" + recid;
+								stmt.executeUpdate( sql );
+								writeable.add( field.getColumnName() );
+								readable.add( field.getColumnName() );
+							} catch( FileMakerException e ) {
+								if( e.getErrorCode() == 201 ) {
+									//Field is not writeable; skip
+									readable.add( field.getColumnName() );
+								} else if( e.getErrorCode() == 102 ) { //This happens when a field is completely unreadable.
+									//Field is not readable; skip
+								} else {
+									throw e;
+								}
+							}
+						}
+					} finally {
+						String sql = "DELETE FROM \"" + tableName + "\" WHERE recid=" + recid;
+						stmt.executeUpdate( sql );
+					}
+				} else {
+					insertWorked = false;
+				}
+			} catch( SQLException e ) {
+				log.log( Level.WARNING, "Error while creating new row to test which fields are writeable", e );
+				insertWorked = false;
+			}
+			if( ! insertWorked ) {
+				log.warning( "Could not create a test row in the database for checking field permissions; will assume that all rows are writeable" );
+				for( FmField field : lastRawFields.getFields() ) {
+					writeable.add( field.getColumnName() );
+					readable.add( field.getColumnName() );
+				}
+				//Could not create test row, assume all fields are writeable?
+			}
+
+			writeableFields.put( lookup, writeable );
+			readableFields.put( lookup, readable );
+		}
+		
+		List<String> result = new LinkedList<String>();
+		if( readable.contains( fieldName ) ) {
+			result.add( "SELECT" );
+		}
+		if( writeable.contains( fieldName ) ) {
+			result.add( "UPDATE" );
+			result.add( "INSERT" ); //FIX!! It's possible that field can be inserted even if it's not readable; currently our process will not detect that.
+		}
+		return result;
+	}
+
 
 	public ResultSet getVersionColumns( String catalog, String schema, String table ) throws SQLException {
 		getColumns( catalog, schema, table, null );
@@ -468,7 +603,7 @@ public class FmMetaData implements DatabaseMetaData {
 			rsColumns.add( new FmField(dummyTable, "DECIMAL_DIGITS", null, FmFieldType.NUMBER, false) ); //6 DECIMAL_DIGITS short => scale - Null is returned for data types where DECIMAL_DIGITS is not applicable.
 			rsColumns.add( new FmField(dummyTable, "PSEUDO_COLUMN", null, FmFieldType.NUMBER, false) ); //7 PSEUDO_COLUMN short => whether this is pseudo column like an Oracle ROWID
 
-			FmRecord result = new FmRecord( rsColumns, 0, 0 );
+			FmRecord result = new FmRecord( rsColumns, 0l, 0 );
 
 			FmField versionField = versionCandidates.get( 0 );
 			result.setRawValue( "" + versionField.getColumnName(), 1 );
@@ -521,7 +656,7 @@ public class FmMetaData implements DatabaseMetaData {
 			rsColumns.add( new FmField(dummyTable, "KEY_SEQ", null, FmFieldType.NUMBER, false) ); //3
 			rsColumns.add( new FmField(dummyTable, "PK_NAME", null, FmFieldType.TEXT, false) ); //3
 
-			FmRecord result = new FmRecord( rsColumns, 0, 0 );
+			FmRecord result = new FmRecord( rsColumns, 0l, 0 );
 			//TABLE_CAT String => table catalog (may be null)
 			//TABLE_SCHEM String => table schema (may be null)
 			result.setRawValue( table, 2 ); //TABLE_NAME String => table name
@@ -854,11 +989,6 @@ public class FmMetaData implements DatabaseMetaData {
 
 
 	//--- These methods can be ignored ---
-
-	public ResultSet getColumnPrivileges( String s, String s1, String s2, String s3 ) throws SQLException {
-		throw new AbstractMethodError( "getColumnPrivileges is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public boolean allProceduresAreCallable() throws SQLException {
 		throw new AbstractMethodError( "allProceduresAreCallable is not implemented yet." ); //FIX!!! Broken placeholder
 	}

@@ -37,12 +37,12 @@ public class FmRecord {
 	private static final Logger log = Logger.getLogger( FmRecord.class.getName() );
 	private static final TimeZone defaultTimeZone = TimeZone.getDefault();
 	
-	private Integer recordId;
+	private Long recordId;
 	private Integer modCount;
 	private FmFieldList fieldList;
 	private String[] rawValues;
 
-	public FmRecord(FmFieldList fieldList, Integer recordId, Integer modCount) {
+	public FmRecord(FmFieldList fieldList, Long recordId, Integer modCount) {
 		this.fieldList = fieldList;
 		this.rawValues = new String[fieldList.getFields().size()];
 		this.recordId = recordId;
@@ -50,7 +50,7 @@ public class FmRecord {
 	}
 
 
-	public Integer getRecordId() {
+	public Long getRecordId() {
 		return recordId;
 	}
 
