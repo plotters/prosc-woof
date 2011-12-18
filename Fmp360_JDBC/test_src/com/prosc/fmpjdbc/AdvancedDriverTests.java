@@ -585,6 +585,38 @@ public class AdvancedDriverTests extends TestCase {
 		assertNotNull("Expected a string of \"readonly\" and received null.", rs.getString(12));
 		assertTrue(rs.getString(12).indexOf("readonly") > -1);
 	}
+	
+	public void testGetFieldMetaData() throws SQLException {
+		DatabaseMetaData metaData = connection7.getMetaData();
+
+		String db = "Contacts";
+		String table = "Calc test";
+		
+		assertTrue( isColumnWriteable( metaData, db, table, "a" ) );
+		assertTrue( isColumnWriteable( metaData, db, table, "b" ) );
+		assertFalse( isColumnWriteable( metaData, db, table, "c" ) );
+		assertTrue( isColumnWriteable( metaData, db, table, "d" ) );
+		assertTrue( isColumnWriteable( metaData, db, table, "e" ) );
+		assertFalse( isColumnWriteable( metaData, db, table, "f" ) );
+		assertFalse( isColumnWriteable( metaData, db, table, "g" ) );
+		assertTrue( isColumnWriteable( metaData, db, table, "h" ) );
+		assertFalse( isColumnWriteable( metaData, db, table, "unreadable" ) );
+		assertFalse( isColumnWriteable( metaData, db, table, "readonly" ) );
+	}
+
+	private boolean isColumnWriteable( DatabaseMetaData metaData, String db, String table, String column ) throws SQLException {
+		ResultSet privs = metaData.getColumnPrivileges( db, null, table, column );
+		try {
+			while( privs.next() ) {
+				if( "UPDATE".equals( privs.getString( "PRIVILEGE" ) ) || "INSERT".equals( privs.getString( "PRIVILEGE" ) ) ) {
+					return true;
+				}
+			}
+			return false;
+		} finally {
+			privs.close();
+		}
+	}
 
 	/*public void testGetColumnNamesFm6() throws SQLException {
 		JDBCTestUtils testUtils = new JDBCTestUtils();

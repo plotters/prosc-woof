@@ -301,7 +301,12 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
 		try {
-			if (i == -1) throw new SQLException( "'" + s + "' is not a field on the requested layout.");
+			if (i == -1) {
+				if( "recid".equals( s ) ) {
+					return String.valueOf( currentRecord.getRecordId() );
+				}
+				throw new SQLException( "'" + s + "' is not a field on the requested layout.");
+			}
 			return currentRecord.getString(i);
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
@@ -341,7 +346,14 @@ public class FmResultSet implements ResultSet {
 	public int getInt(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			if (i == -1) {
+				if( "recid".equals( s ) ) {
+					long longValue = currentRecord.getRecordId();
+					return (int)longValue;
+				} else {
+					throw new SQLException(s + " is not a field on the requested layout.");
+				}
+			}
 			return currentRecord.getInt(i);
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
@@ -351,7 +363,13 @@ public class FmResultSet implements ResultSet {
 	public long getLong(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			if (i == -1) {
+				if( "recid".equals( s ) ) {
+					return currentRecord.getRecordId();
+				} else {
+					throw new SQLException(s + " is not a field on the requested layout.");
+				}
+			}
 			return currentRecord.getLong(i);
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
