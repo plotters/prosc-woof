@@ -586,7 +586,7 @@ public class AdvancedDriverTests extends TestCase {
 		assertTrue(rs.getString(12).indexOf("readonly") > -1);
 	}
 	
-	public void testGetFieldMetaData() throws SQLException {
+	public void testGetColumnPrivileges() throws SQLException {
 		DatabaseMetaData metaData = connection7.getMetaData();
 
 		String db = "Contacts";
@@ -602,6 +602,19 @@ public class AdvancedDriverTests extends TestCase {
 		assertTrue( isColumnWriteable( metaData, db, table, "h" ) );
 		assertFalse( isColumnWriteable( metaData, db, table, "unreadable" ) );
 		assertFalse( isColumnWriteable( metaData, db, table, "readonly" ) );
+	}
+	
+	public void testGetExportedKeys() throws SQLException {
+		DatabaseMetaData metaData = connection7.getMetaData();
+
+		ResultSet rs = metaData.getExportedKeys( "Contacts", null, "Contacts" );
+		while( rs.next() ) {
+			String pkColumn = rs.getString( "PKCOLUMN_NAME" );
+			String foreignKeyTable = rs.getString( "FKTABLE_NAME" );
+			String foreinKeyColumn = rs.getString( "FKCOLUMN_NAME" );
+			short keySequence = rs.getShort( "KEY_SEQ" );
+			String delete_rule = rs.getString( "DELETE_RULE" );
+		}
 	}
 
 	private boolean isColumnWriteable( DatabaseMetaData metaData, String db, String table, String column ) throws SQLException {
