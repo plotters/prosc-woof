@@ -486,7 +486,7 @@ public class FmMetaData implements DatabaseMetaData {
 		if( writeable == null ) {
 			writeable = new HashSet<String>();
 			readable = new HashSet<String>();
-			
+
 			//List<FmField> candidateField = new ArrayList( lastRawFields.size() );
 			//for( FmField field : lastRawFields.getFields() ) {
 			//	if( ! fieldDefinition.isReadOnly() ) {
@@ -496,7 +496,8 @@ public class FmMetaData implements DatabaseMetaData {
 			Statement stmt = getConnection().createStatement();
 			boolean insertWorked = true;
 			try {
-				stmt.executeUpdate( "INSERT INTO '" + tableName + "'(b), VALUES(3)", Statement.RETURN_GENERATED_KEYS );
+				//stmt.executeUpdate( "INSERT INTO '" + tableName + "'(b), VALUES(3)", Statement.RETURN_GENERATED_KEYS );
+				stmt.executeUpdate( "INSERT INTO '" + tableName + "'", Statement.RETURN_GENERATED_KEYS );
 				ResultSet rs = stmt.getGeneratedKeys();
 				if( rs.next() ) {
 					long recid = rs.getLong( "recid" ); //which field is the primary key? How will we delete this row when we're done?
@@ -553,7 +554,7 @@ public class FmMetaData implements DatabaseMetaData {
 			writeableFields.put( lookup, writeable );
 			readableFields.put( lookup, readable );
 		}
-		
+
 		List<String> result = new LinkedList<String>();
 		if( readable.contains( fieldName ) ) {
 			result.add( "SELECT" );
@@ -644,10 +645,10 @@ public class FmMetaData implements DatabaseMetaData {
 			}
 		};
 		Collections.sort( pkCandidates, pkComparator );
+		FmFieldList rsColumns = new FmFieldList();
 		if( pkCandidates.size() == 0 ) {
-			return new FmResultSet(null, 0, null, connection );
+			return new FmResultSet(null, 0, rsColumns, connection );
 		} else {
-			FmFieldList rsColumns = new FmFieldList();
 			FmTable dummyTable = new FmTable("Field definitions");
 			rsColumns.add( new FmField(dummyTable, "TABLE_CAT", null, FmFieldType.TEXT, true) ); //0
 			rsColumns.add( new FmField(dummyTable, "TABLE_SCHEM", null, FmFieldType.TEXT, true) ); //1
@@ -668,8 +669,12 @@ public class FmMetaData implements DatabaseMetaData {
 		}
 	}
 
+	public ResultSet getExportedKeys( String catalog, String schema, String layout ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
 	public ResultSet getImportedKeys( String s, String s1, String s2 ) throws SQLException {
-		return new FmResultSet(null, 0, null, connection );
+		return new FmResultSet(null, 0, new FmFieldList(), connection );
 	}
 
 	public ResultSet getTypeInfo() throws SQLException {
@@ -1250,10 +1255,6 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public ResultSet getBestRowIdentifier( String s, String s1, String s2, int i, boolean b ) throws SQLException {
 		throw new AbstractMethodError( "getBestRowIdentifier is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public ResultSet getExportedKeys( String s, String s1, String s2 ) throws SQLException {
-		throw new AbstractMethodError( "getExportedKeys is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public ResultSet getCrossReference( String s, String s1, String s2, String s3, String s4, String s5 ) throws SQLException {
