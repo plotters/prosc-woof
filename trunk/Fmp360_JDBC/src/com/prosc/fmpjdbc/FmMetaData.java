@@ -503,6 +503,9 @@ public class FmMetaData implements DatabaseMetaData {
 					long recid = rs.getLong( "recid" ); //which field is the primary key? How will we delete this row when we're done?
 					try {
 						for( FmField field : lastRawFields.getFields() ) {
+							if( field.isReadOnly() ) {
+								continue; //Don't need to test calc fields / summary fields. Testing is really pretty slow. The only problem with skipping this is that we won't know whether they are readable.
+							}
 							try {
 								Object value;
 								if( field.getType() == FmFieldType.DATE ) {
@@ -590,7 +593,7 @@ public class FmMetaData implements DatabaseMetaData {
 		};
 		Collections.sort( versionCandidates, modstampComparator );
 		if( versionCandidates.size() == 0 ) {
-			return new FmResultSet(null, 0, null, connection );
+			return new FmResultSet(null, 0, new FmFieldList(), connection );
 		} else {
 			FmFieldList rsColumns = new FmFieldList();
 			FmTable dummyTable = new FmTable("Field definitions");
