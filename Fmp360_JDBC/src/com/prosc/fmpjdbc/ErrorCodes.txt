@@ -16,6 +16,7 @@
 500 "Date value does not meet validation entry options"
 501 "Time value does not meet validation entry options"
 504 "Value in field is not unique as required in validation entry options"
+507 "Value in field failed calculation test of validation entry option"
 509 "Field requires a valid value" - Often happens when a new record is inserted, but not all required values are supplied in the INSERT statement.
 802	"Unable to open file" - Check to make sure that the database file is hosted on FileMaker Server, and that the 'fmxml' extended privilege is enabled for your privilege set.
 # 954-958 are all web-specific error codes
