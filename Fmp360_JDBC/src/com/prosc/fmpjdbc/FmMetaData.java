@@ -193,7 +193,7 @@ public class FmMetaData implements DatabaseMetaData {
 		}
 
 		String postArgs;
-		String tableName;
+		String layoutName;
 		String databaseName;
 		int mark;
 		List<String> databaseNames = new LinkedList<String>();
@@ -250,11 +250,11 @@ public class FmMetaData implements DatabaseMetaData {
 			try {
 				request.doRequest( postArgs );
 				for( Iterator<FmRecord> it = request.getRecordIterator(); it.hasNext(); ) {
-					FmRecord rawRecord = (FmRecord)it.next();
-					tableName = rawRecord.getRawValue(0);
-					mark = tableName.toLowerCase().indexOf(".fp");
-					if( mark != -1 ) tableName = tableName.substring(0, mark);
-					if (tableNamePattern != null && !tableNamePattern.equalsIgnoreCase(tableName) && !tableNamePattern.equalsIgnoreCase(databaseName + "|" + tableName)) {
+					FmRecord rawRecord = it.next();
+					layoutName = rawRecord.getRawValue(0);
+					mark = layoutName.toLowerCase().indexOf(".fp");
+					if( mark != -1 ) layoutName = layoutName.substring(0, mark);
+					if (tableNamePattern != null && !tableNamePattern.equalsIgnoreCase(layoutName) && !tableNamePattern.equalsIgnoreCase(databaseName + "|" + layoutName)) {
 						continue;
 					}
 					FmRecord processedRecord = new FmRecord( tableFormat, null, null );
@@ -280,12 +280,12 @@ public class FmMetaData implements DatabaseMetaData {
 										 an xxx.yyy syntax in the SQL query, we would treat that as the databasename / layout name.
 										 */
 
-					processedRecord.setRawValue( "Catalog name goes here", 0); //FIX!!! Temporary for testing... does this get used anywhere?
-					if( getCatalogSeparator() != null && getCatalogSeparator() != "." ) {
-						processedRecord.setRawValue( databaseName + getCatalogSeparator() + tableName, 2 );
+					processedRecord.setRawValue( databaseName, 0);
+					if( getCatalogSeparator() != null && !getCatalogSeparator().equals( "." ) ) {
+						processedRecord.setRawValue( databaseName + getCatalogSeparator() + layoutName, 2 );
 					} else {
-						processedRecord.setRawValue( databaseName, 1);
-						processedRecord.setRawValue( tableName, 2 );
+						processedRecord.setRawValue( getTableOccurrenceForLayout( catalog, layoutName ), 1);
+						processedRecord.setRawValue( layoutName, 2 );
 					}
 					processedRecord.setRawValue( "TABLE", 3 );
 					tables.add( processedRecord );
@@ -312,6 +312,13 @@ public class FmMetaData implements DatabaseMetaData {
 			}
 		}
 		return new FmResultSet( tables.iterator(), tables.size(), tableFormat, connection );
+	}
+	
+	public String getTableOccurrenceForLayout( String database, String layoutName ) throws IOException, FileMakerException {
+		FmResultSetRequest request = new FmResultSetRequest( connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml", connection.getPort(), connection.getUsername(), connection.getPassword() );
+		String postArgs = "-db=" + URLEncoder.encode( database, "utf-8" ) + "&-lay=" + URLEncoder.encode( layoutName, "utf-8" ) + "&-findany";
+		request.doRequest( postArgs );
+		return request.getTableOccurrence();
 	}
 
 	/**

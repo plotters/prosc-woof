@@ -216,13 +216,6 @@ public class FmConnectionTest extends TestCase {
 		}
 	}
 
-	public void testMetaData() throws Exception {
-		FmConnection connection = new FmConnection(jdbc.getJdbcUrl(null), new Properties());// contacts.fp7
-		DatabaseMetaData metaData = connection.getMetaData();
-		assertTrue(metaData.getDatabaseMajorVersion() > 5);
-		assertTrue(metaData.getDatabaseProductName().toLowerCase().indexOf("filemaker") >= 0);
-	}
-
 	public void testGetCatalogs() throws Exception {
 		FmConnection connection = new FmConnection(jdbc.getJdbcUrl(null), new Properties());// contacts.fp7
 		DatabaseMetaData metaData = connection.getMetaData();

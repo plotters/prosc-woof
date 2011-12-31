@@ -47,12 +47,13 @@ import org.xml.sax.helpers.DefaultHandler;
 public class FmResultSetRequest extends FmRequest {
 	private static final Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 	private static final int SERVER_STREAM_BUFFERSIZE = 16384;
-	
+
 	private final URL theUrl;
 	private final SAXParser xParser;
 	private final String username;
 	private final String authString;
-	
+	public String tableOccurrence;
+
 	private InputStream serverStream;
 	private String postPrefix = "";
 
@@ -125,7 +126,7 @@ public class FmResultSetRequest extends FmRequest {
 		usedFieldArray = null;
 		allFieldNames = new ArrayList();
 		fmTable = null;
-        foundCount = 0;
+		foundCount = 0;
 		if (serverStream != null)
 			try {
 				serverStream.close();
@@ -251,24 +252,26 @@ public class FmResultSetRequest extends FmRequest {
 			else if ("product".equals(qName)) {
 				parsedXML += tabs(tabCount);
 				parsedXML += "<product build=\"" + attributes.getValue("build") + "\"" +
-					" name=\"" + attributes.getValue("name") + "\"" +
-					" version=\"" + attributes.getValue("version") + "\"";
+						" name=\"" + attributes.getValue("name") + "\"" +
+						" version=\"" + attributes.getValue("version") + "\"";
 			}
 			else if ("datasource".equals(qName)) {
 				parsedXML += tabs(tabCount);
 				parsedXML += "<datasource database=\"" + attributes.getValue("database") + "\"" +
-					" date-format=\"" + attributes.getValue("date-format") + "\"" +
-					" layout=\"" + attributes.getValue("layout") + "\"" +
-					" table=\"" + attributes.getValue("table") + "\"" +
-					" time-format=\"" + attributes.getValue("time-format") + "\"" +
-					" timestamp-format=\"" + attributes.getValue("timestamp-format") + "\"" +
-					" total-count=\"" + attributes.getValue("total-count")+ "\"";
+						" date-format=\"" + attributes.getValue("date-format") + "\"" +
+						" layout=\"" + attributes.getValue("layout") + "\"" +
+						" table=\"" + attributes.getValue("table") + "\"" +
+						" time-format=\"" + attributes.getValue("time-format") + "\"" +
+						" timestamp-format=\"" + attributes.getValue("timestamp-format") + "\"" +
+						" total-count=\"" + attributes.getValue("total-count")+ "\"";
 
-					if (fieldDefinitions == null) {
-						fieldDefinitions = new FmFieldList();
-					}
+				if (fieldDefinitions == null) {
+					fieldDefinitions = new FmFieldList();
+				}
 
-					fmTable =  new FmTable( attributes.getValue("database") );
+				tableOccurrence = attributes.getValue( "table" );
+
+				fmTable =  new FmTable( attributes.getValue("database") );
 			}
 			else if ("metadata".equals(qName)) {
 				parsedXML += tabs(tabCount);
@@ -278,12 +281,12 @@ public class FmResultSetRequest extends FmRequest {
 			else if ("field-definition".equals(qName)) {
 				parsedXML += tabs(tabCount);
 				parsedXML += "<field-definition auto-enter=\"" + attributes.getValue("auto-enter") + "\"" +
-					" global=\"" + attributes.getValue("global") + "\"" +
-					" max-repeat=\"" + attributes.getValue("max-repeat") + "\"" +
-					" name=\"" + attributes.getValue("name") + "\"" +
-					" not-empty=\"" + attributes.getValue("not-empty") + "\"" +
-					" result=\"" + attributes.getValue("result") + "\"" +
-					" type=\"" + attributes.getValue("type")+ "\"";
+						" global=\"" + attributes.getValue("global") + "\"" +
+						" max-repeat=\"" + attributes.getValue("max-repeat") + "\"" +
+						" name=\"" + attributes.getValue("name") + "\"" +
+						" not-empty=\"" + attributes.getValue("not-empty") + "\"" +
+						" result=\"" + attributes.getValue("result") + "\"" +
+						" type=\"" + attributes.getValue("type")+ "\"";
 
 				String fieldName = attributes.getValue("name");
 				String fieldTypeName = attributes.getValue("result");
@@ -298,7 +301,7 @@ public class FmResultSetRequest extends FmRequest {
 			else if ("resultset".equals(qName)) {
 				parsedXML += tabs(tabCount);
 				parsedXML += "<field-definition count=\"" + attributes.getValue("count") + "\"" +
-					" fetch-size=\"" + attributes.getValue("fetch-size")+ "\"";
+						" fetch-size=\"" + attributes.getValue("fetch-size")+ "\"";
 			}
 		}
 
@@ -376,4 +379,7 @@ public class FmResultSetRequest extends FmRequest {
 	//	}
 	//}
 
+	public String getTableOccurrence() {
+		return tableOccurrence;
+	}
 }
