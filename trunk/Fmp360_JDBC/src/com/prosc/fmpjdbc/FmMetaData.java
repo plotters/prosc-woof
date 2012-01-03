@@ -53,6 +53,7 @@ public class FmMetaData implements DatabaseMetaData {
 	private FmFieldList lastRawFields;
 	private Map<String,Set<String>> writeableFields = new HashMap<String, Set<String>>();
 	private Map<String,Set<String>> readableFields = new HashMap<String, Set<String>>();
+	private Map<String,String> tableOccurrenceNames = new HashMap<String, String>();
 
 	public FmMetaData(FmConnection connection) throws IOException, FileMakerException {
 		this.connection = connection;
@@ -313,12 +314,21 @@ public class FmMetaData implements DatabaseMetaData {
 		}
 		return new FmResultSet( tables.iterator(), tables.size(), tableFormat, connection );
 	}
-	
+
+	/** FileMaker 'tables' are actually layout names. Sometimes, however, you need to find out the table occurrence name associated with a layout, and
+	 * you can use this method to do that. The results are cached on a per-connection basis, so it is fine to call this method repeatedly for a given connection.
+	 */
 	public String getTableOccurrenceForLayout( String database, String layoutName ) throws IOException, FileMakerException {
-		FmResultSetRequest request = new FmResultSetRequest( connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml", connection.getPort(), connection.getUsername(), connection.getPassword() );
-		String postArgs = "-db=" + URLEncoder.encode( database, "utf-8" ) + "&-lay=" + URLEncoder.encode( layoutName, "utf-8" ) + "&-findany";
-		request.doRequest( postArgs );
-		return request.getTableOccurrence();
+		String lookupKey = database + "~" + layoutName;
+		String result = tableOccurrenceNames.get( lookupKey );
+		if( result == null ) {
+			FmResultSetRequest request = new FmResultSetRequest( connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml", connection.getPort(), connection.getUsername(), connection.getPassword() );
+			String postArgs = "-db=" + URLEncoder.encode( database, "utf-8" ) + "&-lay=" + URLEncoder.encode( layoutName, "utf-8" ) + "&-findany";
+			request.doRequest( postArgs );
+			result = request.getTableOccurrence();
+			tableOccurrenceNames.put( lookupKey, result );
+		}
+		return result;
 	}
 
 	/**
