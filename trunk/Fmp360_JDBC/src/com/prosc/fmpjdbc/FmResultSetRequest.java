@@ -295,8 +295,10 @@ public class FmResultSetRequest extends FmRequest {
 				boolean readOnly = "calculation".equals(attributes.getValue("type") ) || "summary".equals( attributes.getValue("type") );
 				boolean autoEnter = "yes".equals( attributes.getValue( "auto-enter" ) );
 
-				FmField field = new FmField(fmTable, fieldName, fieldName, fieldType, allowsNulls, readOnly, autoEnter );
-				fieldDefinitions.add(field);
+				if( fieldName != null && fieldName.length() > 0 ) {
+					FmField field = new FmField(fmTable, fieldName, fieldName, fieldType, allowsNulls, readOnly, autoEnter );
+					fieldDefinitions.add(field);
+				}
 			}
 			else if ("resultset".equals(qName)) {
 				parsedXML += tabs(tabCount);

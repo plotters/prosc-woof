@@ -1,8 +1,5 @@
 package com.prosc.fmpjdbc;
 
-import java.util.Map;
-import java.util.HashMap;
-
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
     Copyright (C) 2006  Prometheus Systems Consulting, LLC d/b/a 360Works
