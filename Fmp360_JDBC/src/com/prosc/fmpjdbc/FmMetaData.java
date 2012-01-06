@@ -541,7 +541,7 @@ public class FmMetaData implements DatabaseMetaData {
 								writeable.add( field.getColumnName() );
 								readable.add( field.getColumnName() );
 							} catch( FileMakerException e ) {
-								if( e.getErrorCode() == 201 ) {
+								if( e.getErrorCode() == 201 || e.getErrorCode() == 507 ) {
 									//Field is not writeable; skip
 									readable.add( field.getColumnName() );
 								} else if( e.getErrorCode() == 102 ) { //This happens when a field is completely unreadable.
