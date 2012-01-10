@@ -207,16 +207,23 @@ public class FmXmlRequest extends FmRequest {
 				log.fine( "closeRequest: interrupting parsing thread" );
 				parsingThread.interrupt();
 			}
-			if (serverStream != null)
+			if (serverStream != null) {
 				//try {
 				//serverStream = null;
-				//Don't close the serverStream - this is automatically done by the parser. This was causing deadlocks before. --jsb : serverStream.close();
+				//Don't close the serverStream - this is automatically done by the parser. This was causing deadlocks on Windows because two different threads are calling close(). --jsb :
+				try {
+					serverStream.close(); //I turned this back on because I removed it from the parsing thread. Need to test on Windows.
+					serverStream = null;
+				} catch( IOException e ) {
+					log.log( Level.WARNING, "Error while closing fm XML stream: " + e.toString(), e );
+				}
 				if( isStreamOpen ) {
 					if( log.isLoggable( Level.CONFIG ) ) {
 						log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + fullUrl + " )" );
 					}
 					isStreamOpen = false;
 				}
+			}
 			//} catch (IOException e) {
 			//	throw new RuntimeException(e);
 			//}
@@ -243,7 +250,7 @@ public class FmXmlRequest extends FmRequest {
 
 	private void readResult() throws SQLException {
 		synchronized( FmXmlRequest.this ) {
-			parsingThread = new Thread("FileMaker JDBC Parsing Thread") {
+			parsingThread = new Thread("FileMaker JDBC Parsing Thread" ) {
 				public void run() {
 					final InputStream streamToParse;
 					synchronized( FmXmlRequest.this ) {
@@ -280,7 +287,7 @@ public class FmXmlRequest extends FmRequest {
 					} catch( Error e ) {
 						onErrorSetAllVariables( e );
 					} finally {
-						closeRequest();
+						//closeRequest();
 					}
 				}
 
