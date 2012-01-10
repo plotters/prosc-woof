@@ -68,11 +68,10 @@ public class FmStatement implements Statement {
 	}
 
 	public void close() throws SQLException {
-		ResultSet rs = getResultSet();
-		if( rs != null ) {
-			rs.close();
+		if( processor != null ) {
+			processor.close();
+			processor = null; //Assist garbage collection
 		}
-		processor = null; //Assist garbage collection
 	}
 
 	public ResultSet getGeneratedKeys() throws SQLException {
