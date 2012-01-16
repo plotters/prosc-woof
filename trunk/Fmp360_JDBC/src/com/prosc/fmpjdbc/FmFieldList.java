@@ -52,7 +52,7 @@ public class FmFieldList {
 		return fields.size();
 	}
 
-	//OPTIMIZE This could be faster
+	//OPTIMIZE This could be faster, and it is called very often
 	public int indexOfFieldWithAlias(String alias) {
 		int i=0;
 		for( FmField fmField : fields ) {

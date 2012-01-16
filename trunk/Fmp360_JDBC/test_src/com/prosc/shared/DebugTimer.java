@@ -58,8 +58,7 @@ public class DebugTimer {
 		//long totalTime = currentTime.getTime() - startTime.getTime();
 		markTime(null);
 		if(enabled) {
-			System.out.print(progressMessage);
-			log.info("Finished");
+			log.info(progressMessage.toString());
 		}
 	}
 
