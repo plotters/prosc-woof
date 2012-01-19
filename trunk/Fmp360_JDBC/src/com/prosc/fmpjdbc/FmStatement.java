@@ -91,6 +91,22 @@ public class FmStatement implements Statement {
 		return execute(s);
 	}
 
+
+	public int executeUpdate( String s, int i ) throws SQLException {
+		SqlCommand command = new SqlCommand(s);
+		processor = new StatementProcessor(this, command);
+		if( i == Statement.RETURN_GENERATED_KEYS ) {
+			processor.setReturnGeneratedKeys( true );
+		}
+		processor.execute();
+		return processor.getUpdateRowCount();
+	}
+	//---These can be left abstract for now---
+
+	public int[] executeBatch() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+	
 	public int getQueryTimeout() throws SQLException {
 		throw new AbstractMethodError( "getQueryTimeout is not implemented yet." ); //FIX!!! Broken placeholder
 	}
@@ -106,21 +122,7 @@ public class FmStatement implements Statement {
 	public void clearWarnings() throws SQLException {
 		throw new AbstractMethodError( "clearWarnings is not implemented yet." ); //FIX!!! Broken placeholder
 	}
-
-
-	//---These can be left abstract for now---
-
-
-	public int executeUpdate( String s, int i ) throws SQLException {
-		SqlCommand command = new SqlCommand(s);
-		processor = new StatementProcessor(this, command);
-		if( i == Statement.RETURN_GENERATED_KEYS ) {
-			processor.setReturnGeneratedKeys( true );
-		}
-		processor.execute();
-		return processor.getUpdateRowCount();
-	}
-
+	
 	public int executeUpdate( String s, int[] ints ) throws SQLException {
 		throw new AbstractMethodError( "executeUpdate is not implemented yet." ); //FIX!!! Broken placeholder
 	}
@@ -195,10 +197,6 @@ public class FmStatement implements Statement {
 
 	public void clearBatch() throws SQLException {
 		throw new AbstractMethodError( "clearBatch is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public int[] executeBatch() throws SQLException {
-		throw new AbstractMethodError( "executeBatch is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public boolean getMoreResults( int i ) throws SQLException {
