@@ -564,9 +564,12 @@ public class FmMetaData implements DatabaseMetaData {
 				} else {
 					insertWorked = false;
 				}
+				rs.close();
 			} catch( SQLException e ) {
 				log.log( Level.WARNING, "Error while creating new row to test which fields are writeable", e );
 				insertWorked = false;
+			} finally {
+				stmt.close();
 			}
 			if( ! insertWorked ) {
 				log.warning( "Could not create a test row in the database for checking field permissions; will assume that all rows are writeable" );
