@@ -508,6 +508,12 @@ public class SimpleJdbcTest extends TestCase {
 		int idInt = Integer.valueOf(idString).intValue();
 		assertTrue( "ID should be an integer greater than zero", idInt > 0 );
 	}
+	
+	/** This test used to deadlock, but it is fixed now. */
+	public void testUpdateMissingRecord() throws SQLException {
+		int updateCount = statement7.executeUpdate( "UPDATE Contacts SET firstName='wahoo' WHERE ID=-491388", Statement.RETURN_GENERATED_KEYS );
+		assertEquals( 0, updateCount );
+	}
 
 	/** This test passes. */
 	public void testCaseSensitivity() throws SQLException {

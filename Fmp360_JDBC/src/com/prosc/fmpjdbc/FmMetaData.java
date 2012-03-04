@@ -522,49 +522,55 @@ public class FmMetaData implements DatabaseMetaData {
 				//stmt.executeUpdate( "INSERT INTO '" + tableName + "'(b), VALUES(3)", Statement.RETURN_GENERATED_KEYS );
 				stmt.executeUpdate( "INSERT INTO '" + tableName + "'", Statement.RETURN_GENERATED_KEYS );
 				ResultSet rs = stmt.getGeneratedKeys();
-				if( rs.next() ) {
-					long recid = rs.getLong( "recid" ); //which field is the primary key? How will we delete this row when we're done?
-					try {
-						for( FmField field : lastRawFields.getFields() ) {
-							if( field.isReadOnly() ) {
-								continue; //Don't need to test calc fields / summary fields. Testing is really pretty slow. The only problem with skipping this is that we won't know whether they are readable.
-							}
-							try {
-								Object value;
-								if( field.getType() == FmFieldType.DATE ) {
-									value = "1/1/2000";
-								} else if( field.getType() == FmFieldType.TIMESTAMP ) {
-									value = "1/1/2000 11:08am";
-								} else if( field.getType() == FmFieldType.TIME ) {
-									value = "11:07am";
-								} else if( field.getType() == FmFieldType.CONTAINER ) {
-									continue; //Can't write to container fields
-								} else {
-									value = "4289134";
+				try {
+					if( rs.next() ) {
+						long recid = rs.getLong( "recid" ); //which field is the primary key? How will we delete this row when we're done?
+						try {
+							for( FmField field : lastRawFields.getFields() ) {
+								if( field.isReadOnly() ) {
+									continue; //Don't need to test calc fields / summary fields. Testing is really pretty slow. The only problem with skipping this is that we won't know whether they are readable.
 								}
-								String sql = "UPDATE \"" + tableName + "\" SET \"" + field.getColumnName() + "\"= \"" + value + "\" WHERE recid=" + recid;
-								stmt.executeUpdate( sql );
-								writeable.add( field.getColumnName() );
-								readable.add( field.getColumnName() );
-							} catch( FileMakerException e ) {
-								if( e.getErrorCode() == 201 || e.getErrorCode() == 507 ) {
-									//Field is not writeable; skip
+								if( field.getColumnName().contains( "::" ) ) {
+									continue; //Don't test related fields for whether they're writeable
+								}
+								try {
+									Object value;
+									if( field.getType() == FmFieldType.DATE ) {
+										value = "1/1/2000";
+									} else if( field.getType() == FmFieldType.TIMESTAMP ) {
+										value = "1/1/2000 11:08am";
+									} else if( field.getType() == FmFieldType.TIME ) {
+										value = "11:07am";
+									} else if( field.getType() == FmFieldType.CONTAINER ) {
+										continue; //Can't write to container fields
+									} else {
+										value = "4289134";
+									}
+									String sql = "UPDATE \"" + tableName + "\" SET \"" + field.getColumnName() + "\"= \"" + value + "\" WHERE recid=" + recid;
+									stmt.executeUpdate( sql );
+									writeable.add( field.getColumnName() );
 									readable.add( field.getColumnName() );
-								} else if( e.getErrorCode() == 102 ) { //This happens when a field is completely unreadable.
-									//Field is not readable; skip
-								} else {
-									throw e;
+								} catch( FileMakerException e ) {
+									if( e.getErrorCode() == 201 || e.getErrorCode() == 507 ) {
+										//Field is not writeable; skip
+										readable.add( field.getColumnName() );
+									} else if( e.getErrorCode() == 102 ) { //This happens when a field is completely unreadable.
+										//Field is not readable; skip
+									} else {
+										throw e;
+									}
 								}
 							}
+						} finally {
+							String sql = "DELETE FROM \"" + tableName + "\" WHERE recid=" + recid;
+							stmt.executeUpdate( sql );
 						}
-					} finally {
-						String sql = "DELETE FROM \"" + tableName + "\" WHERE recid=" + recid;
-						stmt.executeUpdate( sql );
+					} else {
+						insertWorked = false;
 					}
-				} else {
-					insertWorked = false;
+				} finally {
+					rs.close();
 				}
-				rs.close();
 			} catch( SQLException e ) {
 				log.log( Level.WARNING, "Error while creating new row to test which fields are writeable", e );
 				insertWorked = false;
