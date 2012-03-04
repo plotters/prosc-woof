@@ -371,8 +371,11 @@ public class FmXmlRequest extends FmRequest {
 	public synchronized int getFoundCount() throws SQLException {
 		boolean resetInterrupt = false;
 		while (!foundCountIsSet) {
+			if( errorCodeIsSet && errorCode > 0 ) {
+				return 0;
+			}
 			try {
-				wait();
+				wait(1000);
 			} catch( InterruptedException e ) {
 				log.log( Level.WARNING, "Interrupted while waiting for found count" );
 				resetInterrupt = true;
