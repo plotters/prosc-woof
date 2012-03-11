@@ -515,6 +515,14 @@ public class SimpleJdbcTest extends TestCase {
 		assertEquals( 0, updateCount );
 	}
 
+	/** This tests a bug where queries on an empty table fail if there are any sort criteria included, instead of returning zero records.
+	 * WooF-2 102 XML error when we do a find in an empty table with sort fields
+	 */
+	public void testQueryEmptyTable() throws SQLException {
+		ResultSet rs = statement7.executeQuery( "SELECT * FROM ZeroRecordTable ORDER BY A" );
+		assertFalse( rs.next() );
+	}
+
 	/** This test passes. */
 	public void testCaseSensitivity() throws SQLException {
 		statement7.executeUpdate( "DELETE FROM Contacts where firstName LIKE 'toomsuba'" );
