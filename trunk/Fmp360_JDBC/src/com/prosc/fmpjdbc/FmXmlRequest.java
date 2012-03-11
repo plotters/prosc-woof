@@ -203,20 +203,23 @@ public class FmXmlRequest extends FmRequest {
 		//fmTable = null;
 		//    foundCount = 0;
 		synchronized( FmXmlRequest.this) {
-			if( parsingThread != null && parsingThread.isAlive() ) {
-				log.fine( "closeRequest: interrupting parsing thread" );
-				parsingThread.interrupt();
-			}
-			if (serverStream != null) {
-				//try {
-				//serverStream = null;
-				//Don't close the serverStream - this is automatically done by the parser. This was causing deadlocks on Windows because two different threads are calling close(). --jsb :
-				try {
-					serverStream.close(); //I turned this back on because I removed it from the parsing thread. Need to test on Windows.
-					serverStream = null;
-				} catch( IOException e ) {
-					log.log( Level.WARNING, "Error while closing fm XML stream: " + e.toString(), e );
+			try {
+				if( parsingThread != null && parsingThread.isAlive() ) {
+					log.fine( "closeRequest: interrupting parsing thread" );
+					parsingThread.interrupt();
 				}
+				if (serverStream != null) {
+					//try {
+					//serverStream = null;
+					//Don't close the serverStream - this is automatically done by the parser. This was causing deadlocks on Windows because two different threads are calling close(). --jsb :
+					try {
+						serverStream.close(); //I turned this back on because I removed it from the parsing thread. Need to test on Windows.
+						serverStream = null;
+					} catch( IOException e ) {
+						log.log( Level.WARNING, "Error while closing fm XML stream: " + e.toString(), e );
+					}
+				}
+			} finally {
 				if( isStreamOpen ) {
 					if( log.isLoggable( Level.CONFIG ) ) {
 						log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + fullUrl + " )" );
@@ -875,7 +878,7 @@ public class FmXmlRequest extends FmRequest {
 
 	public static class HttpAuthenticationException extends FileMakerException {
 		public HttpAuthenticationException(String message, String username) {
-			super(212, "Invalid FileMaker user account and/or password. Please try again - username '" + username + "'" );
+			super(212, "Invalid FileMaker user account and/or password. Make sure that the FMXML extended privilege is enabled for this account. Please try again - username '" + username + "'" );
 		}
 	}
 
