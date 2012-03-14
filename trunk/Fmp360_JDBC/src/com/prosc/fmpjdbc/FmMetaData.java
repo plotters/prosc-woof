@@ -171,7 +171,7 @@ public class FmMetaData implements DatabaseMetaData {
 			FmRecord scriptObject;
 			while( scriptIterator.hasNext() ) {
 				FmRecord scriptRecord = scriptIterator.next();
-				if( procedureNamePattern != null && !procedureNamePattern.equals( scriptRecord.getValue( 0 ) ) ) {
+				if( procedureNamePattern != null && !procedureNamePattern.equalsIgnoreCase( String.valueOf(scriptRecord.getValue( 0 ) ) ) ) {
 					continue; //Script name doesn't match requested pattern
 				}
 				scriptObject = new FmRecord( scriptInfo, null, null );
