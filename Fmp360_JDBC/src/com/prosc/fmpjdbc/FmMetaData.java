@@ -33,11 +33,16 @@ import java.net.URLEncoder;
  */
 public class FmMetaData implements DatabaseMetaData {
 	private static final Logger log = Logger.getLogger( FmMetaData.class.getName() );
+	
+	private final FmConnection connection;
+	
+	private boolean didReadDbInfo = false;
+	//These next fields are read on demand
 	private String databaseProductName;
 	private String databaseProductVersion;
 	private int dbMajorVersion;
 	private int dbMinorVersion;
-	private FmConnection connection;
+	
 	//private List databaseNames;
 
 	private static AtomicInteger counter = new AtomicInteger(0);
@@ -58,30 +63,35 @@ public class FmMetaData implements DatabaseMetaData {
 	public FmMetaData(FmConnection connection) throws IOException, FileMakerException {
 		this.connection = connection;
 		//databaseNames = iterator2List( requestHandler.getRecordIterator() );
-		FmXmlRequest requestHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-		int callCount = counter.getAndIncrement();
-		log.fine( "FmMetaData call tracker: Created -max=0&-dbnames request " + callCount );
-		try {
-			logger.log(Level.FINEST, "Creating FmMetaData");
-			requestHandler.doRequest("-max=0&-dbnames");
-			databaseProductName = requestHandler.getDatabaseName();
-			databaseProductVersion = requestHandler.getProductVersion();
-			int endIndex = databaseProductVersion.indexOf('.');
-			if (endIndex == -1) endIndex = databaseProductVersion.length();
-			dbMajorVersion = Integer.valueOf( databaseProductVersion.substring(0, endIndex ) ).intValue();
-			int minorStartIndex = databaseProductVersion.indexOf('v') + 1;
-			if (minorStartIndex == 0) minorStartIndex = databaseProductVersion.indexOf('.') + 1;
-			int minorEndIndex = databaseProductVersion.indexOf(".", minorStartIndex);
-			if (minorStartIndex > 0 && minorEndIndex > 0) {
-				dbMinorVersion = Integer.valueOf( databaseProductVersion.substring(minorStartIndex, minorEndIndex ) ).intValue();
+	}
+
+	private void readDbInfo() {
+		if( ! didReadDbInfo ) {
+			FmXmlRequest requestHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(), connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+			int callCount = counter.getAndIncrement();
+			log.fine( "FmMetaData call tracker: Created -dbnames request " + callCount );
+			try {
+				logger.log( Level.FINEST, "Creating FmMetaData");
+				requestHandler.doRequest("-dbnames"); //Removed the max=0 part of the request, because it had no effect in FMS 11 and causes an error in other versions. --jsb
+				databaseProductName = requestHandler.getDatabaseName();
+				databaseProductVersion = requestHandler.getProductVersion();
+				int endIndex = databaseProductVersion.indexOf('.');
+				if (endIndex == -1) endIndex = databaseProductVersion.length();
+				dbMajorVersion = Integer.valueOf( databaseProductVersion.substring(0, endIndex ) ).intValue();
+				int minorStartIndex = databaseProductVersion.indexOf('v') + 1;
+				if (minorStartIndex == 0) minorStartIndex = databaseProductVersion.indexOf('.') + 1;
+				int minorEndIndex = databaseProductVersion.indexOf(".", minorStartIndex);
+				if (minorStartIndex > 0 && minorEndIndex > 0) {
+					dbMinorVersion = Integer.valueOf( databaseProductVersion.substring(minorStartIndex, minorEndIndex ) ).intValue();
+				}
+				//databaseNames = iterator2List( requestHandler.getRecordIterator() );
+				didReadDbInfo = true;
+			} catch (Exception e) {
+				log.log( Level.WARNING, "Unable to parse metadata", e );
+			} finally {
+				requestHandler.closeRequest();
+				log.fine( "FmMetaData call tracker: Closed -dbnames request " + callCount );
 			}
-			//databaseNames = iterator2List( requestHandler.getRecordIterator() );
-		} catch (Exception e) {
-			log.log( Level.WARNING, "Unable to parse metadata", e );
-		} finally {
-			requestHandler.closeRequest();
-			log.fine( "FmMetaData call tracker: Closed -max=0&-dbnames request " + callCount );
 		}
 	}
 
@@ -161,6 +171,9 @@ public class FmMetaData implements DatabaseMetaData {
 			FmRecord scriptObject;
 			while( scriptIterator.hasNext() ) {
 				FmRecord scriptRecord = scriptIterator.next();
+				if( procedureNamePattern != null && !procedureNamePattern.equals( scriptRecord.getValue( 0 ) ) ) {
+					continue; //Script name doesn't match requested pattern
+				}
 				scriptObject = new FmRecord( scriptInfo, null, null );
 				scriptObject.setRawValue( (String)scriptRecord.getValue(0), 2 );
 				scriptObject.setRawValue( "" + DatabaseMetaData.procedureNoResult, 7 );
@@ -737,14 +750,17 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public String getDatabaseProductName() throws SQLException {
+		readDbInfo();
 		return databaseProductName;
 	}
 
 	public int getDatabaseMajorVersion() throws SQLException {
+		readDbInfo();
 		return dbMajorVersion;
 	}
 
 	public int getDatabaseMinorVersion() throws SQLException {
+		readDbInfo();
 		return dbMinorVersion;
 	}
 
@@ -786,6 +802,7 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public String getDatabaseProductVersion() throws SQLException {
+		readDbInfo();
 		return databaseProductVersion;
 	}
 
