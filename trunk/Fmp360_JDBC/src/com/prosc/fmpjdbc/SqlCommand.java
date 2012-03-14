@@ -607,8 +607,11 @@ public class SqlCommand {
 				} else {
 					if (currentSelectFieldPlaceholder == null) {
 						// found a new field name.  Might have an alias, we won't know until later.
-						int index = string.indexOf('.');
-						if (index > 0) string = string.substring(index+1); // FIX! ignoring leading table names for now, until we want to support JOIN queries
+						
+						//This was causing a problem when searchign for any field that started with a single letter and a dot, like 'F.O.B.', which became just 'O.B.'. Need to check for column name quoting if we're going to do this. --jsb
+						//int index = string.indexOf('.');
+						//if (index > 0) string = string.substring(index+1); // FIX! ignoring leading table names for now, until we want to support JOIN queries
+						
 						currentSelectFieldPlaceholder = new FmField(table, string, null);
 						fields.add(currentSelectFieldPlaceholder);
 					} else {
