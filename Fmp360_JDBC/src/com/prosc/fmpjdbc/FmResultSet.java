@@ -156,7 +156,7 @@ public class FmResultSet implements ResultSet {
 		}
 	}
 	
-	public Integer getModCount() {
+	public Long getModCount() {
 		checkResultSet();
 		return currentRecord.getModCount();
 	}

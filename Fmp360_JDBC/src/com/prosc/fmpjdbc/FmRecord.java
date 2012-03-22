@@ -38,11 +38,11 @@ public class FmRecord {
 	private static final TimeZone defaultTimeZone = TimeZone.getDefault();
 	
 	private Long recordId;
-	private Integer modCount;
+	private Long modCount;
 	private FmFieldList fieldList;
 	private String[] rawValues;
 
-	public FmRecord(FmFieldList fieldList, Long recordId, Integer modCount) {
+	public FmRecord(FmFieldList fieldList, Long recordId, Long modCount) {
 		this.fieldList = fieldList;
 		this.rawValues = new String[fieldList.getFields().size()];
 		this.recordId = recordId;
@@ -54,7 +54,7 @@ public class FmRecord {
 		return recordId;
 	}
 
-	public Integer getModCount() {
+	public Long getModCount() {
 		return modCount;
 	}
 

@@ -637,7 +637,7 @@ public class FmXmlRequest extends FmRequest {
 				foundDataForRow = false;
 				//dt.markTime("  Starting row");
 				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
-				currentRow = new FmRecord(fieldDefinitions, Long.valueOf(attributes.getValue("RECORDID")), Integer.valueOf(attributes.getValue("MODID")));
+				currentRow = new FmRecord(fieldDefinitions, Long.valueOf(attributes.getValue("RECORDID")), Long.valueOf(attributes.getValue("MODID")));
 				columnIndex = -1;
 				//columnDataIndex = -1;
 				fieldPositionIterator = usedFieldArray.iterator();
