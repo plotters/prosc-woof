@@ -38,7 +38,8 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 
 	private FmXmlRequest request; //FIX!! Create a new instance as needed
 	private String scriptName;
-	private String postArgs = "-db=<database>&-lay=<layout>&-max=0&-script=<script>&-findany";
+	private String postArgs = "-db=<database>&-lay=<layout>&-max=0&-script=<script>&-script.param=<script.param>&-findany";
+	private String scriptParam = "";
 
 	public FmCallableStatement( FmConnection connection ) {
     super( connection );
@@ -56,10 +57,16 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 
 	public String getScriptName() { return scriptName; }
 
+	@Override
+	public ResultSet executeQuery() throws SQLException {
+		return super.executeQuery();
+	}
+
 	public boolean execute() throws SQLException {
 		postArgs = postArgs.replaceAll("<database>", getConnection().getCatalog() );
 		postArgs = postArgs.replaceAll("<layout>", ((FmMetaData)getConnection().getMetaData()).getAnyTableName());
 		postArgs = postArgs.replaceAll("<script>", scriptName);
+		postArgs = postArgs.replaceAll("<script.param>", scriptParam == null ? "" : scriptParam);
 
 		try {
 			request.doRequest(postArgs);
@@ -237,7 +244,7 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 	}
 
 	public void setString( String s, String s1 ) throws SQLException {
-		throw new AbstractMethodError( "setString is not implemented yet." ); //FIX!!! Broken placeholder
+		scriptParam = s1;
 	}
 
 	public void setBytes( String s, byte[] bytes ) throws SQLException {

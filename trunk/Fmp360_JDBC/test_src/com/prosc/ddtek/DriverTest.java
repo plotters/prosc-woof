@@ -183,7 +183,9 @@ public class DriverTest extends TestCase {
 	/** This fails. We should be able to call a script in the database. */
 	public void testCallScript() throws SQLException {
 		conn.prepareCall( "'Create New Person'" ).executeQuery(); //Call a script with no params
-		ResultSet rs = conn.prepareCall( "'Create New Person'('Jesse')" ).executeQuery(); //Call a script and pass in a param
+		final CallableStatement callableStatement = conn.prepareCall("'Create New Person'('Jesse')");
+		callableStatement.setString("script.parameter", "Jesse"); // doesn't matter what the parameter name is
+		ResultSet rs = callableStatement.executeQuery(); //Call a script and pass in a param
 		rs.next();
 		assertEquals( "Jesse", rs.getString( "firstName" ) );
 	}
@@ -386,7 +388,7 @@ public class DriverTest extends TestCase {
 		stmt.execute( "DROP TABLE TempTable" );
 	}
 	
-	/** This fails - it would be handy, especially for the Separation Modelª people, if they could alter field types of existing fields */
+	/** This fails - it would be handy, especially for the Separation Modelï¿½ people, if they could alter field types of existing fields */
 	public void testSchemaAlteration2() throws SQLException {
 		Statement stmt = conn.createStatement();
 		stmt.execute( "CREATE TABLE SimpleTable (text VARCHAR)" ); //Create a simple table
