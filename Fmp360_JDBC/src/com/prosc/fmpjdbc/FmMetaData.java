@@ -115,7 +115,7 @@ public class FmMetaData implements DatabaseMetaData {
 			anyTableName = tableNames.getString("TABLE_NAME");
 		}
 		//remove database name if there is one
-		if( anyTableName.indexOf(catalogSeparator) > -1 )
+		if(catalogSeparator != null && anyTableName.indexOf(catalogSeparator) != -1)
 			anyTableName = anyTableName.substring(anyTableName.indexOf(catalogSeparator)+1);
 
 		return anyTableName;
