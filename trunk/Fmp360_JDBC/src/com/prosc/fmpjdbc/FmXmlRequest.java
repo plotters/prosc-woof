@@ -125,7 +125,7 @@ public class FmXmlRequest extends FmRequest {
 		int retryCount = 3; //This is how many times to retry the attempt, in case FileMaker returns an error code 16 / retry. This will hopefully fix Zulu-195 Contact Syncing
 		for( int n=1; n<=retryCount; n++ ) {
 			HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
-			theConnection.setInstanceFollowRedirects( false );
+			theConnection.setInstanceFollowRedirects( true ); //Set this to true because OS X Lion Server always redirects all requests to https://
 			theConnection.setUseCaches(false);
 			theConnection.setConnectTimeout( CONNECT_TIMEOUT ); //FIX!! Make this a configurable connection property
 			//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
