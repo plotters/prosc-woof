@@ -32,12 +32,12 @@ import java.util.logging.Logger;
  * Time: 12:17:09 PM
  * To change this template use File | Settings | File Templates.
  */
-public class ResultQueue implements Iterator {
+public class ResultQueue implements Iterator<FmRecord> {
 	private static final Logger log = Logger.getLogger( ResultQueue.class.getName() );
 
 	private final long resumeSize; // this is when we'll start adding items again
-	private final LinkedList objects; // LinkedLists are un-synchronized
-	private final LinkedList sizes;
+	private final LinkedList<FmRecord> objects; // LinkedLists are un-synchronized
+	private final LinkedList<Long> sizes;
 
 	private volatile Throwable storedError;
 	private long maxSize; // this is the max size of the queue
@@ -54,8 +54,8 @@ public class ResultQueue implements Iterator {
 		resumeSize = rsize;
 		currentSize = 0;
 		finished = false;
-		objects = new LinkedList();
-		sizes = new LinkedList();
+		objects = new LinkedList<FmRecord>();
+		sizes = new LinkedList<Long>();
 	}
 
 	public synchronized void setStoredError( Throwable storedError, String field ) {
@@ -73,7 +73,7 @@ public class ResultQueue implements Iterator {
 	 * @param toAdd - The item (Object) to add to the queue
 	 * @param size - An estimate of the size of toAdd
 	 */
-	public synchronized void add(Object toAdd, long size) throws InterruptedException {
+	public synchronized void add(FmRecord toAdd, long size) throws InterruptedException {
 		// keep track of total size and only blocks until it can add new elements when
 		// what about when the first item you try to add to the list is LARGER than the max size?
 		// INCREASE THE MAX SIZE AND ADD IT ANYWAY
@@ -90,7 +90,7 @@ public class ResultQueue implements Iterator {
 		// when it's ok for me to add (notify will be called), add toAdd and size to
 		// respective queues, and update the current size of the queue
 		objects.addLast(toAdd);
-		sizes.addLast(new Long(size));
+		sizes.addLast( size );
 		currentSize += size;
 		rowsReceived++;
 		notifyAll(); // just in case someone's waiting to get something out of the queue
@@ -130,7 +130,7 @@ public class ResultQueue implements Iterator {
 	 * the add method that it's OK to add more Objects to the iterator
 	 * @return the next item in the iterator
 	 */
-	public synchronized Object next() {
+	public synchronized FmRecord next() {
 		while (objects.size() == 0 && storedError == null ) { // objects and sizes should always have the same # of elements
 			// just in case i'm taking them out faster than i can put them in
 			if (finished) {
@@ -155,7 +155,7 @@ public class ResultQueue implements Iterator {
 			else throw new RuntimeException("Error while trying to access field '" + errorFieldName + "' in zero-indexed row " + errorRow + ": " + storedError.toString(), storedError);
 		}
 
-		Object toReturn = objects.removeFirst();
+		FmRecord toReturn = objects.removeFirst();
 		Object toReturnSize = sizes.removeFirst();
 
 		currentSize -= (Long)toReturnSize;

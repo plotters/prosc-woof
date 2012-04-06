@@ -288,15 +288,22 @@ public class FmResultSetRequest extends FmRequest {
 						" result=\"" + attributes.getValue("result") + "\"" +
 						" type=\"" + attributes.getValue("type")+ "\"";
 
+				//Field attributes: four-digit-year, global, max-repeat, numeric-only, time-of-day, name, result, not-empty, type, auto-enter
 				String fieldName = attributes.getValue("name");
 				String fieldTypeName = attributes.getValue("result");
 				FmFieldType fieldType = (FmFieldType) FmFieldType.typesByName.get(fieldTypeName.toUpperCase());
 				boolean allowsNulls = "no".equals(attributes.getValue("not-empty"));
-				boolean readOnly = "calculation".equals(attributes.getValue("type") ) || "summary".equals( attributes.getValue("type") );
+				boolean isCalc = "calculation".equals( attributes.getValue( "type" ) );
+				boolean isSummary = "summary".equals( attributes.getValue( "type" ) );
+				boolean readOnly = isCalc || isSummary;
 				boolean autoEnter = "yes".equals( attributes.getValue( "auto-enter" ) );
+				int maxReps = Integer.valueOf( attributes.getValue( "max-repeat" ) );
+				boolean global = "yes".equals( attributes.getValue( "global" ) );
+				
+				//Other attributes: 
 
 				if( fieldName != null && fieldName.length() > 0 ) {
-					FmField field = new FmField(fmTable, fieldName, fieldName, fieldType, allowsNulls, readOnly, autoEnter );
+					FmField field = new FmField(fmTable, fieldName, fieldName, fieldType, allowsNulls, readOnly, autoEnter, maxReps, global, isCalc, isSummary );
 					fieldDefinitions.add(field);
 				}
 			}

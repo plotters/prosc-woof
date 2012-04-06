@@ -205,8 +205,8 @@ public class SqlCommandTest extends TestCase {
 	public void testRepeatingFields() throws Exception {
 		SqlCommand cmd = new SqlCommand("SELECT nonRepeating, f2[1], f2[2], f2[3] FROM foo WHERE f2[1]='x'");
 		assertEquals(4, cmd.getFields().size());
-		Iterator iterator = cmd.getFields().iterator();
-		FmField eachField = (FmField) iterator.next();
+		Iterator<FmField> iterator = cmd.getFields().iterator();
+		FmField eachField = iterator.next();
 		assertEquals("nonRepeating", eachField.getColumnName());
 		//assertEquals(1, eachField.getRepetition());
 		//

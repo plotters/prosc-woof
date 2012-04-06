@@ -171,12 +171,12 @@ public class FmMetaData implements DatabaseMetaData {
 			FmRecord scriptObject;
 			while( scriptIterator.hasNext() ) {
 				FmRecord scriptRecord = scriptIterator.next();
-				if( procedureNamePattern != null && !procedureNamePattern.equalsIgnoreCase( String.valueOf(scriptRecord.getValue( 0 ) ) ) ) {
+				if( procedureNamePattern != null && !procedureNamePattern.equalsIgnoreCase( String.valueOf(scriptRecord.getString( 0, 1 ) ) ) ) {
 					continue; //Script name doesn't match requested pattern
 				}
 				scriptObject = new FmRecord( scriptInfo, null, null );
-				scriptObject.setRawValue( (String)scriptRecord.getValue(0), 2 );
-				scriptObject.setRawValue( "" + DatabaseMetaData.procedureNoResult, 7 );
+				scriptObject.addRawValue( (String)scriptRecord.getString( 0, 1 ), 2 );
+				scriptObject.addRawValue( "" + DatabaseMetaData.procedureNoResult, 7 );
 				scripts.add( scriptObject );
 				if (logger.isLoggable(Level.FINEST)) {
 					logger.log(Level.FINEST, String.valueOf(scriptObject));
@@ -223,7 +223,7 @@ public class FmMetaData implements DatabaseMetaData {
 			try {
 				request.doRequest( postArgs );
 				for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
-					databaseName = ((FmRecord)it.next()).getString(0);
+					databaseName = ((FmRecord)it.next()).getString(0, 1 );
 					mark = databaseName.toLowerCase().indexOf(".fp");
 					if( mark != -1 ) databaseName = databaseName.substring(0, mark);
 					databaseNames.add( databaseName );
@@ -265,7 +265,7 @@ public class FmMetaData implements DatabaseMetaData {
 				request.doRequest( postArgs );
 				for( Iterator<FmRecord> it = request.getRecordIterator(); it.hasNext(); ) {
 					FmRecord rawRecord = it.next();
-					layoutName = rawRecord.getRawValue(0);
+					layoutName = rawRecord.getString( 0, 1 );
 					mark = layoutName.toLowerCase().indexOf(".fp");
 					if( mark != -1 ) layoutName = layoutName.substring(0, mark);
 					if (tableNamePattern != null && !tableNamePattern.equalsIgnoreCase(layoutName) && !tableNamePattern.equalsIgnoreCase(databaseName + "|" + layoutName)) {
@@ -294,14 +294,14 @@ public class FmMetaData implements DatabaseMetaData {
 										 an xxx.yyy syntax in the SQL query, we would treat that as the databasename / layout name.
 										 */
 
-					processedRecord.setRawValue( databaseName, 0);
+					processedRecord.addRawValue( databaseName, 0 );
 					if( getCatalogSeparator() != null && !getCatalogSeparator().equals( "." ) ) {
-						processedRecord.setRawValue( databaseName + getCatalogSeparator() + layoutName, 2 );
+						processedRecord.addRawValue( databaseName + getCatalogSeparator() + layoutName, 2 );
 					} else {
 						//processedRecord.setRawValue( getTableOccurrenceForLayout( catalog, layoutName ), 1); //I skip this because it's quite slow
-						processedRecord.setRawValue( layoutName, 2 );
+						processedRecord.addRawValue( layoutName, 2 );
 					}
-					processedRecord.setRawValue( "TABLE", 3 );
+					processedRecord.addRawValue( "TABLE", 3 );
 					tables.add( processedRecord );
 					if (logger.isLoggable(Level.FINEST)) {
 						logger.log(Level.FINEST, String.valueOf(processedRecord ));
@@ -436,30 +436,52 @@ public class FmMetaData implements DatabaseMetaData {
 			lastFile = catalog;
 			lastTable = tableNamePattern;
 
-			fieldCount = lastRawFields.getFields().size();
+			fieldCount = lastRawFields.size();
 			FmField eachField;
 			FmRecord fieldRecord;
 			for( int n=0; n<fieldCount; n++ ) {
 				eachField = lastRawFields.get( n );
 				fieldRecord = new FmRecord( fields, null, null );
-				fieldRecord.setRawValue( tableNamePattern, 2 ); //FIX! Is this the right param to pass in? --jsb
-				fieldRecord.setRawValue( eachField.getAlias(), 3 );
+				fieldRecord.addRawValue( tableNamePattern, 2 ); //FIX! Is this the right param to pass in? --jsb
+				fieldRecord.addRawValue( eachField.getAlias(), 3 );
 				try {
 					eachField.getType().getSqlDataType();
 				} catch(NullPointerException e) {
 					log.log( Level.SEVERE, "NPE while trying to get the SQL data type", e); //FIX! Brian wrote this code - are we supposed to do something here? Are we expecting this to fail? --jsb
 				}
-				fieldRecord.setRawValue( "" + eachField.getType().getSqlDataType(), 4 );
-				fieldRecord.setRawValue( eachField.getType().getExternalTypeName(), 5 );
-				fieldRecord.setRawValue( "" + eachField.getType().getPrecision(), 6 );
-				fieldRecord.setRawValue( "" + 16, 8 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
-				fieldRecord.setRawValue( "" + 10, 9 );
-				fieldRecord.setRawValue( "" + (eachField.isNullable() ?  DatabaseMetaData.columnNullable : DatabaseMetaData.columnNoNulls), 10 );
-				fieldRecord.setRawValue(eachField.isReadOnly() ? "readonly" : "", 11);
-				fieldRecord.setRawValue( "" + eachField.getType().getPrecision(), 15 ); //FIX! What's the difference between this and COLUMN_SIZE?
-				fieldRecord.setRawValue( "" + n+1, 16 );
-				fieldRecord.setRawValue( eachField.isNullable() ? "YES" : "NO", 17 );
-				fieldRecord.setRawValue( "", 22 ); //Can't tell whether a column is auto-incremented or not
+				fieldRecord.addRawValue( "" + eachField.getType().getSqlDataType(), 4 );
+				fieldRecord.addRawValue( eachField.getType().getExternalTypeName(), 5 );
+				fieldRecord.addRawValue( "" + eachField.getType().getPrecision(), 6 );
+				fieldRecord.addRawValue( "" + 16, 8 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
+				fieldRecord.addRawValue( "" + 10, 9 );
+				fieldRecord.addRawValue( "" + ( eachField.isNullable() ? DatabaseMetaData.columnNullable : DatabaseMetaData.columnNoNulls ), 10 );
+				StringBuilder comments = new StringBuilder( 32 );
+				String delim = "";
+				if( eachField.isReadOnly() ) {
+					comments.append( "readonly" );
+					delim = " ";
+				}
+				if( eachField.getMaxReps() > 1 ) {
+					comments.append( delim + "maxRepetitions(" + eachField.getMaxReps() + ")" );
+					delim = " ";
+				}
+				if( eachField.isGlobal() ) {
+					comments.append( delim + "global" );
+					delim = " ";
+				}
+				if( eachField.isCalculation() ) {
+					comments.append( delim + "calculation" );
+					delim = " ";
+				}
+				if( eachField.isSummary() ) {
+					comments.append( delim + "summary" );
+					delim = " ";
+				}
+				fieldRecord.addRawValue( comments.toString(), 11 );
+				fieldRecord.addRawValue( "" + eachField.getType().getPrecision(), 15 ); //FIX! What's the difference between this and COLUMN_SIZE?
+				fieldRecord.addRawValue( "" + n + 1, 16 );
+				fieldRecord.addRawValue( eachField.isNullable() ? "YES" : "NO", 17 );
+				fieldRecord.addRawValue( "", 22 ); //Can't tell whether a column is auto-incremented or not
 				lastColumns.add( fieldRecord );
 				if (logger.isLoggable(Level.FINEST)) {
 					logger.log(Level.FINEST, String.valueOf(fieldRecord ));
@@ -488,12 +510,12 @@ public class FmMetaData implements DatabaseMetaData {
 		List<FmRecord> result = new LinkedList<FmRecord>();
 		for( String privilege : privileges ) {
 			FmRecord record = new FmRecord( fields, null, null );
-			record.setRawValue( catalog, 0 );
-			record.setRawValue( table, 2 );
-			record.setRawValue( columnNamePattern, 3 );
-			record.setRawValue( connection.getUsername(), 5 );
-			record.setRawValue( privilege, 6 );
-			record.setRawValue( "NO", 7 );
+			record.addRawValue( catalog, 0 );
+			record.addRawValue( table, 2 );
+			record.addRawValue( columnNamePattern, 3 );
+			record.addRawValue( connection.getUsername(), 5 );
+			record.addRawValue( privilege, 6 );
+			record.addRawValue( "NO", 7 );
 			result.add( record );
 		}
 		return new FmResultSet( result.iterator(), result.size(), fields, connection );
@@ -655,12 +677,12 @@ public class FmMetaData implements DatabaseMetaData {
 			FmRecord result = new FmRecord( rsColumns, 0L, 0L );
 
 			FmField versionField = versionCandidates.get( 0 );
-			result.setRawValue( "" + versionField.getColumnName(), 1 );
-			result.setRawValue( "" + versionField.getType().getSqlDataType(), 2 );
-			result.setRawValue( versionField.getType().getExternalTypeName(), 3 );
-			result.setRawValue( "" + versionField.getType().getPrecision(), 4 );
-			result.setRawValue( "" + 17, 6 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
-			result.setRawValue( "NO", 7 );
+			result.addRawValue( "" + versionField.getColumnName(), 1 );
+			result.addRawValue( "" + versionField.getType().getSqlDataType(), 2 );
+			result.addRawValue( versionField.getType().getExternalTypeName(), 3 );
+			result.addRawValue( "" + versionField.getType().getPrecision(), 4 );
+			result.addRawValue( "" + 17, 6 ); //FIX!! Wild-ass guess, really don't know what to put here --jsb
+			result.addRawValue( "NO", 7 );
 
 			Iterator<FmRecord> it = Collections.singleton( result ).iterator();
 			return new FmResultSet( it, 1, rsColumns, connection );
@@ -708,10 +730,10 @@ public class FmMetaData implements DatabaseMetaData {
 			FmRecord result = new FmRecord( rsColumns, 0L, 0L );
 			//TABLE_CAT String => table catalog (may be null)
 			//TABLE_SCHEM String => table schema (may be null)
-			result.setRawValue( table, 2 ); //TABLE_NAME String => table name
-			result.setRawValue( pkCandidates.get(0).getColumnName(), 3 ); //COLUMN_NAME String => column name
-			result.setRawValue( "1", 4 ); //KEY_SEQ short => sequence number within primary key( a value of 1 represents the first column of the primary key, a value of 2 would represent the second column within the primary key).
-			result.setRawValue( pkCandidates.get(0).getColumnName(), 5 ); //PK_NAME String => primary key name (may be null)
+			result.addRawValue( table, 2 ); //TABLE_NAME String => table name
+			result.addRawValue( pkCandidates.get( 0 ).getColumnName(), 3 ); //COLUMN_NAME String => column name
+			result.addRawValue( "1", 4 ); //KEY_SEQ short => sequence number within primary key( a value of 1 represents the first column of the primary key, a value of 2 would represent the second column within the primary key).
+			result.addRawValue( pkCandidates.get( 0 ).getColumnName(), 5 ); //PK_NAME String => primary key name (may be null)
 			Iterator<FmRecord> it = Collections.singleton( result ).iterator();
 			return new FmResultSet( it, 1, rsColumns, connection );
 		}
@@ -867,9 +889,10 @@ public class FmMetaData implements DatabaseMetaData {
 
 			for (Iterator it = request.getRecordIterator(); it.hasNext();) {
 				FmRecord rawRecord = (FmRecord) it.next();
-				String databaseName = rawRecord.getRawValue(0);
+				//String databaseName = rawRecord.getRawStringValue( 0 );
+				String databaseName = rawRecord.getString( 0, 1 );
 				FmRecord processRecord = new FmRecord(format, null, null);
-				processRecord.setRawValue(databaseName, 0);
+				processRecord.addRawValue( databaseName, 0 );
 				databases.add(processRecord);
 			}
 		}

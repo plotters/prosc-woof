@@ -6,10 +6,8 @@ import java.sql.*;
 import java.math.BigDecimal;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.Map;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.Collections;
+import java.sql.Date;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.net.URL;
@@ -38,39 +36,70 @@ import java.net.URL;
  */
 public class FmResultSet implements ResultSet {
 	private static final Logger log = Logger.getLogger( FmResultSet.class.getName() );
-	private Iterator<FmRecord> fmRecords;
-	private FmResultSetMetaData metaData;
-	private FmRecord currentRecord;
-	private FmFieldList fieldDefinitions;
-	private FmConnection connection;
+
+	private final Iterator<FmRecord> fmRecords;
+	private final FmResultSetMetaData metaData;
+	private final FmFieldList fieldDefinitions;
+	private final FmConnection connection;
+	private final FmXmlRequest xmlRequest;
+	private final FmStatement statement;
+	private final int foundCount;
+	private final FmRecord singleRecord;
+	private final int columnOffset;
+
+	//These fields are only used when the ResultSet represents a repeating field
+	//private int repetitionStartIndex;
+	private int repetitionMaxIndex;
+	private int repetitionCurrentIndex;
 
 	private boolean isOpen = true;
 	//private boolean isBeforeFirst = true;
 	//private boolean isFirst = false;
 	private boolean isAfterLast = false;
 	//private boolean isLast = false;
-	private Logger logger = Logger.getLogger( FmResultSet.class.getName() );
 	private int rowNum = -1;
-	private int foundCount;
-	private FmXmlRequest xmlRequest;
-	private FmStatement statement;
+	private FmRecord currentRecord;
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
-	public FmResultSet( Iterator<FmRecord> fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection ) {
+	FmResultSet( Iterator<FmRecord> fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection ) {
 		this( fmRecordsIterator, foundCount, fieldDefinitions, null, connection, null );
 	}
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
-	public FmResultSet( Iterator<FmRecord> fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, @Nullable FmStatement statement, FmConnection connection, @Nullable FmXmlRequest xmlRequest ) {
+	FmResultSet( Iterator<FmRecord> fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, @Nullable FmStatement statement, FmConnection connection, @Nullable FmXmlRequest xmlRequest ) {
 		this.statement = statement;
 		this.connection = connection;
-		if( fmRecordsIterator == null ) this.fmRecords = Collections.EMPTY_LIST.iterator();
+		if( fmRecordsIterator == null ) this.fmRecords = new ArrayList<FmRecord>().iterator();
 		else this.fmRecords = fmRecordsIterator;
 		this.metaData = new FmResultSetMetaData( fieldDefinitions );
 		this.fieldDefinitions = fieldDefinitions;
 		this.foundCount = foundCount;
 		connection.notifyNewResultSet(this);
 		this.xmlRequest = xmlRequest;
+		this.singleRecord = null;
+		this.repetitionCurrentIndex = 1;
+		this.columnOffset = 0;
+	}
+
+	/** This constructor is used to create a ResultSet representing a repeating field. See {@link Array} */
+	FmResultSet( FmRecord record, int index, int count, int whichColumnIndex, FmFieldList fieldList, FmResultSet resultSet, Object typeMap ) {
+		if( typeMap != null ) {
+			throw new AbstractMethodError("Custom typeMaps are not currently supported."); //FIX!!! Broken placeholder
+		}
+		this.singleRecord = record;
+		this.currentRecord = record;
+		this.repetitionMaxIndex = index + count;
+		this.rowNum = index-1;
+		this.repetitionCurrentIndex = index;
+		this.fieldDefinitions = fieldList;
+		this.foundCount = count;
+		this.fmRecords = new ArrayList<FmRecord>().iterator();
+
+		this.metaData = resultSet.metaData;
+		this.connection = resultSet.connection;
+		this.xmlRequest = resultSet.xmlRequest;
+		this.statement = resultSet.statement;
+		this.columnOffset = whichColumnIndex;
 	}
 
 	/** This returns the total number of records found in the query. This is a FileMaker-specific attribute which is not part of the JDBC
@@ -85,13 +114,13 @@ public class FmResultSet implements ResultSet {
 	//OPTIMIZE make all methods final
 
 	private SQLException handleFormattingException(Exception e, int position) {
-		logger.log(Level.WARNING, e.toString());
+		log.log(Level.WARNING, e.toString());
 		String columnName = fieldDefinitions.get( position - 1 ).getColumnName();
 		return handleFormattingException(e, columnName);
 	}
 
 	private SQLException handleFormattingException(Exception e, String columnName) {
-		logger.log(Level.WARNING, e.toString(), e);
+		log.log(Level.WARNING, e.toString(), e);
 		SQLException sqlException = new SQLException( e.toString() + " (requested column '" + columnName + "' / zero-indexed row: " + rowNum + ")" );
 		sqlException.initCause(e);
 		return sqlException;
@@ -99,41 +128,54 @@ public class FmResultSet implements ResultSet {
 
 	private AbstractMethodError handleMissingMethod(String message) {
 		AbstractMethodError result = new AbstractMethodError(message);
-		logger.log(Level.WARNING, result.toString());
+		log.log(Level.WARNING, result.toString());
 		return result;
 	}
 
 	//---These methods must be implemented---
 	public boolean next() throws SQLException {
 		if( ! isOpen ) throw new IllegalStateException("The ResultSet has been closed; you cannot read any more records from it." );
-		if( fmRecords.hasNext() ) {
-			try {
-				currentRecord = fmRecords.next();
-			} catch( RuntimeException e ) {
-				log.log( Level.SEVERE, "Got an exception while trying to fetch next row from database.", e );
-				SQLException e1 = new SQLException( e.getMessage() );
-				e1.initCause( e );
-				throw e1;
+
+		if( singleRecord == null ) { //This is a regular result set representing zero or more rows
+
+			if( fmRecords.hasNext() ) {
+				try {
+					currentRecord = fmRecords.next();
+				} catch( RuntimeException e ) {
+					log.log( Level.SEVERE, "Got an exception while trying to fetch next row from database.", e );
+					SQLException e1 = new SQLException( e.getMessage() );
+					e1.initCause( e );
+					throw e1;
+				}
+				// The first time through isBeforeFirst is still true, because we haven't set
+				// it to false yet, which means this is the first record.
+				rowNum++;
+				//if (isBeforeFirst) {
+				//	isFirst = true;
+				//	isBeforeFirst = false; // set isBeforeFirst to false now. We're on the first record
+				//} else { // The following needs to happen in the else!
+				//	isFirst = false; // Set isFirst to false
+				//}
+				// If there are no records after the current record
+				// we're on the last record.  Set isLast to true.
+				return true;
+			} else {
+				// This method 'next()'  has been called again and there are no more records.
+				// This means that we are after the last record
+				//isLast = false;
+				isAfterLast = true;
+				//currentRecord = null; //Fix!!! should currentRecord be set to false since we are after the last record?
+				return false;
 			}
-			// The first time through isBeforeFirst is still true, because we haven't set
-			// it to false yet, which means this is the first record.
+		} else { //This ResultSet represents a repetition within a single row
 			rowNum++;
-			//if (isBeforeFirst) {
-			//	isFirst = true;
-			//	isBeforeFirst = false; // set isBeforeFirst to false now. We're on the first record
-			//} else { // The following needs to happen in the else!
-			//	isFirst = false; // Set isFirst to false
-			//}
-			// If there are no records after the current record
-			// we're on the last record.  Set isLast to true.
-			return true;
-		} else {
-			// This method 'next()'  has been called again and there are no more records.
-			// This means that we are after the last record
-			//isLast = false;
-			isAfterLast = true;
-			//currentRecord = null; //Fix!!! should currentRecord be set to false since we are after the last record?
-			return false;
+			repetitionCurrentIndex++;
+			if( rowNum < repetitionMaxIndex ) {
+				return true;
+			} else {
+				isAfterLast = true;
+				return false;
+			}
 		}
 	}
 
@@ -145,17 +187,17 @@ public class FmResultSet implements ResultSet {
 
 
 	public void close() throws SQLException {
-		fmRecords = null;
-		metaData = null;
+		//fmRecords = null;
+		//metaData = null;
 		currentRecord = null;
-		fieldDefinitions = null;
+		//fieldDefinitions = null;
 		isOpen = false;
 		connection.notifyClosedResultSet( this );
 		if( xmlRequest != null ) {
 			xmlRequest.closeRequest();
 		}
 	}
-	
+
 	public Long getModCount() {
 		checkResultSet();
 		return currentRecord.getModCount();
@@ -165,26 +207,26 @@ public class FmResultSet implements ResultSet {
 	public String getString( int i ) throws SQLException {
 		checkResultSet();
 		String result;
-		if( Types.BLOB == fieldDefinitions.get( i - 1 ).getType().getSqlDataType() ) {
+		if( Types.BLOB == fieldDefinitions.get( i - 1 + columnOffset ).getType().getSqlDataType() ) {
 			FmBlob fmBlob = (FmBlob)getBlob( i );
 			if( fmBlob == null ) return null;
 			result = fmBlob.getURL().toExternalForm();
 		} else {
-			result = currentRecord.getString(i - 1);
+			result = currentRecord.getString(i - 1 + columnOffset, repetitionCurrentIndex );
 		}
-		logger.log(Level.FINEST, result);
+		log.log(Level.FINEST, result);
 		return result;
 	}
 
 	public boolean getBoolean( int i ) throws SQLException {
 		checkResultSet();
-		return currentRecord.getBoolean(i - 1);
+		return currentRecord.getBoolean(i - 1 + columnOffset, repetitionCurrentIndex );
 	}
 
 	public byte getByte( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getByte(i - 1);
+			return currentRecord.getByte(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (NumberFormatException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -193,7 +235,7 @@ public class FmResultSet implements ResultSet {
 	public short getShort( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getShort(i - 1);
+			return currentRecord.getShort(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (NumberFormatException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -202,7 +244,7 @@ public class FmResultSet implements ResultSet {
 	public int getInt( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getInt(i - 1);
+			return currentRecord.getInt(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (NumberFormatException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -211,7 +253,7 @@ public class FmResultSet implements ResultSet {
 	public long getLong( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getLong(i - 1);
+			return currentRecord.getLong(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (NumberFormatException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -220,7 +262,7 @@ public class FmResultSet implements ResultSet {
 	public float getFloat( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getFloat(i - 1);
+			return currentRecord.getFloat(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (NumberFormatException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -229,7 +271,7 @@ public class FmResultSet implements ResultSet {
 	public double getDouble( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getDouble(i - 1);
+			return currentRecord.getDouble(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (NumberFormatException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -250,7 +292,7 @@ public class FmResultSet implements ResultSet {
 	public Date getDate( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getDate(i - 1);
+			return currentRecord.getDate(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (IllegalArgumentException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -259,7 +301,7 @@ public class FmResultSet implements ResultSet {
 	public Time getTime( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getTime(i - 1);
+			return currentRecord.getTime(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (IllegalArgumentException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -267,11 +309,11 @@ public class FmResultSet implements ResultSet {
 
 	public Timestamp getTimestamp( int i ) throws SQLException {
 		checkResultSet();
-		if (logger.isLoggable(Level.FINER)) {
-			logger.log(Level.FINER, String.valueOf(i));
+		if (log.isLoggable(Level.FINER)) {
+			log.log(Level.FINER, String.valueOf(i));
 		}
 		try {
-			return currentRecord.getTimestamp(i - 1);
+			return currentRecord.getTimestamp(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (IllegalArgumentException e) {
 			throw handleFormattingException( e, i );
 		}
@@ -279,11 +321,11 @@ public class FmResultSet implements ResultSet {
 
 	public Blob getBlob( int i ) throws SQLException {
 		checkResultSet();
-		if (logger.isLoggable(Level.FINER)) {
-			logger.log(Level.FINER, String.valueOf(i));
+		if (log.isLoggable(Level.FINER)) {
+			log.log(Level.FINER, String.valueOf(i));
 		}
 		try {
-			return currentRecord.getBlob(i - 1, connection );
+			return currentRecord.getBlob(i - 1 + columnOffset, repetitionCurrentIndex, connection );
 		} catch (IllegalArgumentException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -307,7 +349,7 @@ public class FmResultSet implements ResultSet {
 				}
 				throw new SQLException( "'" + s + "' is not a field on the requested layout.");
 			}
-			return currentRecord.getString(i);
+			return currentRecord.getString(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -317,7 +359,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
 			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getBoolean(i);
+			return currentRecord.getBoolean(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -327,7 +369,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
 			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getByte(i);
+			return currentRecord.getByte(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -337,7 +379,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
 			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getShort(i);
+			return currentRecord.getShort(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -354,7 +396,7 @@ public class FmResultSet implements ResultSet {
 					throw new SQLException(s + " is not a field on the requested layout.");
 				}
 			}
-			return currentRecord.getInt(i);
+			return currentRecord.getInt(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -370,7 +412,7 @@ public class FmResultSet implements ResultSet {
 					throw new SQLException(s + " is not a field on the requested layout.");
 				}
 			}
-			return currentRecord.getLong(i);
+			return currentRecord.getLong(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -380,7 +422,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
 			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getFloat(i);
+			return currentRecord.getFloat(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -390,7 +432,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
 			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getDouble(i);
+			return currentRecord.getDouble(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -408,7 +450,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
 			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getDate(i);
+			return currentRecord.getDate(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -418,7 +460,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
 			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getTime(i);
+			return currentRecord.getTime(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -428,7 +470,7 @@ public class FmResultSet implements ResultSet {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
 			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getTimestamp(i);
+			return currentRecord.getTimestamp(i + columnOffset, repetitionCurrentIndex );
 		} catch (Exception e) {
 			throw handleFormattingException(e, s);
 		}
@@ -460,10 +502,10 @@ public class FmResultSet implements ResultSet {
 
 	public Object getObject( int i ) throws SQLException {
 		checkResultSet();
-		Object result = currentRecord.getObject(i - 1, connection);
+		Object result = currentRecord.getObject(i - 1 + columnOffset, repetitionCurrentIndex, connection);
 		if (wasNull()) result = null;
-		if (logger.isLoggable(Level.FINER)) {
-			logger.log(Level.FINER, "getObject(" + i + ") is " + result);
+		if (log.isLoggable(Level.FINER)) {
+			log.log(Level.FINER, "getObject(" + i + ") is " + result);
 		}
 		return result;
 	}
@@ -485,7 +527,7 @@ public class FmResultSet implements ResultSet {
 	public BigDecimal getBigDecimal( int i ) throws SQLException {
 		checkResultSet();
 		try {
-			return currentRecord.getBigDecimal(i - 1);
+			return currentRecord.getBigDecimal(i - 1 + columnOffset, repetitionCurrentIndex );
 		} catch (NumberFormatException e) {
 			throw handleFormattingException(e, i);
 		}
@@ -518,11 +560,8 @@ public class FmResultSet implements ResultSet {
 		return fieldDefinitions.wasNull;
 	}
 
-	public int getType() throws SQLException {
-		throw handleMissingMethod( "getType is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
 	public byte[] getBytes( int i ) throws SQLException {
+		checkResultSet();
 		Blob blob = getBlob(i);
 		if( blob == null ) return new byte[0];
 		long length = blob.length();
@@ -530,8 +569,77 @@ public class FmResultSet implements ResultSet {
 		return blob.getBytes( 0, (int)length );
 	}
 
+	public Date getDate( int i, Calendar calendar ) throws SQLException {
+		checkResultSet();
+		try {
+			return currentRecord.getDate(i - 1 + columnOffset, repetitionCurrentIndex, calendar.getTimeZone());
+		} catch (IllegalArgumentException e) {
+			throw handleFormattingException(e, i);
+		}
+	}
+
+	public Date getDate( String s, Calendar calendar ) throws SQLException {
+		checkResultSet();
+		int i = fieldDefinitions.indexOfFieldWithAlias(s);
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getDate(i + columnOffset, repetitionCurrentIndex, calendar.getTimeZone());
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
+	}
+
+	public Time getTime( int i, Calendar calendar ) throws SQLException {
+		checkResultSet();
+		try {
+			return currentRecord.getTime( i - 1 + columnOffset, repetitionCurrentIndex, calendar.getTimeZone() );
+		} catch (IllegalArgumentException e) {
+			throw handleFormattingException(e, i);
+		}
+	}
+
+	public Time getTime( String s, Calendar calendar ) throws SQLException {
+		checkResultSet();
+		int i = fieldDefinitions.indexOfFieldWithAlias(s);
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getTime(i + columnOffset, repetitionCurrentIndex, calendar.getTimeZone());
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
+	}
+
+	public Statement getStatement() throws SQLException {
+		return statement;
+	}
+
+	public Array getArray( int i ) throws SQLException { //I think we could use this for repeating fields --jsb		
+		checkResultSet();
+		try {
+			return currentRecord.getArray( i - 1 + columnOffset, this );
+		} catch (NumberFormatException e) {
+			throw handleFormattingException(e, i);
+		}
+	}
+
+	public Array getArray( String s ) throws SQLException {
+		checkResultSet();
+		int i = fieldDefinitions.indexOfFieldWithAlias(s);
+		try {
+			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+			return currentRecord.getArray(i + columnOffset, this );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
+	}
+
 	//---These methods do not have to be implemented, but technically could be
 
+
+
+	public int getType() throws SQLException {
+		throw handleMissingMethod( "getType is not implemented yet." ); //FIX!!! Broken placeholder
+	}
 
 	public void beforeFirst() throws SQLException {
 		throw handleMissingMethod( "beforeFirst is not implemented yet." ); //FIX!!! Broken placeholder
@@ -559,10 +667,6 @@ public class FmResultSet implements ResultSet {
 
 	public int getFetchSize() throws SQLException {
 		throw handleMissingMethod( "getFetchSize is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public Statement getStatement() throws SQLException {
-		return statement;
 	}
 
 	public byte[] getBytes( String s ) throws SQLException {
@@ -593,58 +697,12 @@ public class FmResultSet implements ResultSet {
 		throw handleMissingMethod( "refreshRow is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
-	public Date getDate( int i, Calendar calendar ) throws SQLException {
-		checkResultSet();
-		try {
-			return currentRecord.getDate(i - 1, calendar.getTimeZone());
-		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e, i);
-		}
-	}
-
-	public Date getDate( String s, Calendar calendar ) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getDate(i, calendar.getTimeZone());
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public Time getTime( int i, Calendar calendar ) throws SQLException {
-		checkResultSet();
-		try {
-			return currentRecord.getTime(i - 1, calendar.getTimeZone());
-		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e, i);
-		}
-	}
-
-	public Time getTime( String s, Calendar calendar ) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getTime(i, calendar.getTimeZone());
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
 	public Timestamp getTimestamp( int i, Calendar calendar ) throws SQLException {
 		throw handleMissingMethod( "getTimestamp is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public Timestamp getTimestamp( String s, Calendar calendar ) throws SQLException {
 		throw handleMissingMethod( "getTimestamp is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public Array getArray( int i ) throws SQLException { //I think we could use this for repeating fields --jsb
-		throw handleMissingMethod( "getArray is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public Array getArray( String s ) throws SQLException {
-		throw handleMissingMethod( "getArray is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public void deleteRow() throws SQLException {
@@ -927,7 +985,7 @@ public class FmResultSet implements ResultSet {
 	public void updateArray( String s, Array array ) throws SQLException {
 		throw handleMissingMethod( "updateArray is not implemented yet." ); //FIX!!! Broken placeholder
 	}
-	
+
 	//===These methods were added in Java 1.5 ===
 
 	public Object getObject( int i, Map<String, Class<?>> map ) throws SQLException {
@@ -1089,9 +1147,9 @@ public class FmResultSet implements ResultSet {
 	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
-	
+
 	// ===These methods were added in Java 6. Comment them out to compile in Java 1.5. ===
-	
+
 
 	public RowId getRowId( int i ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder

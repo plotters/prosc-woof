@@ -1,8 +1,8 @@
 package com.prosc.fmpjdbc;
 
-import java.util.List;
-import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -28,10 +28,10 @@ import java.util.ArrayList;
  * @author sbarnum
  */
 public class FmFieldList {
-	private List<FmField> fields;
-	public boolean wasNull;
+	private ArrayList<FmField> fields;
+	boolean wasNull;
 
-	public FmFieldList() {
+	FmFieldList() {
 		this.fields = new ArrayList<FmField>();
 	}
 
@@ -59,7 +59,6 @@ public class FmFieldList {
 			if( fmField.getAlias().equalsIgnoreCase( alias ) ) return i;
 			else i++;
 		}
-		//throw new IllegalArgumentException("No such field '" + alias + "'");
 		return -1;
 	}
 

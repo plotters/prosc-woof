@@ -1,5 +1,7 @@
 package com.prosc.fmpjdbc;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.*;
@@ -33,18 +35,42 @@ import java.net.URL;
 /**
  * Created by IntelliJ IDEA. User: jesse Date: Apr 17, 2005 Time: 4:36:27 PM
  */
-public class FmRecord {
+class FmRecord {
 	private static final Logger log = Logger.getLogger( FmRecord.class.getName() );
 	private static final TimeZone defaultTimeZone = TimeZone.getDefault();
-	
+
+	//FIX!! If we're using FileMaker 6, we need much smarter parsers, because FM6 doesn't normalize the data in the XML
+
+	final static ThreadLocal<DateFormat> timeFormat = new ThreadLocal<DateFormat>() {
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("HH:mm:ss");
+		}
+	};
+
+	final static ThreadLocal<DateFormat> timestampFormat = new ThreadLocal<DateFormat>() {
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+		}
+	};
+
+	final static ThreadLocal<DateFormat> dateFormat = new ThreadLocal<DateFormat>() {
+		protected DateFormat initialValue() {
+			return new SimpleDateFormat("MM/dd/yyyy");
+		}
+	};
+
 	private Long recordId;
 	private Long modCount;
 	private FmFieldList fieldList;
-	private String[] rawValues;
+	
+	/** rawValues is an array that contains either String (for non-repeating) or String[] (for repeating) objects. */
+	private Object[] rawValues;
+	private int[] valueCounts;
 
-	public FmRecord(FmFieldList fieldList, Long recordId, Long modCount) {
+	FmRecord(FmFieldList fieldList, Long recordId, Long modCount) {
 		this.fieldList = fieldList;
-		this.rawValues = new String[fieldList.getFields().size()];
+		this.rawValues = new Object[fieldList.size()];
+		this.valueCounts = new int[ fieldList.size() ];
 		this.recordId = recordId;
 		this.modCount = modCount;
 	}
@@ -58,17 +84,19 @@ public class FmRecord {
 		return modCount;
 	}
 
-	public FmFieldList getFieldList() {
+	/*public FmFieldList getFieldList() {
 		return fieldList;
-	}
+	}*/
 
 	public String toString() {
-		StringBuffer result = new StringBuffer();
+		return "RecordId: " + recordId + "; ModCount: " + modCount;
+		
+		/*StringBuilder result = new StringBuilder();
 		result.append("RecordId: " + recordId + "; ModCount: " + modCount + "; Data: ");
-		for (int n = 0; n < rawValues.length; n++) {
-			result.append("(" + rawValues[n] + ")");
+		for( Object rawValue : rawValues ) {
+			result.append( "(" + rawValue + ")" );
 		}
-		return result.toString();
+		return result.toString();*/
 	}
 
 	/**
@@ -84,48 +112,86 @@ public class FmRecord {
 	}*/
 
 	/** Reads data directly from the array of String objects parsed from the XML response. */
-	protected String getRawValue(int index) {
-		return rawValues[index];
+	private String getRawStringValue( int columnIndex, int repetition ) {
+		Object rawResult = rawValues[columnIndex];
+		if( rawResult instanceof String && repetition == 1 ) return (String)rawResult;
+		else if( rawResult instanceof String[] ) {
+			String[] rawResultArray = (String[])rawResult;
+			if( repetition > rawResultArray.length ) {
+				throw new IllegalArgumentException( "Repetition " + repetition + " was requested, but " + fieldList.get(columnIndex).getColumnName() + " only has " + rawResultArray.length + " repetitions." );
+			}
+			return rawResultArray[ repetition - 1 ];
+		}
+		else if( rawResult instanceof String && repetition > 1 ) {
+			throw new IllegalArgumentException( "Repetition " + repetition + " was requested, but " + fieldList.get(columnIndex).getColumnName() + " is not a repeating field." );
+		} else {
+			throw new IllegalStateException( "rawResult class is " + rawResult.getClass() + "; this is incorrect" );
+		}
 	}
 
 	/** Provides write access directly to the String array for this FmRecord. */
-	protected void setRawValue(String newValue, int index) {
-		rawValues[index] = newValue;
+	protected void addRawValue( String newValue, int columnIndex ) {
+		addRawValue( newValue, columnIndex, 1 );
+		rawValues[columnIndex] = newValue;
 	}
 
-	public Object getValue(int index) {
-		Object result = rawValues[index];
-		if( result == null ) {
-			fieldList.wasNull = true;
-			if( ! fieldList.get(index).isNullable() ) result = ""; //FIX!!! Use formatter to parse value; return zero for numeric values
-		} else fieldList.wasNull = false;
-		return result;
+	protected void addRawValue( String newValue, int columnIndex, int maxRepetitions ) {
+		ensureCapacity( columnIndex, maxRepetitions );
+		int whichRep = ++valueCounts[ columnIndex ];
+		if( maxRepetitions < 2 ) {
+			rawValues[ columnIndex ] = newValue;
+		} else {
+			if( whichRep > maxRepetitions ) throw new IllegalStateException( "Called addRawValue too many times (" + whichRep + "), maxRepetitions is only " + maxRepetitions );
+			@SuppressWarnings({"MismatchedReadAndWriteOfArray"})
+			String[] stringArray = (String[])rawValues[columnIndex];
+			stringArray[ whichRep-1 ] = newValue;
+		}
+	}
+
+	private void ensureCapacity( int columnIndex, int maxRepetitions ) {
+		if( maxRepetitions == 1 ) return; //We'll just set it as a String, not a String[] array, so it doesn't matter what rawValues currently contains
+		if( rawValues[columnIndex] == null ) {
+			rawValues[columnIndex] = new String[ maxRepetitions ];
+		} else if( rawValues[columnIndex] instanceof String[] ) {
+			String[] array = (String[])rawValues[columnIndex];
+			if( array.length < maxRepetitions ) {
+				String[] newArray = new String[ maxRepetitions ]; 
+				System.arraycopy( array, 0, newArray, 0, array.length );
+				rawValues[columnIndex] = newArray;
+			}
+		} else if( rawValues[columnIndex] instanceof String ) {
+			String[] newArray = new String[ maxRepetitions ];
+			newArray[0] = (String)rawValues[columnIndex];
+			rawValues[columnIndex] = newArray;
+		} else {
+			throw new IllegalStateException( "rawValues[" + columnIndex + "] contains an object of class: " + rawValues[columnIndex].getClass() );
+		}
 	}
 
 
-	public Object getObject(int index, FmConnection connection) {
+	public Object getObject( int columnIndex, int repetition, FmConnection connection ) {
 		Object result;
-		FmFieldType fmType = fieldList.get( index ).getType();
+		FmFieldType fmType = fieldList.get( columnIndex ).getType();
 		int sqlType = fmType.getSqlDataType();
 
 		switch (sqlType ) {
 			case Types.LONGVARCHAR:
 			case Types.VARCHAR:
-				result = getString(index);
+				result = getString(columnIndex, repetition );
 				break;
-			case Types.DECIMAL: result = getBigDecimal(index); //All filemaker numbers are treated as decimal by default
+			case Types.DECIMAL: result = getBigDecimal(columnIndex, repetition ); //All filemaker numbers are treated as decimal by default
 				break;
-			case Types.DATE: result = getDate(index);
+			case Types.DATE: result = getDate(columnIndex, repetition );
 				break;
-			case Types.TIME: result = getTime(index);
+			case Types.TIME: result = getTime(columnIndex, repetition );
 				break;
-			case Types.TIMESTAMP: result = getTimestamp(index);
+			case Types.TIMESTAMP: result = getTimestamp(columnIndex, repetition );
 				break;
-			case Types.INTEGER: result = new Integer( getInt(index) ); //This will only happen for recIds
+			case Types.INTEGER: result = getInt( columnIndex, repetition ); //This will only happen for recIds
 				break;
-			case Types.BLOB: result = getBlob(index, connection);
+			case Types.BLOB: result = getBlob(columnIndex, repetition, connection);
 				break;
-			default: result = getString(index);
+			default: result = getString(columnIndex, repetition );
 		}
 
 		return result;
@@ -136,29 +202,40 @@ public class FmRecord {
 	/**
 	 * Returns the string value for the record. This implementation returns null for empty strings (since FileMaker does not distinguish between null and empty); it's
 	 * debatable which behavior is correct.
-	* @return returns String value
-	*/
-	public String getString(int i) { //OPTIMIZE Shouldn't need to check for both null and length 0; check to see which way FmXmlResult handles it
-		Object rawValue = rawValues[i];
+	 * @return returns String value
+	 * @param columnIndex
+	 * @param repetition
+	 */
+	public String getString( int columnIndex, int repetition ) { //OPTIMIZE Shouldn't need to check for both null and length 0; check to see which way FmXmlResult handles it
+		String rawValue = getRawStringValue( columnIndex, repetition );
+		
 		if( rawValue == null ) {
 			fieldList.wasNull = true;
-			return fieldList.get(i).isNullable() ? null : "";
+			return fieldList.get(columnIndex).isNullable() ? null : "";
 		}
-		String result = rawValue.toString();
-		if( result.length() == 0 ) {
+		if( rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
-			return fieldList.get(i).isNullable() ? null : "";
+			return fieldList.get(columnIndex).isNullable() ? null : "";
 		} else {
 			fieldList.wasNull = false;
-			return result;
+			return rawValue;
 		}
 	}
+
+	/*public Object getValue(int index) {
+		Object result = rawValues[index];
+		if( result == null ) {
+			fieldList.wasNull = true;
+			if( ! fieldList.get(index).isNullable() ) result = ""; //FIX!!! Use formatter to parse value; return zero for numeric values
+		} else fieldList.wasNull = false;
+		return result;
+	}*/
 
 	/*
 	* @Return returns the boolean and column i
 	*/
-	public boolean getBoolean(int i) {
-		String rawValue = getRawValue(i);
+	public boolean getBoolean( int columnIndex, int repetition ) {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		fieldList.wasNull = (rawValue == null);
 		return getBooleanForRawValue(rawValue);
 	}
@@ -171,88 +248,88 @@ public class FmRecord {
 				rawValue.trim().length() == 0 || // if it's empty
 				"false".equals(rawValue.toLowerCase().trim()) || // if it says false
 				"0".equals(rawValue.trim()) // if it says 0
-		) return false;
+				) return false;
 
 		return true;
 	}
 
 
-	public byte getByte(int i) throws NumberFormatException {
-		String rawValue = getRawValue(i);
+	public byte getByte( int columnIndex, int repetition ) throws NumberFormatException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		fieldList.wasNull = (rawValue == null);
 		if( rawValue == null || rawValue.length() == 0 ) return 0;
-		return Byte.valueOf( rawValue ).byteValue();
+		return Byte.valueOf( rawValue );
 	}
 
-	public short getShort(int i) throws NumberFormatException {
-		String rawValue = getRawValue(i);
+	public short getShort( int columnIndex, int repetition ) throws NumberFormatException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		if( rawValue == null || rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
 		try {
-			return Short.valueOf( rawValue ).shortValue();
+			return Short.valueOf( rawValue );
 		} catch( NumberFormatException e ) {
-			return Short.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).shortValue();
+			return Short.valueOf( NumberUtils.removeNonNumericChars( rawValue ) );
 		}
 	}
 
-	public int getInt(int i) throws NumberFormatException {
-		String rawValue = getRawValue(i);
+	public int getInt( int columnIndex, int repetition ) throws NumberFormatException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		if( rawValue == null || rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
 		try {
-			return Integer.valueOf( rawValue ).intValue();
+			return Integer.valueOf( rawValue );
 		} catch(NumberFormatException e) {
 			String stripDigits = NumberUtils.removeNonNumericChars( rawValue );
 			return new BigDecimal( stripDigits ).intValue(); //We do big decimal here so that if there is a decimal, we just toss it instead of getting a NumberFormatException
 		}
 	}
 
-	public long getLong(int i) throws NumberFormatException {
-		String rawValue = getRawValue(i);
+	public long getLong( int columnIndex, int repetition ) throws NumberFormatException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		if( rawValue == null || rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
 		try {
-			return Long.valueOf( rawValue ).longValue();
+			return Long.valueOf( rawValue );
 		} catch( NumberFormatException e ) {
-			return Long.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).longValue();
+			return Long.valueOf( NumberUtils.removeNonNumericChars( rawValue ) );
 		}
 	}
 
-	public float getFloat(int i) throws NumberFormatException {
-		String rawValue = getRawValue(i);
+	public float getFloat( int columnIndex, int repetition ) throws NumberFormatException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		if( rawValue == null || rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
 		try {
-			return Float.valueOf( rawValue ).floatValue();
+			return Float.valueOf( rawValue );
 		} catch( NumberFormatException e ) {
-			return Float.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).floatValue();
+			return Float.valueOf( NumberUtils.removeNonNumericChars( rawValue ) );
 		}
 	}
 
-	public double getDouble(int i) throws NumberFormatException {
-		String rawValue = getRawValue(i);
+	public double getDouble( int columnIndex, int repetition ) throws NumberFormatException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		if( rawValue == null || rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
 			return 0;
 		} else fieldList.wasNull = false;
 		try {
-			return Double.valueOf( rawValue ).doubleValue();
+			return Double.valueOf( rawValue );
 		} catch( NumberFormatException e ) {
-			return Double.valueOf( NumberUtils.removeNonNumericChars( rawValue ) ).doubleValue();
+			return Double.valueOf( NumberUtils.removeNonNumericChars( rawValue ) );
 		}
 	}
 
 
-	public BigDecimal getBigDecimal( int i ) throws NumberFormatException {
-		String rawValue = rawValues[i];
+	public BigDecimal getBigDecimal( int columnIndex, int repetition ) throws NumberFormatException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		if( rawValue == null || rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
 			return new BigDecimal(0d);
@@ -266,42 +343,26 @@ public class FmRecord {
 		}
 	}
 
-	public static ThreadLocal dateFormat = new ThreadLocal() {
-		protected Object initialValue() {
-			return new SimpleDateFormat("MM/dd/yyyy");
-		}
-	};
-
-	//FIX!! If we're using FileMaker 6, we need much smarter parsers, because FM6 doesn't normalize the data in the XML
-
-	public static ThreadLocal timeFormat = new ThreadLocal() {
-		protected Object initialValue() {
-			return new SimpleDateFormat("HH:mm:ss");
-		}
-	};
-
-	public static ThreadLocal timestampFormat = new ThreadLocal() {
-		protected Object initialValue() {
-			return new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-		}
-	};
-
-	public Date getDate(int i) throws IllegalArgumentException {
+	public Date getDate( int columnIndex, int repetition ) throws IllegalArgumentException {
 		final TimeZone zone = defaultTimeZone;
-		return getDate(i, zone);
+		return getDate( columnIndex, repetition, zone);
 	}
 
-	public Date getDate(final int i, final TimeZone zone) {
-		String rawValue = getRawValue(i);
+	public Date getDate( final int columnIndex, int repetition, final TimeZone zone ) {
+		String rawValue = getRawStringValue( columnIndex, repetition );
+		return getDate( zone, rawValue );
+	}
+
+	private Date getDate( TimeZone zone, String rawValue ) {
 		if( rawValue == null || rawValue.length() == 0 || "?".equals(rawValue) ) { //FIX! I don't know if ignoring "?" is the best policy --jsb
 			fieldList.wasNull = true;
 			return null;
 		} else fieldList.wasNull = false;
 		try {
-			DateFormat format = (DateFormat)dateFormat.get();
+			DateFormat format = dateFormat.get();
 			format.setTimeZone(zone);
 			java.util.Date date = format.parse( rawValue );
-			if (log.isLoggable(Level.FINE)) {
+			if (log.isLoggable( Level.FINE)) {
 				log.fine( "Return date " + date + " for raw value " + rawValue );
 			}
 			return new Date( date.getTime() );
@@ -315,19 +376,19 @@ public class FmRecord {
 		}
 	}
 
-	public Time getTime(int i) throws IllegalArgumentException {
+	Time getTime( int columnIndex, int repetition ) throws IllegalArgumentException {
 		final TimeZone timeZone = defaultTimeZone;
-		return getTime(i, timeZone);
+		return getTime( columnIndex, repetition, timeZone);
 	}
 
-	public Time getTime(final int i, final TimeZone timeZone) {
-		String rawValue = getRawValue(i);
+	Time getTime( final int columnIndex, int repetition, final TimeZone timeZone ) {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		if( rawValue == null || rawValue.length() == 0 || "?".equals(rawValue) ) { //FIX! I don't know if ignoring "?" is the best policy --jsb
 			fieldList.wasNull = true;
 			return null;
 		} else fieldList.wasNull = false;
 		try {
-			DateFormat format = (DateFormat)timeFormat.get();
+			DateFormat format = timeFormat.get();
 			format.setTimeZone(timeZone);
 			return new Time( format.parse(rawValue).getTime() ); //This is where it fails
 		} catch( ParseException e ) {
@@ -340,14 +401,14 @@ public class FmRecord {
 		}
 	}
 
-	public Timestamp getTimestamp(int i) throws IllegalArgumentException {
-		String rawValue = getRawValue(i);
+	Timestamp getTimestamp( int columnIndex, int repetition ) throws IllegalArgumentException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 		if( rawValue == null || rawValue.length() == 0 || "?".equals(rawValue) ) { //FIX! I don't know if ignoring "?" is the best policy --jsb
 			fieldList.wasNull = true;
 			return null;
 		} else fieldList.wasNull = false;
 		try {
-			DateFormat format = (DateFormat)timestampFormat.get();
+			DateFormat format = timestampFormat.get();
 			return new java.sql.Timestamp( format.parse(rawValue).getTime() );
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
@@ -359,9 +420,8 @@ public class FmRecord {
 		}
 	}
 
-	public Blob getBlob(int i, FmConnection connection) throws IllegalArgumentException {
-
-		String rawValue = getRawValue(i);
+	Blob getBlob( int columnIndex, int repetition, FmConnection connection ) throws IllegalArgumentException {
+		String rawValue = getRawStringValue( columnIndex, repetition );
 
 		if( rawValue == null || rawValue.length() == 0 ) {
 			fieldList.wasNull = true;
@@ -383,5 +443,72 @@ public class FmRecord {
 	}
 
 
+	/** This is used for repeating fields */
+	Array getArray( int fieldIndex, FmResultSet resultSet ) {
+		return new FmArray( fieldIndex, resultSet );
+	}
 
+	class FmArray implements Array {
+		private int fieldIndex;
+		private FmResultSet resultSet;
+
+		FmArray( int fieldIndex, FmResultSet resultSet ) {
+			this.fieldIndex = fieldIndex;
+			this.resultSet = resultSet;
+		}
+
+		public String getBaseTypeName() throws SQLException {
+			FmField whichField = fieldList.get( fieldIndex );
+			return whichField.getType().getExternalTypeName();
+		}
+
+		public int getBaseType() throws SQLException {
+			FmField whichField = fieldList.get( fieldIndex );
+			return whichField.getType().getSqlDataType();
+		}
+
+		public void free() throws SQLException {}
+
+		public Object getArray() throws SQLException {
+			return getArray( 0, valueCounts[fieldIndex], null );
+		}
+
+		public Object getArray( Map<String, Class<?>> map ) throws SQLException {
+			return getArray( 0, valueCounts[fieldIndex], map );
+		}
+
+		public Object getArray( long index, int count ) throws SQLException {
+			return getArray( index, count, null );
+		}
+
+		public Object getArray( long index, int count, @Nullable Map<String, Class<?>> map ) throws SQLException {
+			Object[] result = new Object[ count ];
+			ResultSet rs = getResultSet( index, count, map );
+			int n=0;
+			while( rs.next() ) {
+				result[n++] = rs.getObject( 1 );
+			}
+			return result;
+		}
+
+		public ResultSet getResultSet() throws SQLException {
+			return getResultSet( 0, valueCounts[fieldIndex], null );
+		}
+
+		public ResultSet getResultSet( Map<String, Class<?>> map ) throws SQLException {
+			return getResultSet( 0, valueCounts[fieldIndex], null );
+		}
+
+		public ResultSet getResultSet( long index, int count ) throws SQLException {
+			return getResultSet( index, count, null );
+		}
+
+		public ResultSet getResultSet( long index, int count, @Nullable Map<String, Class<?>> map ) throws SQLException {
+			if( count + index > valueCounts[fieldIndex] )
+				throw new SQLException( "Invalid index(" + index + ") and count (" + count + "), there are only " + valueCounts[fieldIndex] + " elements in the repetition" );
+			FmFieldList repetitionFieldList = new FmFieldList();
+			repetitionFieldList.add( fieldList.get( fieldIndex ) );
+			return new FmResultSet( FmRecord.this, 0, valueCounts[fieldIndex], fieldIndex, repetitionFieldList, resultSet, null );
+		}
+	}
 }
