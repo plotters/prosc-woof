@@ -179,24 +179,24 @@ public class FmFieldType implements Cloneable {
 
 	public FmRecord getInResultSetFormat() {
 		FmRecord result = new FmRecord( resultSetFormat, null, null );
-		result.setRawValue( externalTypeName, 0 );
-		result.setRawValue( "" + sqlDataType, 1 );
-		result.setRawValue( "" + precision, 2 );
-		result.setRawValue( literalPrefix, 3 );
-		result.setRawValue( literalSuffix, 4 );
-		result.setRawValue( createParams, 5 );
-		result.setRawValue( "" + nullable, 6 );
-		result.setRawValue( "" + caseSensitive, 7 );
-		result.setRawValue( "" + searchable, 8 );
-		result.setRawValue( "" + unsignedAttribute, 9 );
-		result.setRawValue( "" + fixedPrecisionScale, 10 );
-		result.setRawValue( "" + autoIncrement, 11 );
-		result.setRawValue( localTypeName, 12 );
-		result.setRawValue( "" + minimumScale, 13 );
-		result.setRawValue( "" + maximumScale, 14 );
-		result.setRawValue( "0", 15 );
-		result.setRawValue( "0", 16 );
-		result.setRawValue( "" + numberPrecisionRadix, 17 );
+		result.addRawValue( externalTypeName, 0 );
+		result.addRawValue( "" + sqlDataType, 1 );
+		result.addRawValue( "" + precision, 2 );
+		result.addRawValue( literalPrefix, 3 );
+		result.addRawValue( literalSuffix, 4 );
+		result.addRawValue( createParams, 5 );
+		result.addRawValue( "" + nullable, 6 );
+		result.addRawValue( "" + caseSensitive, 7 );
+		result.addRawValue( "" + searchable, 8 );
+		result.addRawValue( "" + unsignedAttribute, 9 );
+		result.addRawValue( "" + fixedPrecisionScale, 10 );
+		result.addRawValue( "" + autoIncrement, 11 );
+		result.addRawValue( localTypeName, 12 );
+		result.addRawValue( "" + minimumScale, 13 );
+		result.addRawValue( "" + maximumScale, 14 );
+		result.addRawValue( "0", 15 );
+		result.addRawValue( "0", 16 );
+		result.addRawValue( "" + numberPrecisionRadix, 17 );
 		return result;
 	}
 

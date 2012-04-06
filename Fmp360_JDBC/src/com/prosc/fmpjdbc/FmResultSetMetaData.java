@@ -37,7 +37,7 @@ public class FmResultSetMetaData implements ResultSetMetaData {
 
 	//---These methods must be implemented---
 	public int getColumnCount() throws SQLException {
-		return fieldDefinitions.getFields().size();
+		return fieldDefinitions.size();
 	}
 
 	public String getColumnClassName( int i ) throws SQLException {

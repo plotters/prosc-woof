@@ -19,6 +19,8 @@ package com.prosc.fmpjdbc;
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * @author sbarnum
  */
@@ -37,6 +39,10 @@ public class FmField {
 	/** Whether the field is read-only. */
 	private boolean readOnly = false;
 	private boolean autoEnter;
+	private int maxReps;
+	private boolean global;
+	private boolean isCalc;
+	private boolean isSummary;
 
 	/** Creates an FMField without any metadata.
 	 * This method is usually called by SqlCommand, during parsing of SQL query strings.
@@ -58,8 +64,8 @@ public class FmField {
 	 * @param type The type of field
 	 * @param isNullable Whether null values are allowed.
 	 */
-	public FmField(FmTable table, String name, String alias, FmFieldType type, boolean isNullable) {
-		this(table, name, alias, type, isNullable, false, false);
+	public FmField(FmTable table, String name, String alias, @Nullable FmFieldType type, boolean isNullable) {
+		this(table, name, alias, type, isNullable, false, false, 1, false, false, false);
 	}
 
 	/**
@@ -71,7 +77,7 @@ public class FmField {
 	 * @param isNullable Whether null values are allowed.
 	 * @param readOnly Whether the field is readonly (calculation)
 	 */
-	public FmField(FmTable table, String name, String alias, FmFieldType type, boolean isNullable, boolean readOnly, boolean autoEnter ) {
+	public FmField(FmTable table, String name, String alias, FmFieldType type, boolean isNullable, boolean readOnly, boolean autoEnter, int maxReps, boolean global, boolean isCalc, boolean isSummary ) {
 		this.table = table;
 		this.columnName = name;
 		this.alias = alias;
@@ -79,6 +85,10 @@ public class FmField {
 		this.isNullable = isNullable;
 		this.readOnly = readOnly;
 		this.autoEnter = autoEnter;
+		this.maxReps = maxReps;
+		this.global = global;
+		this.isCalc = isCalc;
+		this.isSummary = isSummary;
 	}
 
 	/**
@@ -151,6 +161,22 @@ public class FmField {
 
 	public void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;
+	}
+
+	public int getMaxReps() {
+		return maxReps;
+	}
+
+	public boolean isGlobal() {
+		return global;
+	}
+
+	public boolean isCalculation() {
+		return isCalc;
+	}
+
+	public boolean isSummary() {
+		return isSummary;
 	}
 
 	public String toString() {

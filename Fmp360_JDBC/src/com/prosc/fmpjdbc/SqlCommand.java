@@ -1,5 +1,7 @@
 package com.prosc.fmpjdbc;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.*;
 
 /*
@@ -26,22 +28,6 @@ import java.util.*;
  * Created by IntelliJ IDEA. User: jesse Date: Apr 17, 2005
  */
 public class SqlCommand {
-
-	/*
-	///////////////////////////////////////////////////////////////////////////
-	//  DDL QUERY TYPES
-	///////////////////////////////////////////////////////////////////////////
-	*/
-	public static final int ALTER = 1;
-	public static final int CREATE_INDEX = 2;
-	public static final int CREATE_TABLE = 3;
-	public static final int CREATE_VIEW = 4;
-	public static final int DROP_INDEX = 5;
-	public static final int DROP_TABLE = 6;
-	public static final int DROP_VIEW = 7;
-	public static final int GRANT = 8;
-	public static final int REVOKE = 9;
-
 	/*
 	///////////////////////////////////////////////////////////////////////////
 	// LOGICAL OPERATOR DEFINITIONS
@@ -80,22 +66,22 @@ public class SqlCommand {
 	 */
 	private FmTable table;
 
-	private List searchTerms;
-	private List sortTerms;
-	private List assignmentTerms;
+	private List<SearchTerm> searchTerms;
+	private List<SortTerm> sortTerms;
+	private List<AssignmentTerm> assignmentTerms;
 
 	public SqlCommand(String sql) throws SqlParseException {
 		this( sql, null );
 	}
 
-	public SqlCommand(String sql, String catalogSeparator) throws SqlParseException {
+	public SqlCommand(String sql, @Nullable String catalogSeparator) throws SqlParseException {
 		if (sql == null) throw new IllegalArgumentException("sql must not be null.");
 		if (sql.length() < 8) throw new IllegalArgumentException("sql command is too short.");
 		this.sql = sql;
 		fields = new FmFieldList();
-		sortTerms = new LinkedList();
-		searchTerms = new LinkedList();
-		assignmentTerms = new LinkedList();
+		sortTerms = new LinkedList<SortTerm>();
+		searchTerms = new LinkedList<SearchTerm>();
+		assignmentTerms = new LinkedList<AssignmentTerm>();
 		doParse();
 		if( operation == SELECT && fields.size() == 0 ) {
 			throw new IllegalArgumentException("No fields issued for SELECT: " + sql );
@@ -107,7 +93,7 @@ public class SqlCommand {
 	 */
 	private void doParse() throws SqlParseException {
 		String operationString = sql.substring(0, 6).toUpperCase();
-		Parser parser = null;
+		Parser parser;
 		if ("SELECT".equals(operationString)) {
 			operation = SELECT;
 			parser = new SelectParser();
@@ -169,21 +155,21 @@ public class SqlCommand {
 	/**
 	 * Returns the array of SearchTerm objects used by the query.
 	 */
-	public List getSearchTerms() {
+	public List<SearchTerm> getSearchTerms() {
 		return searchTerms;
 	}
 
 	/**
 	 * Returns the List of {@link SortTerm} objects for the query.
 	 */
-	public List getSortTerms() {
+	public List<SortTerm> getSortTerms() {
 		return sortTerms;
 	}
 
 	/**
 	 * Returns the List of {@link AssignmentTerm} objects for the query (only applicable for UPDATE and INSERT queries).
 	 */
-	public List getAssignmentTerms() {
+	public List<AssignmentTerm> getAssignmentTerms() {
 		return assignmentTerms;
 	}
 
@@ -229,7 +215,7 @@ public class SqlCommand {
 			int state = IN_SQLCODE;
 			queryPart = getInitialQueryPart();
 			nestedParentheses = 0;
-			char c = 0;
+			char c;
 			for (int i = 6; i < length; i++) {
 				c = sql.charAt(i);
 				switch (state) {
@@ -441,7 +427,7 @@ public class SqlCommand {
 
 	}
 	
-	private void addSearchTerm(FmField field, int operator, String whereFragment, boolean isPlaceholder ) throws SqlParseException {
+	private void addSearchTerm(FmField field, int operator, @Nullable String whereFragment, boolean isPlaceholder ) throws SqlParseException {
 		searchTerms.add( new SearchTerm(field, operator, whereFragment, isPlaceholder) );
 	}
 
@@ -452,8 +438,8 @@ public class SqlCommand {
 		if (index > 0) {
 			name = name.substring(index + 1);
 		}
-		for (Iterator iterator = fields.iterator(); iterator.hasNext();) {
-			FmField selectFieldPlaceholder = (FmField) iterator.next();
+		for (Iterator<FmField> iterator = fields.iterator(); iterator.hasNext();) {
+			FmField selectFieldPlaceholder = iterator.next();
 			if (selectFieldPlaceholder.getColumnName().equals(name)) return selectFieldPlaceholder;
 			if (selectFieldPlaceholder.getAlias().equals(name)) return selectFieldPlaceholder;
 		}
@@ -517,8 +503,8 @@ public class SqlCommand {
 
 	private class InsertParser extends Parser {
 		boolean didParseInto = false;
-		List assignedFieldNames = new LinkedList();
-		private Iterator assignedFieldNamesIterator;
+		List<String> assignedFieldNames = new LinkedList<String>();
+		private Iterator<String> assignedFieldNamesIterator;
 
 
 		int getInitialQueryPart() {
@@ -548,7 +534,7 @@ public class SqlCommand {
 					assignedFieldNames.add(string);
 				}
 			} else if (queryPart == ASSIGNED_VALUES) {
-				String fieldName = (String) assignedFieldNamesIterator.next();
+				String fieldName = assignedFieldNamesIterator.next();
 				FmField field = new FmField(table, fieldName, null, FmFieldType.TEXT, true);
 				AssignmentTerm term = new AssignmentTerm(field, string, false);
 				assignmentTerms.add(term);
@@ -565,7 +551,7 @@ public class SqlCommand {
 
 		void handlePlaceholderCharacter() {
 			if (queryPart == ASSIGNED_VALUES) {
-				String fieldName = (String) assignedFieldNamesIterator.next();
+				String fieldName = assignedFieldNamesIterator.next();
 				FmField field = new FmField(table, fieldName, null, FmFieldType.TEXT, true);
 				AssignmentTerm term = new AssignmentTerm(field, null, true);
 				assignmentTerms.add(term);
@@ -629,8 +615,8 @@ public class SqlCommand {
 					queryPart = LIMIT;
 				} else if (table == null) {
 					table = new FmTable(string);
-					for (Iterator iterator = fields.iterator(); iterator.hasNext();) {
-						FmField selectFieldPlaceholder = (FmField) iterator.next();
+					for (Iterator<FmField> iterator = fields.iterator(); iterator.hasNext();) {
+						FmField selectFieldPlaceholder = iterator.next();
 						selectFieldPlaceholder.setTable(table);
 					}
 				} else {
