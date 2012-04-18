@@ -60,7 +60,7 @@ public class StatementProcessor {
 		this.command = command;
 		this.statement = statement;
 		FmConnection connection = (FmConnection)statement.getConnection();
-		is7OrLater = ((FmConnection)connection ).getFmVersion() >= 7;
+		is7OrLater = connection.getFmVersion() >= 7;
 		maxRecords = connection.getProperties().getProperty( "maxrecords", "all" );
 		encoding = is7OrLater ? "UTF-8" : "ISO-8859-1";
 	}

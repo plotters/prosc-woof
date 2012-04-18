@@ -90,6 +90,24 @@ public class AdvancedDriverTests extends TestCase {
 		System.out.println("End select in fm7.  duration : " + (end - start) + " milliseconds.  rowCount = " + rowCount);
 	}
 
+	public void testSelectWithLimit() throws SQLException {
+		//First try 7
+		long start = System.currentTimeMillis();
+		String tableName = "Contacts";
+		String sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al' LIMIT 3";
+		ResultSet resultSet = statement7.executeQuery( sql );
+		int rowCount = 0;
+		while( resultSet.next() ) {
+			rowCount++;
+			if( rowCount == 1 ) assertEquals( "Al", resultSet.getObject("firstName") );
+		}
+		assertTrue( "More rows found than limit of 3", rowCount <= 3 );
+		assertEquals( "There were not 3 rows, test case is invalid", 3, rowCount );
+
+		long end = System.currentTimeMillis();
+		System.out.println("End select in fm7.  duration : " + (end - start) + " milliseconds.  rowCount = " + rowCount);
+	}
+
 
 	/** @TestPasses */
 	public void testEscapeFMWildCards() throws SQLException {
@@ -651,8 +669,6 @@ public class AdvancedDriverTests extends TestCase {
 	//FIX!! Write tests for FmResultSetMetaData, it is mostly abstract errors right now
 
 	//FIX!! Write tests for ORDER BY clause
-
-	//FIX!! Write tests for LIMIT clause
 
 	/** This tests the amount of time it takes to do a select across a large number of columns (315) with a small number of records (6).
 	 * I established a threshold of 2000ms as a minimal acceptable time to complete this. The XML interface delivers the result in about 1000ms,

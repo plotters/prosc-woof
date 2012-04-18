@@ -438,7 +438,7 @@ public class FmXmlRequest extends FmRequest {
 				missingFieldNames.add( ( missingField ).getColumnName() );
 			}
 			closeRequest();
-			throw new SQLException("The requested fields are not on the layout: " + missingFieldNames, null, 102 );
+			throw new MissingFieldException("The requested fields are not on the layout: " + missingFieldNames, null, 102, fmLayout, missingFieldNames );
 		}
 		return fieldDefinitions;
 	}
@@ -485,6 +485,7 @@ public class FmXmlRequest extends FmRequest {
 	 * updates and inserts etc.
 	 */
 	private volatile FmFieldList fieldDefinitions;
+	private String fmLayout;
 	private FmTable fmTable;
 	private boolean useSelectFields = false;
 
@@ -670,6 +671,7 @@ public class FmXmlRequest extends FmRequest {
 				setDatabaseName(attributes.getValue("NAME")); // databaseName = attributes.getValue("NAME");
 				setProductVersion(attributes.getValue("VERSION")); // productVersion = attributes.getValue("VERSION");
 			} else if ("DATABASE".equals(qName)) {
+				fmLayout = attributes.getValue( "LAYOUT" );
 				fmTable =  new FmTable( attributes.getValue("NAME") );
 
 				if (fieldDefinitions == null) {
