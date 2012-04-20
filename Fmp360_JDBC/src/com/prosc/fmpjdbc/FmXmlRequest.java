@@ -660,7 +660,7 @@ public class FmXmlRequest extends FmRequest {
 						handleParsedMetaDataField(fieldName, eachRepIndex, maxRepeat, theType, allowsNulls);
 					}
 				} else {
-					handleParsedMetaDataField(fieldName, 0, 0, theType, allowsNulls);
+					handleParsedMetaDataField(fieldName, 0, maxRepeat, theType, allowsNulls);
 				}
 
 			} else if ("RESULTSET".equals(qName)) {
