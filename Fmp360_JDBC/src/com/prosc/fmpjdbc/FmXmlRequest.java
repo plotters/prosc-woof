@@ -289,6 +289,8 @@ public class FmXmlRequest extends FmRequest {
 						//throw new RuntimeException(e);
 					} catch( Error e ) {
 						onErrorSetAllVariables( e );
+					} finally {
+						recordIterator.setFinished();
 					}
 				}
 
@@ -297,7 +299,8 @@ public class FmXmlRequest extends FmRequest {
 			parsingThread.start();
 		}
 		if(hasError()) {
-			throw FileMakerException.exceptionForErrorCode( errorCode, fullUrl );
+			closeRequest();
+			throw FileMakerException.exceptionForErrorCode( errorCode, fullUrl, fmLayout );
 		}
 
 	}
@@ -438,7 +441,7 @@ public class FmXmlRequest extends FmRequest {
 				missingFieldNames.add( ( missingField ).getColumnName() );
 			}
 			closeRequest();
-			throw new MissingFieldException("The requested fields are not on the layout: " + missingFieldNames, null, 102, fmLayout, missingFieldNames );
+			throw new MissingFieldException("The requested fields are not on the layout: " + missingFieldNames, 102, fmLayout, missingFieldNames );
 		}
 		return fieldDefinitions;
 	}
@@ -606,11 +609,12 @@ public class FmXmlRequest extends FmRequest {
 					// this is not the first DATA in the COL. It's either a repeating field or portal
 					// FIX!! if a portal, only return the first item -ssb
 					if (fieldPositionPointer != null && fieldPositionPointer.isRepeating) {
-						if( fieldPositionPointer.matchedSquareBrackets ) {
+						fieldPositionPointer = fieldPositionIterator.next();
+						/*if( fieldPositionPointer.matchedSquareBrackets ) {
 							fieldPositionPointer = fieldPositionIterator.next();
 						} else {
 							//Keep fieldPositionPointer the same value. This means that additional DATA elements will be appended to the FmRercord
-						}
+						}*/
 					} else {
 						fieldPositionPointer = null; // ignore any other data
 					}
@@ -651,12 +655,19 @@ public class FmXmlRequest extends FmRequest {
 				boolean allowsNulls = "YES".equals(attributes.getValue("EMPTYOK"));
 				int maxRepeat = Integer.parseInt(attributes.getValue("MAXREPEAT"));
 
-				if (!useSelectFields) { // this is a select * query.  create a new non-repeating field and add it to the fieldDefinitions
-					FmField fmField = new FmField(fmTable, fieldName, fieldName, theType, allowsNulls);
+				if (!useSelectFields) { // this is a select * query.  create a new field and add it to the fieldDefinitions
+					//We don't know these things - they are only available in fmpresultset.xml
+					boolean isReadOnly = false;
+					boolean isAutoEnter = false;
+					boolean isGlobal = false;
+					boolean isCalc = false;
+					boolean isSummary = false;
+					FmField fmField = new FmField(fmTable, fieldName, fieldName, theType, allowsNulls, isReadOnly, isAutoEnter, maxRepeat, isGlobal, isCalc, isSummary );
 					fieldDefinitions.add(fmField);
 				}
 				if (maxRepeat > 1) { // this is a repeating field.  handle each repetition as a virtual field.
 					for (int eachRepIndex =1; eachRepIndex <= maxRepeat; eachRepIndex++) {
+						//handleParsedMetaDataField(fieldName, eachRepIndex, 0, theType, allowsNulls);
 						handleParsedMetaDataField(fieldName, eachRepIndex, maxRepeat, theType, allowsNulls);
 					}
 				} else {
@@ -693,7 +704,7 @@ public class FmXmlRequest extends FmRequest {
 		 * @param allowsNulls
 		 */
 		private void handleParsedMetaDataField(String fieldName, int repetitionIndex, int maxRepetitions, FmFieldType theType, boolean allowsNulls) {
-			String adjustedName = repetitionIndex == 0 ? fieldName : fieldName + "[" + repetitionIndex + "]";
+			String adjustedName = maxRepetitions == 1 ? fieldName : fieldName + "[" + repetitionIndex + "]";
 			int whichColumn = -1;
 			boolean foundOneOccurrence = false;
 			boolean matchedSquareBrackets = false;
@@ -701,8 +712,8 @@ public class FmXmlRequest extends FmRequest {
 			do {
 				int indexToTry = whichColumn + 1;
 				whichColumn = fieldDefinitions.indexOfFieldWithColumnName(adjustedName, indexToTry );
-				if (whichColumn == -1 && repetitionIndex == 1) {
-					// this may be the first repetition of a repeating field, which does not have a [] bracket.  Look for a fieldDefinition name without the brackets
+				if (whichColumn == -1 && maxRepetitions > 1) {
+					// this may be a repetition of a repeating field, which does not have a [] bracket.  Look for a fieldDefinition name without the brackets
 					whichColumn = fieldDefinitions.indexOfFieldWithColumnName(fieldName, indexToTry );
 				} else {
 					matchedSquareBrackets = true;
@@ -734,7 +745,7 @@ public class FmXmlRequest extends FmRequest {
 		}
 
 		public void endDocument() throws SAXException {
-			recordIterator.setFinished();
+			//recordIterator.setFinished(); //Don't need to call this, it happens in the finally block of the parse() command.
 		}
 
 		public void endElement(String uri, String localName, String qName) throws SAXException {

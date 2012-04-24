@@ -861,4 +861,50 @@ public class AdvancedDriverTests extends TestCase {
 		assertTrue( "Visisble records and totalRecords are both " + totalRecords + "; visible records should be less because of record-level privilege set restrictions.", visibleRecords < totalRecords );
 		System.out.println( "Success! Visible records: " + visibleRecords + "; total records: " + totalRecords );
 	}
+	
+	public void testRepeatingFields() throws Exception {
+		statement7.execute( "INSERT INTO Contacts(firstName,lastName,repeating[2],repeating[4], emailAddress) VALUES ('Jesse', 'Barnum', 'Two', 'Four', 'jesse@360works.com')", Statement.RETURN_GENERATED_KEYS );
+		ResultSet rs = statement7.getGeneratedKeys();
+		String recid;
+		try {
+			rs.next();
+			recid = rs.getString( "recid" );
+			assertEquals( "Jesse", rs.getString( "firstName" ) );
+			Object[] array = (Object[])rs.getArray( "repeating" ).getArray();
+			assertEquals( "Two", array[1] );
+			assertEquals( "Four", array[3] );
+			
+			//You can't get repeating items using a bracket syntax with getGeneratedKeys().
+			//assertEquals( "Two", rs.getString( "repeating[2]" ) );
+			//assertEquals( "Four", rs.getString( "repeating[4]" ) );
+			
+			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
+		} finally {
+			rs.close();
+		}
+		
+		rs = statement7.executeQuery( "SELECT firstName,lastName,repeating[2], repeating[4], repeating[8], emailAddress FROM Contacts WHERE recid=" + recid );
+		try {
+			rs.next();
+			assertEquals( "Jesse", rs.getString( "firstName" ) );
+			assertEquals( "Two", rs.getString( "repeating[2]" ) );
+			assertEquals( "Four", rs.getString( "repeating[4]" ) );
+			//assertEquals( "Eight", rs.getString( "repeating[8]" ) ); //Can't insert repeating[8] because we're only showing 4 repetitions on the layout. --jsb
+			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
+		} finally {
+			rs.close();
+		}
+		
+		rs = statement7.executeQuery( "SELECT * FROM Contacts WHERE recid=" + recid );
+		try {
+			rs.next();
+			assertEquals( "Jesse", rs.getString( "firstName" ) );
+			Object[] array = (Object[])rs.getArray( "repeating" ).getArray();
+			assertEquals( "Two", array[1] );
+			assertEquals( "Four", array[3] );
+			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
+		} finally {
+			rs.close();
+		}
+	}
 }
