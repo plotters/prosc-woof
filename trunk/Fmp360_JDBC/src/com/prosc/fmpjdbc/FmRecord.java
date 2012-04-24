@@ -35,7 +35,7 @@ import java.net.URL;
 /**
  * Created by IntelliJ IDEA. User: jesse Date: Apr 17, 2005 Time: 4:36:27 PM
  */
-class FmRecord {
+public class FmRecord {
 	private static final Logger log = Logger.getLogger( FmRecord.class.getName() );
 	private static final TimeZone defaultTimeZone = TimeZone.getDefault();
 
@@ -114,6 +114,7 @@ class FmRecord {
 	/** Reads data directly from the array of String objects parsed from the XML response. */
 	private String getRawStringValue( int columnIndex, int repetition ) {
 		Object rawResult = rawValues[columnIndex];
+		if( rawResult == null ) return null;
 		if( rawResult instanceof String && repetition == 1 ) return (String)rawResult;
 		else if( rawResult instanceof String[] ) {
 			String[] rawResultArray = (String[])rawResult;

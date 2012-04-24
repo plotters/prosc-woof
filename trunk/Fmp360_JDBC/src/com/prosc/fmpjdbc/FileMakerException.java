@@ -70,11 +70,15 @@ public class FileMakerException extends SQLException {
 	}
 
 	public static FileMakerException exceptionForErrorCode(Integer errorCode) {
-		return exceptionForErrorCode(errorCode, null );
+		return exceptionForErrorCode(errorCode, null, null );
 	}
 
-	public static FileMakerException exceptionForErrorCode( Integer errorCode, String requestUrl ) {
-		return new FileMakerException(errorCode, getErrorMessage(errorCode), requestUrl );
+	public static FileMakerException exceptionForErrorCode( Integer errorCode, String requestUrl, String whichLayout ) {
+		if( errorCode == 102 ) {
+			return new MissingFieldException( getErrorMessage(errorCode), 102, whichLayout, null );
+		} else {
+			return new FileMakerException(errorCode, getErrorMessage(errorCode), requestUrl );
+		}
 	}
 
 	public String getMessage() {
