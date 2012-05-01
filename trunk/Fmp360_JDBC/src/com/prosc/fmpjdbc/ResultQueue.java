@@ -112,7 +112,8 @@ public class ResultQueue implements Iterator<FmRecord> {
 				log.log( Level.WARNING, "Interrupted while waiting for next item in ResultQueue" );
 				resetInterrupt = true;
 			}
-		} // end of while, ready to decide
+		}
+		if( storedError != null ) return true; //We need to check this again, because it's possible that finished could be set to true at the same time that an error was stored. In that case, we want to throw the error, and the only way to do that is to return true so that the client will call next(). --jsb
 		if( resetInterrupt ) {
 			Thread.currentThread().interrupt();
 		}

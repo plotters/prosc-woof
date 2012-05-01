@@ -138,6 +138,9 @@ public class FmRecord {
 
 	protected void addRawValue( String newValue, int columnIndex, int maxRepetitions ) {
 		ensureCapacity( columnIndex, maxRepetitions );
+		if( columnIndex >= valueCounts.length ) {
+			throw new ArrayIndexOutOfBoundsException( "Tried to set a value for column index " + columnIndex + ", but there are only " + valueCounts.length + " items in the array");
+		}
 		int whichRep = ++valueCounts[ columnIndex ];
 		if( maxRepetitions < 2 ) {
 			rawValues[ columnIndex ] = newValue;

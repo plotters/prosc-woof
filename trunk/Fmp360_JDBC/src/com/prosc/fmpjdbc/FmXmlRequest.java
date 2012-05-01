@@ -70,6 +70,7 @@ public class FmXmlRequest extends FmRequest {
 	private String username;
 	private String fullUrl;
 	private Thread parsingThread;
+	private SQLException metadataError;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion) {
 		try {
@@ -298,9 +299,14 @@ public class FmXmlRequest extends FmRequest {
 			};
 			parsingThread.start();
 		}
-		if(hasError()) {
-			closeRequest();
-			throw FileMakerException.exceptionForErrorCode( errorCode, fullUrl, fmLayout );
+		synchronized( FmXmlRequest.this ) {
+			if(hasError()) {
+				closeRequest();
+				throw FileMakerException.exceptionForErrorCode( errorCode, fullUrl, fmLayout );
+			}
+			if( getFieldDefinitions() == null ) {
+				throw metadataError;
+			}
 		}
 
 	}
@@ -325,6 +331,10 @@ public class FmXmlRequest extends FmRequest {
 		//recordIterator = null;
 		fieldDefinitionsListIsSet = true;
 		fieldDefinitions = null;
+		metadataError = new SQLException( "Error occurred while reading XML: " + t.toString() );
+		metadataError.initCause( t );
+		
+		log.warning( "Exception " + t.toString() + " occurred while processing request: " + fullUrl );
 		notifyAll();
 	}
 
@@ -725,7 +735,7 @@ public class FmXmlRequest extends FmRequest {
 					if( foundOneOccurrence ) { //We've already found at least one occurrence in the SELECT field list; this is a subsequent one
 						int[] biggerArray = new int[ indeces.length + 1 ]; //Copy into a bigger array and add this index to the end
 						System.arraycopy( indeces, 0, biggerArray, 0, indeces.length );
-						biggerArray[ biggerArray.length -1 ] = whichColumn+1;
+						biggerArray[ biggerArray.length -1 ] = whichColumn;
 						indeces = biggerArray;
 					} else {
 						indeces[0] = whichColumn;
@@ -816,6 +826,9 @@ public class FmXmlRequest extends FmRequest {
 
 				synchronized (FmXmlRequest.this) { // this is different from the other attributes in the xml, since this one is being built on the fly and the variable is not just being "set" once we're finished reading it
 					fieldDefinitionsListIsSet = true;
+					if( fieldDefinitions == null ) {
+						throw new IllegalStateException( "Finished parsing METADATA, bt did not create a fieldDefinitions list" ); //This should never happen. --jsb
+					}
 					FmXmlRequest.this.notifyAll();
 				}
 			}
