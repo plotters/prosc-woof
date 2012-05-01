@@ -251,7 +251,15 @@ public class StatementProcessor {
 					}
 
 					actionHandler.setSelectFields(command.getFields()); // Set the fields that are used in the select statement
-					actionHandler.doRequest( dbLayoutString + postArgs );
+					try {
+						actionHandler.doRequest( dbLayoutString + postArgs );
+					} catch( IOException e ) {
+						actionHandler.closeRequest();
+						throw e;
+					} catch( SQLException e ) {
+						actionHandler.closeRequest();
+						throw e;
+					}
 
 					results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getFoundCount(), actionHandler.getFieldDefinitions(), statement, connection, actionHandler );
 					// DO NOT CLOSE the request since the result set needs to stream the records

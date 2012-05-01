@@ -182,6 +182,18 @@ public class SimpleJdbcTest extends TestCase {
 		}*/
 	}
 
+	public void testSelectSameFieldMultipleTimes() throws SQLException {
+		//First try 7
+		String sql = "SELECT firstName, lastName, ID, lastName, firstName FROM Contacts WHERE ID=2";
+		ResultSet rs = statement7.executeQuery( sql );
+		assertTrue( rs.next() );
+		assertEquals( "Sam", rs.getString( 1 ) );
+		assertEquals( "BARNUM", rs.getString( 2 ) );
+		assertEquals( 2, rs.getInt( 3 ) );
+		assertEquals( "BARNUM", rs.getString( 4 ) );
+		assertEquals( "Sam", rs.getString( 5 ) );
+	}
+
 	private int simpleSelectCheck( ResultSet resultSet ) throws SQLException {
 		int rowCount = 0;
 		while( resultSet.next() ) {

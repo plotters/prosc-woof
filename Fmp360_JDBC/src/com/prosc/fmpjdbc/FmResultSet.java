@@ -142,8 +142,8 @@ public class FmResultSet implements ResultSet {
 				try {
 					currentRecord = fmRecords.next();
 				} catch( RuntimeException e ) {
-					log.log( Level.SEVERE, "Got an exception while trying to fetch next row from database.", e );
-					SQLException e1 = new SQLException( e.getMessage() );
+					//log.log( Level.SEVERE, "Got an exception while trying to fetch next row from database.", e );
+					SQLException e1 = new SQLException( e.toString() );
 					e1.initCause( e );
 					throw e1;
 				}
