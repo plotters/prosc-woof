@@ -5,15 +5,19 @@ import junit.framework.TestCase;
 import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author sbarnum
  */
 public class FmRecordTest extends TestCase {
+	private static final Logger log = Logger.getLogger(FmRecordTest.class.getName());
+	
 	public void testRepeatingReads() throws Exception {
-		Thread.sleep(300L);
 		final Properties properties = new Properties();
 		properties.setProperty("user", "Admin");
 		properties.setProperty("password", "1200");
@@ -38,5 +42,32 @@ public class FmRecordTest extends TestCase {
 			System.out.println("Fetched record from GratuitousJoin: " + Arrays.asList(object1, object2, object3));
 		}
 
+	}
+
+	public void testAccessRestriction() throws Exception {
+		final Properties properties = new Properties();
+		properties.setProperty("user", "barb");
+		properties.setProperty("password", "barb");
+		FmConnection conn = new FmConnection("jdbc:fmp360://localhost/ContactSync", properties);
+		//final String sql = "SELECT \"#ID\", \"Modification timestamp\", \"AlarmEmailRecipients\", \"AlarmTriggerMinutes\", \"AlarmTriggerTimestamp\", \"AlarmType\", \"createdBy\", \"Creation timestamp\", \"Description\", \"End Date\", \"End Time\", \"Location\", \"public\", \"Recurrence\", \"Start Date\", \"Start Time\", \"Summary\", \"Sync ID\", \"Timezone\", \"URL\" FROM \"Event\" ORDER BY \"#ID\"";
+		final String sql = "SELECT * FROM \"Event\" ORDER BY \"#ID\"";
+		final PreparedStatement ps = conn.prepareStatement(sql);
+		final ResultSet rs = ps.executeQuery();
+		final ResultSetMetaData metaData = rs.getMetaData();
+		final int columnCount = metaData.getColumnCount();
+		int maxKeyLength = 8;
+		for (int i=1; i<=columnCount; i++) {
+			maxKeyLength = Math.max(maxKeyLength, metaData.getColumnName(i).length());
+		}
+		while (rs.next()) {
+			System.out.println("Fetched record " + rs.getString("recid"));
+			//assertEquals(1, rs.getInt("public"));
+			//assertNotNull(rs.getObject("#ID"));
+			for(int i=1; i<= columnCount; i++) {
+				final Object object = rs.getObject(i);
+				final String columnName = metaData.getColumnName(i);
+				System.out.println(String.format("%" + maxKeyLength + "s = %s", columnName, String.valueOf(object).replaceAll("\n", "\\n")));
+			}
+		}
 	}
 }

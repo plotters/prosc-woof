@@ -415,7 +415,7 @@ public class FmRecord {
 			DateFormat format = timestampFormat.get();
 			return new java.sql.Timestamp( format.parse(rawValue).getTime() );
 		} catch( ParseException e ) {
-			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
+			IllegalArgumentException e1 = new IllegalArgumentException(e.toString() + " for column " + columnIndex + "[" + repetition + "]");
 			e1.initCause(e);
 			//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
 			//log.log( Level.WARNING, "Can't parse this as a timestamp: " + rawValue, e1 );
