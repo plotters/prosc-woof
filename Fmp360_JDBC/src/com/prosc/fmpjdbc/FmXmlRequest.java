@@ -786,6 +786,7 @@ public class FmXmlRequest extends FmRequest {
 			if("COL".equals(qName)){ // added to fix a bug with columns that only have an end element - mww
 				if( ! foundDataForColumn ) { //If there is a related field but the relationship is invalid, then FM does not contain a <DATA> element. We need to catch that specially and treat it as null.
 					if (fieldPositionPointer != null) {
+						currentData.setLength(0);
 						fieldPositionPointer.setDataInRow(currentData, currentRow); //FIX!! This should actually be null instead of an empty string, but currently that will throw a NPE - need to fix many things to support this. --jsb
 					}
 				}
@@ -872,8 +873,9 @@ public class FmXmlRequest extends FmRequest {
 		}
 
 		public void setDataInRow(StringBuffer data, FmRecord row) {
+			final String newValue = data.toString();
 			for( int targetIndex : targetIndeces ) {
-				row.addRawValue( data.toString(), targetIndex, maxRepetitions );
+				row.addRawValue(newValue, targetIndex, maxRepetitions );
 			}
 		}
 	}
