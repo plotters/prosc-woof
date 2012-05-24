@@ -60,7 +60,8 @@ public class FmResultSetRequest extends FmRequest {
 	public FmResultSetRequest(String protocol, String host, String url, int portNumber, String username, String password) throws MalformedURLException {
 		this.theUrl = new URL(protocol, host, portNumber, url);
 		this.username = username;
-		if (username != null || password != null) {
+		if (username != null && username.length() > 0) {
+			if( password == null ) password = "";
 			String tempString = username + ":" + password;
 			authString = new BASE64Encoder().encode(tempString.getBytes());
 		} else {

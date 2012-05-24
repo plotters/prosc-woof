@@ -131,7 +131,7 @@ public class FmConnection implements Connection {
 				try {
 					url = new URL( getProtocol(), getHost(), getPort(), "" );
 				} catch( MalformedURLException e1 ) {}
-				SQLException sqlE = new SQLException( "There does not seem to be a web server running at " + url + ". Check to make sure that Apache or IIS is running on the Web Publishing Engine." );
+				SQLException sqlE = new SQLException( "There does not seem to be a web server running at " + url + ". Check to make sure that Apache or IIS is running on the Web Publishing Engine. Also make sure that your SSL setting matches your server." );
 				sqlE.initCause( e );
 				throw sqlE;
 			} catch( IOException e ) {
