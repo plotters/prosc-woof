@@ -505,6 +505,9 @@ public class FmMetaData implements DatabaseMetaData {
 		fields.add( new FmField(dummyTable, "PRIVILEGE", null, FmFieldType.TEXT, false) ); //6
 		fields.add( new FmField(dummyTable, "IS_GRANTABLE", null, FmFieldType.TEXT, false) ); //7
 
+		if( catalog == null ) {
+			catalog = connection.getCatalog();
+		}
 		List<String> privileges = getFieldPrivileges( catalog, table, columnNamePattern );
 
 		List<FmRecord> result = new LinkedList<FmRecord>();
