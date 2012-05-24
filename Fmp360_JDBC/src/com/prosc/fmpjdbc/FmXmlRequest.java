@@ -2,6 +2,7 @@ package com.prosc.fmpjdbc;
 
 import sun.misc.BASE64Encoder;
 
+import javax.net.ssl.SSLHandshakeException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import java.io.*;
@@ -123,6 +124,7 @@ public class FmXmlRequest extends FmRequest {
 		requestStartTime = System.currentTimeMillis();
 		postArgs = input;
 
+		boolean redirected = false;
 		int retryCount = 3; //This is how many times to retry the attempt, in case FileMaker returns an error code 16 / retry. This will hopefully fix Zulu-195 Contact Syncing
 		for( int n=1; n<=retryCount; n++ ) {
 			HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
@@ -133,21 +135,29 @@ public class FmXmlRequest extends FmRequest {
 			if (authString != null) {
 				theConnection.addRequestProperty("Authorization", "Basic " + authString);
 			}
-			if (postArgs != null) {
-				//postArgs = postPrefix + postArgs;
-				fullUrl = theUrl + "?" + postPrefix + postArgs;
-				log.log(Level.FINE, "Starting request: " + fullUrl );
-				theConnection.setDoOutput(true);
-				PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
-				out.print(postPrefix);
-				out.println(postArgs);
-				out.close();
-			}
-
 			try {
+				if (postArgs != null) {
+					//postArgs = postPrefix + postArgs;
+					fullUrl = theUrl + "?" + postPrefix + postArgs;
+					log.log(Level.FINE, "Starting request: " + fullUrl );
+					theConnection.setDoOutput(true);
+					PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
+					out.print(postPrefix);
+					out.println(postArgs);
+					out.close();
+				}
+
+
 				int httpStatusCode = theConnection.getResponseCode();
 				if( httpStatusCode >= 200 && httpStatusCode < 300 ) {} //Fine, no problem
-				else if( httpStatusCode >= 300 && httpStatusCode < 400 ) throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
+				else if( httpStatusCode >= 300 && httpStatusCode < 400 ) { //Follow the redirect, because OS X Lion automatically redirects http to https
+					redirected = true;
+					String redirect = theConnection.getHeaderField( "location" );
+					theUrl = new URL( theUrl, redirect );
+					n--; //Don't count this as a retry
+					continue;
+					//throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
+				}
 				else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username );
 				else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. Check and make sure that the FileMaker Web Publishing Engine is running at " + theUrl );
 				else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
@@ -174,6 +184,18 @@ public class FmXmlRequest extends FmRequest {
 				if( log.isLoggable( Level.CONFIG ) ) {
 					creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
 				}
+			} catch( SSLHandshakeException e ) {
+				IOException ioe;
+				if( redirected ) {
+					ioe = new IOException( "This request was automatically redirected to " + theUrl.toString() +", which is not running a trusted certificate. " +
+							"Self-signed certificates are not supported, unless you have set them up with your Java Key store. If you are running OS X Lion Server, " +
+							"you can fix this by disabling SSL for the default web site." );
+				} else {
+					ioe = new IOException( "The server at " + theUrl.toString() + " is not running a trusted certificate. Self-signed certificates are not supported, " +
+							"unless you have set them up with your Java Key store." );
+				}
+				ioe.initCause( e );
+				throw ioe;
 			} catch( IOException e ) {
 				if( e.getCause() instanceof FileNotFoundException ) {
 					String message = "Remote URL " + e.getCause().getMessage() + " could not be located.";
@@ -333,7 +355,7 @@ public class FmXmlRequest extends FmRequest {
 		fieldDefinitions = null;
 		metadataError = new SQLException( "Error occurred while reading XML: " + t.toString() );
 		metadataError.initCause( t );
-		
+
 		log.warning( "Exception " + t.toString() + " occurred while processing request: " + fullUrl );
 		notifyAll();
 	}
@@ -640,7 +662,11 @@ public class FmXmlRequest extends FmRequest {
 				foundDataForColumn = false;
 				foundColStart = true; // added to fix a bug with columns that only have an end element - mww
 				//columnDataIndex++;
-				fieldPositionPointer = fieldPositionIterator.next();
+				try {
+					fieldPositionPointer = fieldPositionIterator.next();
+				} catch( NoSuchElementException e ) {
+					throw e;
+				}
 				columnIndex++;
 				if( columnIndex == recIdColumnIndex ) {
 					currentRow.addRawValue( currentRow.getRecordId().toString(), columnIndex );
