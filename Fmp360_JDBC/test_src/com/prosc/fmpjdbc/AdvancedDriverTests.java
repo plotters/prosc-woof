@@ -160,7 +160,7 @@ public class AdvancedDriverTests extends TestCase {
 	public void testExecuteStoredProcedure() throws SQLException {
 		connection7.prepareCall("capitalizeLastNames").execute();
 		String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		statement7.executeUpdate( "INSERT INTO "+tableName+" (firstName, lastName, emailAddress) values('Fred', 'flintstone', 'fred@rubble.com')");
+		statement7.executeUpdate( "INSERT INTO "+tableName+" (firstName, lastName, emailAddress) values('Fred', 'flintstone', 'fred@rubble.com')", Statement.RETURN_GENERATED_KEYS );
 		ResultSet rs = statement7.getGeneratedKeys();
 		rs.next();
 		Object id = rs.getObject( "ID" );
@@ -171,6 +171,19 @@ public class AdvancedDriverTests extends TestCase {
 		rs = statement7.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
 		rs.next();
 		assertEquals( "FLINTSTONE", rs.getString("lastName") );
+	}
+	
+	public void testStoredProcedureQueryAndParam() throws SQLException {
+		CallableStatement call = connection7.prepareCall( "find by state" );
+		call.setString( "-script.param", "FL\nGA" );
+		ResultSet rs = call.executeQuery();
+		int foundCount=0;
+		while( rs.next() ) {
+			foundCount++;
+			System.out.println( rs.getString("name") );
+		}
+		rs.close();
+		assertEquals( 4, foundCount ); //Tampa, Saraosta, Atlanta, Alpharetta
 	}
 
 	//Need to add test cases for executeQuery() with several parameters and executeUpdate() with prepared statements.

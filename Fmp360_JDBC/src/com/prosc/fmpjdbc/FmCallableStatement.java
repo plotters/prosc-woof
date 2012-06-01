@@ -1,14 +1,15 @@
 package com.prosc.fmpjdbc;
 
-import java.sql.*;
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Calendar;
-import java.net.URL;
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.sql.*;
+import java.util.Calendar;
+import java.util.Map;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -38,14 +39,15 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 
 	private FmXmlRequest request; //FIX!! Create a new instance as needed
 	private String scriptName;
-	private String postArgs = "-db=<database>&-lay=<layout>&-max=0&-script=<script>&-script.param=<script.param>&-findany";
+	private String postArgs = "-db=<database>&-lay=<layout>&-max=all&-script=<script>&-script.param=<script.param>&-findany";
 	private String scriptParam = "";
 
-	public FmCallableStatement( FmConnection connection ) {
-    super( connection );
-    request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-            connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion()); //connection.getXmlRequestHandler();
-  }
+	public FmCallableStatement( FmConnection connection ) throws SqlParseException {
+		super( connection );
+		
+		request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion()); //connection.getXmlRequestHandler();
+	}
 
 	public void setScriptName(String scriptName) {
 		if( scriptName.startsWith(woPrefix) ) {
@@ -55,32 +57,43 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 		this.scriptName = scriptName;
 	}
 
-	public String getScriptName() { return scriptName; }
+	//public String getScriptName() { return scriptName; }
+
+	public boolean execute() throws SQLException {
+		executeQuery().close();
+		return false;
+	}
+
+	@Override
+	public int executeUpdate() throws SQLException {
+		ResultSet rs = executeQuery();
+		try {
+			return ((FmResultSet)rs).getFoundCount();
+		} finally {
+			rs.close();
+		}
+	}
 
 	@Override
 	public ResultSet executeQuery() throws SQLException {
-		return super.executeQuery();
-	}
-
-	public boolean execute() throws SQLException {
 		postArgs = postArgs.replaceAll("<database>", getConnection().getCatalog() );
 		postArgs = postArgs.replaceAll("<layout>", ((FmMetaData)getConnection().getMetaData()).getAnyTableName());
 		postArgs = postArgs.replaceAll("<script>", scriptName);
-		postArgs = postArgs.replaceAll("<script.param>", scriptParam == null ? "" : scriptParam);
+		try {
+			postArgs = postArgs.replaceAll("<script.param>", scriptParam == null ? "" : URLEncoder.encode(scriptParam,"utf-8") );
+		} catch( UnsupportedEncodingException e ) {
+			throw new RuntimeException(e); //Can't happen
+		}
 
 		try {
 			request.doRequest(postArgs);
+			return new FmResultSet( request.getRecordIterator(), request.getFoundCount(), request.getFieldDefinitions(), (FmConnection)getConnection() );
 		} catch (IOException ioe) {
 			SQLException sqle = new SQLException(ioe.toString());
 			sqle.initCause(ioe);
 			throw sqle;
-    } finally {
-		request.closeRequest();
-    }
-
-		return true;
+		}
 	}
-
 	//------ TBD if need -------//
 
 	public void registerOutParameter( int i, int i1 ) throws SQLException {
@@ -390,7 +403,7 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 	public URL getURL( String s ) throws SQLException {
 		throw new AbstractMethodError( "getURL is not implemented yet." ); //FIX!!! Broken placeholder
 	}
-	
+
 	// ==== These methods were added in JDK 1.5 ====
 
 	public Object getObject( int i, Map<String, Class<?>> map ) throws SQLException {
@@ -492,9 +505,9 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 	public void setNClob( String s, Reader reader ) throws SQLException {
 		throw new AbstractMethodError( "This feature has not been implemented yet." ); //FIX!!! Broken placeholder
 	}
-	
+
 	// === Comment these out to compile in Java 1.5 ===
-	
+
 
 	public RowId getRowId( int i ) throws SQLException {
 		throw new AbstractMethodError( "This feature has not been implemented yet." ); //FIX!!! Broken placeholder
