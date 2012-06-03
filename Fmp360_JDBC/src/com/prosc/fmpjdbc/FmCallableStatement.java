@@ -87,7 +87,7 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 
 		try {
 			request.doRequest(postArgs);
-			return new FmResultSet( request.getRecordIterator(), request.getFoundCount(), request.getFieldDefinitions(), (FmConnection)getConnection() );
+			return new FmResultSet( request.getRecordIterator(), request.getFoundCount(), request.getFieldDefinitions(), null, (FmConnection)getConnection(), request );
 		} catch (IOException ioe) {
 			SQLException sqle = new SQLException(ioe.toString());
 			sqle.initCause(ioe);
