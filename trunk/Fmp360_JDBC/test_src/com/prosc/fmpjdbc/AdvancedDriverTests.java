@@ -185,6 +185,19 @@ public class AdvancedDriverTests extends TestCase {
 		rs.close();
 		assertEquals( 4, foundCount ); //Tampa, Saraosta, Atlanta, Alpharetta
 	}
+	
+	public void testStoredProcedureWithNoResults() throws SQLException {
+		CallableStatement call = connection7.prepareCall( "find by state" );
+		call.setString( "-script.param", "UT" );
+		ResultSet rs = call.executeQuery();
+		int foundCount=0;
+		while( rs.next() ) {
+			foundCount++;
+			System.out.println( rs.getString("name") );
+		}
+		rs.close();
+		assertEquals( 0, foundCount ); //Tampa, Saraosta, Atlanta, Alpharetta
+	}
 
 	//Need to add test cases for executeQuery() with several parameters and executeUpdate() with prepared statements.
 
