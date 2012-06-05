@@ -71,7 +71,7 @@ public class StatementProcessor {
 	 */
 	public void execute() throws SQLException {
 		if (logger.isLoggable(Level.CONFIG)) {
-			logger.log(Level.CONFIG, command.getSql());
+			logger.log(Level.CONFIG, toString() );
 		}
 
 		if (command.getTable() == null) {
@@ -661,5 +661,10 @@ public class StatementProcessor {
 
 	public void setReturnGeneratedKeys( boolean returnGeneratedKeys ) {
 		this.returnGeneratedKeys = returnGeneratedKeys;
+	}
+
+	@Override
+	public String toString() {
+		return this.getSQL() + " with parameters " + this.getParams();
 	}
 }
