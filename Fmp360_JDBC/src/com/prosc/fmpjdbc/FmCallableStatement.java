@@ -77,7 +77,7 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 	@Override
 	public ResultSet executeQuery() throws SQLException {
 		postArgs = postArgs.replaceAll("<database>", getConnection().getCatalog() );
-		postArgs = postArgs.replaceAll("<layout>", ((FmMetaData)getConnection().getMetaData()).getAnyTableName());
+		postArgs = postArgs.replaceAll("<layout>", ((FmMetaData)getConnection().getMetaData()).getAnyTableName()); //Optimize: Inefficient
 		postArgs = postArgs.replaceAll("<script>", scriptName);
 		try {
 			postArgs = postArgs.replaceAll("<script.param>", scriptParam == null ? "" : URLEncoder.encode(scriptParam,"utf-8") );
