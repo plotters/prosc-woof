@@ -1,22 +1,23 @@
 package com.prosc.fmpjdbc;
 
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.helpers.DefaultHandler;
 import sun.misc.BASE64Encoder;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.HttpURLConnection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Iterator;
-import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.xml.sax.*;
-import org.xml.sax.helpers.DefaultHandler;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -53,6 +54,7 @@ public class FmResultSetRequest extends FmRequest {
 	private final String username;
 	private final String authString;
 	public String tableOccurrence;
+	private String fullUrl;
 
 	private InputStream serverStream;
 	private String postPrefix = "";
@@ -92,9 +94,9 @@ public class FmResultSetRequest extends FmRequest {
 		postPrefix = s;
 	}
 
-
 	public void doRequest(String postArgs) throws IOException, FileMakerException {
 		if (serverStream != null) throw new IllegalStateException("You must call closeRequest() before sending another request.");
+		fullUrl = theUrl.toString() + "?" + postArgs;
 		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
 		theConnection.setUseCaches(false);
 		if (authString != null) theConnection.addRequestProperty("Authorization", "Basic " + authString);
@@ -122,10 +124,10 @@ public class FmResultSetRequest extends FmRequest {
 	}
 
 	public void closeRequest() {
-		useSelectFields = false;
+		//useSelectFields = false;
 		fieldDefinitions = null;
-		usedFieldArray = null;
-		allFieldNames = new ArrayList();
+		//usedFieldArray = null;
+		//allFieldNames = new ArrayList();
 		fmTable = null;
 		foundCount = 0;
 		if (serverStream != null)
@@ -142,29 +144,32 @@ public class FmResultSetRequest extends FmRequest {
 		super.finalize();
 	}
 
-	private void readResult() throws IOException, SAXException {
+	private void readResult() throws IOException, SAXException, FileMakerException {
 		InputStream streamToParse;
 		streamToParse = serverStream;
 		InputSource input = new InputSource(streamToParse);
 		input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort());
 		xParser.parse( input, xmlHandler );
+		if( errorCode != 0 ) {
+			throw FileMakerException.exceptionForErrorCode( errorCode, fullUrl, fmLayout );
+		}
 	}
 
-	public String getProductVersion() {
-		return productVersion;
-	}
+	//public String getProductVersion() {
+	//	return productVersion;
+	//}
 
-	public String getDatabaseName() {
-		return databaseName;
-	}
+	//public String getDatabaseName() {
+	//	return databaseName;
+	//}
 
 	public int getFoundCount() {
 		return foundCount;
 	}
 
-	public FmRecord getLastRecord() {
-		return currentRow;
-	}
+	//public FmRecord getLastRecord() {
+	//	return currentRow;
+	//}
 
 	public Iterator getRecordIterator() {
 		return records.iterator(); //FIX!! Do this on a row-by-row basis instead of storing the whole list in memory
@@ -183,32 +188,34 @@ public class FmResultSetRequest extends FmRequest {
 	i.e  for updates and inserts etc.
 	*/
 
+	private int errorCode;
+	private String fmLayout;
 	private FmFieldList fieldDefinitions;
 	private FmTable fmTable;
-	private boolean useSelectFields = false;
+	//private boolean useSelectFields = false;
 
-	private String productVersion;
-	private String databaseName;
+	//private String productVersion;
+	//private String databaseName;
 	private int foundCount = -1;
-	private FmRecord currentRow;
+	//private FmRecord currentRow;
 	private List records = new LinkedList(); //FIX!! Temporary for development - get rid of in final version
 	private transient StringBuffer currentData = new StringBuffer(255);
-	private transient int insertionIndex;
+	//private transient int insertionIndex;
 
 	private static transient int code = 0;
-	private static Integer IGNORE_NODE = new Integer(code++);
+	//private static Integer IGNORE_NODE = new Integer(code++);
 	private static Integer DATA_NODE = new Integer(code++);
 	private static Integer ERROR_NODE = new Integer(code++);
 
-	private int[] usedFieldArray; // The array used by the characters() method in xmlHandler.
-	private List allFieldNames = new ArrayList(); // a list of Strings.  All the Field names inside the METADATA tag.
+	//private int[] usedFieldArray; // The array used by the characters() method in xmlHandler.
+	//private List allFieldNames = new ArrayList(); // a list of Strings.  All the Field names inside the METADATA tag.
 
 
 	// ---XML parsing SAX implementation ---
 	private DefaultHandler xmlHandler = new org.xml.sax.helpers.DefaultHandler() {
 		private Integer currentNode = null;
-		private String parsedXML = "";
-		private int columnIndex;
+		private StringBuilder parsedXML = new StringBuilder( 1024 );
+		//private int columnIndex;
 		private int tabCount = 0;
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
 
@@ -242,29 +249,31 @@ public class FmResultSetRequest extends FmRequest {
 
 		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) {
 			if ("fmresultset".equals(qName)) {
-				parsedXML += tabs(tabCount);
-				parsedXML += "- <fmresultset version=\"" + attributes.getValue("version") + "\">";
+				parsedXML.append( tabs(tabCount) );
+				parsedXML.append( "- <fmresultset version=\"" + attributes.getValue("version") + "\">" );
 				tabCount++;
 			}
 			else if ("error".equals(qName)) {
-				parsedXML += tabs(tabCount);
-				parsedXML += "<error code=\"" + attributes.getValue("code") + "\"";
+				errorCode = Integer.valueOf( attributes.getValue( "code" ) );
+				parsedXML.append( tabs(tabCount) );
+				parsedXML.append( "<error code=\"" + errorCode + "\"" );
 			}
 			else if ("product".equals(qName)) {
-				parsedXML += tabs(tabCount);
-				parsedXML += "<product build=\"" + attributes.getValue("build") + "\"" +
+				parsedXML.append( tabs(tabCount) );
+				parsedXML.append( "<product build=\"" + attributes.getValue("build") + "\"" +
 						" name=\"" + attributes.getValue("name") + "\"" +
-						" version=\"" + attributes.getValue("version") + "\"";
+						" version=\"" + attributes.getValue("version") + "\"" );
 			}
 			else if ("datasource".equals(qName)) {
-				parsedXML += tabs(tabCount);
-				parsedXML += "<datasource database=\"" + attributes.getValue("database") + "\"" +
+				parsedXML.append( tabs(tabCount) );
+				fmLayout = attributes.getValue("layout");
+				parsedXML.append( "<datasource database=\"" + attributes.getValue("database") + "\"" +
 						" date-format=\"" + attributes.getValue("date-format") + "\"" +
-						" layout=\"" + attributes.getValue("layout") + "\"" +
+						" layout=\"" + fmLayout + "\"" +
 						" table=\"" + attributes.getValue("table") + "\"" +
 						" time-format=\"" + attributes.getValue("time-format") + "\"" +
 						" timestamp-format=\"" + attributes.getValue("timestamp-format") + "\"" +
-						" total-count=\"" + attributes.getValue("total-count")+ "\"";
+						" total-count=\"" + attributes.getValue("total-count")+ "\"" );
 
 				if (fieldDefinitions == null) {
 					fieldDefinitions = new FmFieldList();
@@ -275,19 +284,19 @@ public class FmResultSetRequest extends FmRequest {
 				fmTable =  new FmTable( attributes.getValue("database") );
 			}
 			else if ("metadata".equals(qName)) {
-				parsedXML += tabs(tabCount);
-				parsedXML += "- <metadata>" + "\n";
+				parsedXML.append( tabs(tabCount) );
+				parsedXML.append( "- <metadata>" + "\n" );
 				tabCount++;
 			}
 			else if ("field-definition".equals(qName)) {
-				parsedXML += tabs(tabCount);
-				parsedXML += "<field-definition auto-enter=\"" + attributes.getValue("auto-enter") + "\"" +
+				parsedXML.append( tabs(tabCount) );
+				parsedXML.append( "<field-definition auto-enter=\"" + attributes.getValue("auto-enter") + "\"" +
 						" global=\"" + attributes.getValue("global") + "\"" +
 						" max-repeat=\"" + attributes.getValue("max-repeat") + "\"" +
 						" name=\"" + attributes.getValue("name") + "\"" +
 						" not-empty=\"" + attributes.getValue("not-empty") + "\"" +
 						" result=\"" + attributes.getValue("result") + "\"" +
-						" type=\"" + attributes.getValue("type")+ "\"";
+						" type=\"" + attributes.getValue("type")+ "\"" );
 
 				//Field attributes: four-digit-year, global, max-repeat, numeric-only, time-of-day, name, result, not-empty, type, auto-enter
 				String fieldName = attributes.getValue("name");
@@ -309,35 +318,35 @@ public class FmResultSetRequest extends FmRequest {
 				}
 			}
 			else if ("resultset".equals(qName)) {
-				parsedXML += tabs(tabCount);
-				parsedXML += "<field-definition count=\"" + attributes.getValue("count") + "\"" +
-						" fetch-size=\"" + attributes.getValue("fetch-size")+ "\"";
+				parsedXML.append( tabs(tabCount) );
+				parsedXML.append( "<field-definition count=\"" + attributes.getValue("count") + "\"" +
+						" fetch-size=\"" + attributes.getValue("fetch-size")+ "\"" );
 			}
 		}
 
 		public void endElement(String uri, String localName, String qName) {
 			if ("fmresultset".equals(qName)) {
-				parsedXML += "</fmresultset>" + "\n";
+				parsedXML.append( "</fmresultset>" + "\n" );
 			}
 			else if ("error".equals(qName)) {
-				parsedXML += "/>" + "\n";
+				parsedXML.append( "/>" + "\n" );
 			}
 			else if ("product".equals(qName)) {
-				parsedXML += "/>";
+				parsedXML.append( "/>" );
 			}
 			else if ("datasource".equals(qName)) {
-				parsedXML += "/>" + "\n";
+				parsedXML.append( "/>" + "\n" );
 			}
 			else if ("metadata".equals(qName)) {
 				tabCount--;
-				parsedXML += tabs(tabCount);
-				parsedXML += "</metadata>" + "\n";
+				parsedXML.append( tabs(tabCount) );
+				parsedXML.append( "</metadata>" + "\n" );
 			}
 			else if ("field-definition".equals(qName)) {
-				parsedXML += "/>" + "\n";
+				parsedXML.append( "/>" + "\n" );
 			}
 			else if ("resultset".equals(qName)) {
-				parsedXML += "/>" + "\n";
+				parsedXML.append( "/>" + "\n" );
 				tabCount--;
 			}
 		}

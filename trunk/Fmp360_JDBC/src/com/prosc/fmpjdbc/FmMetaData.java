@@ -441,9 +441,13 @@ public class FmMetaData implements DatabaseMetaData {
 			FmRecord fieldRecord;
 			for( int n=0; n<fieldCount; n++ ) {
 				eachField = lastRawFields.get( n );
+				String fieldName = eachField.getAlias();
+				if( columnNamePattern != null && ! columnNamePattern.equals( fieldName ) ) {
+					continue;
+				}
 				fieldRecord = new FmRecord( fields, null, null );
 				fieldRecord.addRawValue( tableNamePattern, 2 ); //FIX! Is this the right param to pass in? --jsb
-				fieldRecord.addRawValue( eachField.getAlias(), 3 );
+				fieldRecord.addRawValue( fieldName, 3 );
 				try {
 					eachField.getType().getSqlDataType();
 				} catch(NullPointerException e) {
