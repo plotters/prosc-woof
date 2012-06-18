@@ -302,6 +302,8 @@ public class FmXmlRequest extends FmRequest {
 							onErrorSetAllVariables(ioe);
 							//throw new RuntimeException(ioe);
 						}
+					} catch( StopParsingException e ) {
+						//It's safe to ignore these, because once we've been closed, the client is not going to be requesting any more data
 					} catch (SAXException e) {
 						//log.fine("There was SAXException: " + e.getMessage() + ", so the parsing thread is setting all of the threading variables to true and notifying all threads.\n Here's the stack trace: ");
 						onErrorSetAllVariables(e);
@@ -803,7 +805,7 @@ public class FmXmlRequest extends FmRequest {
 					log.config( "Skipped an empty row, record ID " + currentRow.getRecordId() );
 				}
 				sizeEstimate = 0; // set it to 0 and start estimating again
-				if( columnIndex == recIdColumnIndex ) { //This is necessary in case the record id is the last selected field; it won't be caught in the begin of the <COL> element.
+				if( columnIndex == recIdColumnIndex && columnIndex != -1 ) { //This is necessary in case the record id is the last selected field; it won't be caught in the begin of the <COL> element.
 					currentRow.addRawValue( currentRow.getRecordId().toString(), columnIndex );
 					columnIndex++;
 				}
