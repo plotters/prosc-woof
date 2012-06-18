@@ -458,7 +458,7 @@ public class StatementProcessor {
 				buffer.append(URLEncoder.encode(String.valueOf(value), encoding));
 			}
 			String result = buffer.toString();
-			if( is7OrLater ) result = result.replaceAll( "%0A", "%0A%0D" ); //This seems to be necessary to properly insert carriage returns in FM7
+			//if( is7OrLater ) result = result.replaceAll( "%0A", "%0D%0A" ); //This seems to be necessary to properly insert carriage returns in FM7
 			return result;
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
