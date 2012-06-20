@@ -614,7 +614,11 @@ public class FmMetaData implements DatabaseMetaData {
 					rs.close();
 				}
 			} catch( SQLException e ) {
-				log.log( Level.WARNING, "Error while creating new row to test which fields are writeable", e );
+				if( e.getErrorCode() == 509 ) { //Validation failure, this is normal
+					log.log( Level.INFO, "FileMaker's validation prevented a new record from being created in table " + tableName );
+				} else {
+					log.log( Level.WARNING, "Error while creating new row in table " + tableName + " to test which fields are writeable", e );
+				}
 				insertWorked = false;
 			} finally {
 				stmt.close();
