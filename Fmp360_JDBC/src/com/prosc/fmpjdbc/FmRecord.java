@@ -141,7 +141,12 @@ public class FmRecord {
 		if( columnIndex >= valueCounts.length ) {
 			throw new ArrayIndexOutOfBoundsException( "Tried to set a value for column index " + columnIndex + ", but there are only " + valueCounts.length + " items in the array");
 		}
-		int whichRep = ++valueCounts[ columnIndex ];
+		int whichRep = 0;
+		try {
+			whichRep = ++valueCounts[ columnIndex ];
+		} catch( RuntimeException e ) {
+			throw e;
+		}
 		if( maxRepetitions < 2 ) {
 			rawValues[ columnIndex ] = newValue;
 		} else {
