@@ -63,7 +63,7 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 
 	@Override
 	public String toString() {
-		return getProcessor().toString();
+		return getProcessor() == null ? super.toString() : getProcessor().toString();
 	}
 
 	public boolean execute() throws SQLException {
