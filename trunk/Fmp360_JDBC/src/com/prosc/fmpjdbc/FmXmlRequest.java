@@ -383,7 +383,7 @@ public class FmXmlRequest extends FmRequest {
 		notifyAll();
 	}
 
-	public synchronized String getDatabaseName() throws SQLException {
+	public synchronized String getDatabaseName() {
 		boolean resetInterrupt = false;
 		while (!databaseNameIsSet) {
 			try {
@@ -397,6 +397,11 @@ public class FmXmlRequest extends FmRequest {
 			Thread.currentThread().interrupt();
 		}
 		return databaseName;
+	}
+	
+	public long getTotalRecordCount() {
+		getDatabaseName(); //Do this first to make sure that we've read the headers in the XML
+		return totalRecordCount;
 	}
 
 	private synchronized void setDatabaseName(String dbName) {
@@ -525,6 +530,7 @@ public class FmXmlRequest extends FmRequest {
 	private String fmLayout;
 	private FmTable fmTable;
 	private boolean useSelectFields = false;
+	private long totalRecordCount;
 
 	private volatile String productVersion;
 	private volatile String databaseName;
@@ -722,6 +728,7 @@ public class FmXmlRequest extends FmRequest {
 			} else if ("DATABASE".equals(qName)) {
 				fmLayout = attributes.getValue( "LAYOUT" );
 				fmTable =  new FmTable( attributes.getValue("NAME") );
+				totalRecordCount = Long.valueOf( attributes.getValue( "RECORDS" ) );
 
 				if (fieldDefinitions == null) {
 					fieldDefinitions = new FmFieldList();

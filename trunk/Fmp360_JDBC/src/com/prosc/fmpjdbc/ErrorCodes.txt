@@ -26,6 +26,9 @@
 957 "Conflicting commands"
 958 "Parameter missing in query"
 
+#This is not in FM documentation
+8003 "Record is in use by another user"
+
 *see FileMaker Server 7 Advanced Custom Web Publishing Guide p.89 for all error codes
 
 #A comment

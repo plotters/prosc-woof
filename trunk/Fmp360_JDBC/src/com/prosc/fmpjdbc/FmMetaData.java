@@ -593,10 +593,14 @@ public class FmMetaData implements DatabaseMetaData {
 									writeable.add( field.getColumnName() );
 									readable.add( field.getColumnName() );
 								} catch( FileMakerException e ) {
-									if( e.getErrorCode() == 201 || e.getErrorCode() == 507 ) {
+									final int errorCode = e.getErrorCode();
+									if( errorCode >= 500 && errorCode < 600 ) { //This is a validation error. Don't assume that the field is not writeable, it just means that we don't know what the valid values are.
+										writeable.add( field.getColumnName() );
+										readable.add( field.getColumnName() );
+									} else if( errorCode == 201 || (errorCode >=500 && errorCode < 600) ) {
 										//Field is not writeable; skip
 										readable.add( field.getColumnName() );
-									} else if( e.getErrorCode() == 102 ) { //This happens when a field is completely unreadable.
+									} else if( errorCode == 102 ) { //This happens when a field is completely unreadable.
 										//Field is not readable; skip
 									} else {
 										throw e;
