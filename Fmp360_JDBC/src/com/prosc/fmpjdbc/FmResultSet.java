@@ -59,6 +59,7 @@ public class FmResultSet implements ResultSet {
 	//private boolean isLast = false;
 	private int rowNum = -1;
 	private FmRecord currentRecord;
+	private long totalRecordCount;
 
 	/** Pass in an iterator of {@link FmRecord} objects, which will be used as the ResultSet. Pass null for an empty ResultSet. */
 	FmResultSet( Iterator<FmRecord> fmRecordsIterator, int foundCount, FmFieldList fieldDefinitions, FmConnection connection ) {
@@ -102,6 +103,15 @@ public class FmResultSet implements ResultSet {
 		this.columnOffset = whichColumnIndex;
 	}
 
+	void setTotalRecordCount( long totalRecordCount ) {
+		this.totalRecordCount = totalRecordCount;
+	}
+
+	/** This returns the total number of records in the table, which is not (necessarily) the same as the found count for this query. */
+	public long getTotalRecordCount() {
+		return totalRecordCount;
+	}
+
 	/** This returns the total number of records found in the query. This is a FileMaker-specific attribute which is not part of the JDBC
 	 * spec, so cast the ResultSet to this class if you need to access this attribute. This found count includes records not viewable based
 	 * on record-level security restrictions, so if you need to get an accurate count of the visible records, the only way is to repeatedly
@@ -122,7 +132,7 @@ public class FmResultSet implements ResultSet {
 	private SQLException handleFormattingException(Exception e, String columnName) {
 		log.log(Level.WARNING, e.toString(), e);
 		SQLException sqlException = new SQLException( e.toString() + " (requested column '" + columnName + "' / zero-indexed row: " + rowNum + ")" );
-		sqlException.initCause(e);
+		sqlException.initCause( e );
 		return sqlException;
 	}
 

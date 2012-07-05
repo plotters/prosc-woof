@@ -277,6 +277,7 @@ public class StatementProcessor {
 					}
 
 					results = new FmResultSet( actionHandler.getRecordIterator(), actionHandler.getFoundCount(), actionHandler.getFieldDefinitions(), statement, connection, actionHandler );
+					results.setTotalRecordCount( actionHandler.getTotalRecordCount() );
 					// DO NOT CLOSE the request since the result set needs to stream the records
 					break;
 
@@ -473,7 +474,10 @@ public class StatementProcessor {
 				buffer.append(URLEncoder.encode(String.valueOf(value), encoding));
 			}
 			String result = buffer.toString();
-			//if( is7OrLater ) result = result.replaceAll( "%0A", "%0D%0A" ); //This seems to be necessary to properly insert carriage returns in FM7
+			
+			/* FileMaker 11 requires new lines to use %0D. FileMaker 12 allows either %0A or %0D (combining both yields an extra new line).
+			Switching all occurrences of %0A to %0D will make new lines work correctly for either version. --jsb */
+			if( is7OrLater ) result = result.replace( "%0A", "%0D" ); //Optimize - If we detected the version of FileMaker, we could skip this step if running in FM 12. --jsb
 			return result;
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);

@@ -71,6 +71,10 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 		try {
 			getProcessor().execute();
 		} catch (RuntimeException e) {
+			this.close();
+			throw e;
+		} catch( SQLException e ) {
+			this.close();
 			throw e;
 		}
 		return getProcessor().hasResultSet();
@@ -83,7 +87,14 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 	}*/
 
 	public ResultSet executeQuery() throws SQLException {
-		execute();
+		try {
+			execute();
+		} catch( RuntimeException e ) {
+			this.close();
+			throw e;
+		} catch( SQLException e ) {
+			this.close();
+			throw e;		}
 		return getProcessor().getResultSet();
 	}
 
