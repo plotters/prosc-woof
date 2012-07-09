@@ -44,7 +44,7 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 
 	public FmCallableStatement( FmConnection connection ) throws SqlParseException {
 		super( connection );
-		
+
 		request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion()); //connection.getXmlRequestHandler();
 	}
@@ -76,10 +76,11 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 
 	@Override
 	public ResultSet executeQuery() throws SQLException {
-		postArgs = postArgs.replaceAll("<database>", getConnection().getCatalog() );
-		postArgs = postArgs.replaceAll("<layout>", ((FmMetaData)getConnection().getMetaData()).getAnyTableName()); //Optimize: Inefficient
-		postArgs = postArgs.replaceAll("<script>", scriptName);
 		try {
+			postArgs = postArgs.replaceAll("<database>", URLEncoder.encode( getConnection().getCatalog(), "utf-8") );
+			postArgs = postArgs.replaceAll("<layout>", URLEncoder.encode( ((FmMetaData)getConnection().getMetaData()).getAnyTableName(), "utf-8") ); //Optimize: Inefficient
+			postArgs = postArgs.replaceAll("<script>", URLEncoder.encode( scriptName, "utf-8") );
+
 			postArgs = postArgs.replaceAll("<script.param>", scriptParam == null ? "" : URLEncoder.encode(scriptParam,"utf-8") );
 		} catch( UnsupportedEncodingException e ) {
 			throw new RuntimeException(e); //Can't happen

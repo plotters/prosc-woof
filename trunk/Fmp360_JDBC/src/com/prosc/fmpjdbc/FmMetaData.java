@@ -1,5 +1,6 @@
 package com.prosc.fmpjdbc;
 
+import java.io.UnsupportedEncodingException;
 import java.sql.*;
 import java.io.IOException;
 import java.util.*;
@@ -145,7 +146,8 @@ public class FmMetaData implements DatabaseMetaData {
 				logger.warning( "Cannot read stored procedures unless a database name is specified." );
 				scriptIterator = Collections.EMPTY_LIST.iterator();
 			} else {
-				handler.doRequest("-db=" + dbName +"&-scriptnames"); //fixed hard-coded database columnName -bje
+				String encodedDbName = URLEncoder.encode( dbName, "utf-8" );
+				handler.doRequest("-db=" + encodedDbName +"&-scriptnames"); //fixed hard-coded database columnName -bje
 				//if (logger.isLoggable(Level.FINEST)) {
 				//	logger.log(Level.FINEST, "Script count: " + handler.getFoundCount() );
 				//}
@@ -175,7 +177,7 @@ public class FmMetaData implements DatabaseMetaData {
 					continue; //Script name doesn't match requested pattern
 				}
 				scriptObject = new FmRecord( scriptInfo, null, null );
-				scriptObject.addRawValue( (String)scriptRecord.getString( 0, 1 ), 2 );
+				scriptObject.addRawValue( scriptRecord.getString( 0, 1 ), 2 );
 				scriptObject.addRawValue( "" + DatabaseMetaData.procedureNoResult, 7 );
 				scripts.add( scriptObject );
 				if (logger.isLoggable(Level.FINEST)) {
@@ -255,7 +257,12 @@ public class FmMetaData implements DatabaseMetaData {
 		List<FmRecord> tables = new LinkedList<FmRecord>();
 		for( Iterator<String> dbIterator=databaseNames.iterator(); dbIterator.hasNext(); ) {
 			databaseName = dbIterator.next();
-			String encodedDBName = URLEncoder.encode(databaseName);
+			String encodedDBName;
+			try {
+				encodedDBName = URLEncoder.encode( databaseName, "utf-8" );
+			} catch( UnsupportedEncodingException e ) {
+				throw new RuntimeException( e );
+			}
 			postArgs = "-db=" + encodedDBName + "&-layoutnames"; //fixed hard-coded test value -bje
 			FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
@@ -420,7 +427,9 @@ public class FmMetaData implements DatabaseMetaData {
 					if( dbName == null ) dbName = connection.getCatalog();
 				}
 				//FIX!! What do we do if it's still null?
-				String postArgs = "-db=" + dbName + "&-lay=" + tableNamePattern + "&-max=0&-findany";
+				String encodedDbName = URLEncoder.encode( dbName, "utf-8" );
+				String encodedTableName = URLEncoder.encode( tableNamePattern, "utf-8" );
+				String postArgs = "-db=" + encodedDbName + "&-lay=" + encodedTableName + "&-max=0&-findany";
 				handler.doRequest(postArgs);
 				lastRawFields = handler.getFieldDefinitions();
 			} catch (IOException e) {
