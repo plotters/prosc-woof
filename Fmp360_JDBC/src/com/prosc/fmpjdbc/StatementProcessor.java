@@ -87,14 +87,14 @@ public class StatementProcessor {
 				displayLayout = layout.substring( mark + DISPLAY_LAYOUT_MARKER.length() );
 				layout = layout.substring( 0, mark );
 			}
-			if( layout != null ) layout = URLEncoder.encode( layout, "UTF-8" );
+			//if( layout != null ) layout = URLEncoder.encode( layout, "UTF-8" );
 			if( displayLayout != null ) displayLayout = URLEncoder.encode( displayLayout, "UTF-8" );
 			final String encodedDbName = URLEncoder.encode( getDatabaseName(), "UTF-8" );
 			if( ( (FmConnection)statement.getConnection() ).getFmVersion() < 7 ) {
 				dbLayoutString = "-db=" + encodedDbName;
 				//String layoutName = getLayoutName();
 				if( displayLayout == null ) displayLayout = layout; //FM6 only needs a displayLayout, it's OK to search for fields that don't exist on the layout
-				if( displayLayout != null ) dbLayoutString += "&-lay=" + displayLayout;
+				if( displayLayout != null ) dbLayoutString += "&-lay=" + URLEncoder.encode( displayLayout, "utf-8" );
 				else logger.info( "Executing an SQL query without a layout name can be slow. Specify a layout name for best efficiency." );
 			} else {
 				String encodedLayout = URLEncoder.encode( layout, "utf-8" );
