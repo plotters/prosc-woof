@@ -629,8 +629,7 @@ public class FmXmlRequest extends FmRequest {
 		}
 
 		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) throws SAXException {
-			if( Thread.interrupted() ) {
-				Thread.currentThread().interrupt();
+			if( Thread.currentThread().isInterrupted() ) {
 				throw new StopParsingException( "Parsing thread was interrupted" );
 			}
 			/*if( debugMode ) {
