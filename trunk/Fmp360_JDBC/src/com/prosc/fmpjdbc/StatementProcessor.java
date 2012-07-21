@@ -122,8 +122,9 @@ public class StatementProcessor {
 			Map whereSegmentKeys = new HashMap( command.getSearchTerms().size() );
 
 			Iterator recordIdIterator = null;
+			boolean findAny = true;
 			for( Iterator it = command.getSearchTerms().iterator(); it.hasNext(); ) {
-				SearchTerm eachTerm = (SearchTerm)it.next();
+				SearchTerm eachTerm = (SearchTerm)it.next();				
 				if( "recid".equals( eachTerm.getField().getColumnName().toLowerCase() ) ) { //Throw away all other params, just use recid
 					Object value = eachTerm.getValue();
 					if( eachTerm.isPlaceholder() ) {
@@ -134,6 +135,8 @@ public class StatementProcessor {
 					recordIds.add( Long.valueOf( value.toString() ) );
 					recordIdIterator = recordIds.iterator();
 					break;
+				} else if( findAny && ! eachTerm.isSpecialTerm() ) { //We need to know if there are any search terms that do not start with a hyphen, to know whether to do a -find or -findany. --jsb
+					findAny = false;
 				}
 				String fieldName = eachTerm.getField().getColumnName(); //FIX!! use fully qualified table names for related fields
 				/**
@@ -147,10 +150,10 @@ public class StatementProcessor {
 				eachTermSegments[0] = "";
 				final int operator = eachTerm.getOperator();
 				eachTermSegments[3] = new Integer( operator );
-				if (operator == SearchTerm.EQUALS) {
-					wildcardsToEscape = WILDCARDS_EQUALS;
-				} else if (operator == SearchTerm.LIKE) {
+				if( operator == SearchTerm.LIKE ) {
 					wildcardsToEscape = WILDCARDS_LIKE;
+				} else if (operator == SearchTerm.EQUALS) {
+					wildcardsToEscape = WILDCARDS_EQUALS;
 				} else {
 					wildcardsToEscape = WILDCARDS_EQUALS;
 					String operatorString;
@@ -185,7 +188,8 @@ public class StatementProcessor {
 				eachTermSegments[1] = "&" + URLEncoder.encode(fieldName, "UTF-8") + "=";
 				eachTermSegments[2] = urlEncodedValue(value, applyFormatter, wildcardsToEscape, operator == SearchTerm.EQUALS);
 				if ("%3D".equals(eachTermSegments[2]) && (eachTerm.getOperator() == SearchTerm.EQUALS)) {
-					eachTermSegments[2] = "%3D%3D"; // need two == signs for an exact empty match
+					//FIX!! I don't think this is correct - Sam, my test shows that one equals works fine (and I'm assuming it's faster...?) --jsb
+					//eachTermSegments[2] = "%3D%3D"; // need two == signs for an exact empty match
 				}
 
 				/* This checks to see if the same term is used multiple times, and if it is, it
@@ -245,7 +249,7 @@ public class StatementProcessor {
 					if( whereClause.length() == 0 )
 						postArgs.append( "&-max=" + maxRecords + "&-findall" );
 					else {
-						boolean findAny = false;
+						//boolean findAny = false;
 						if( command.getLogicalOperator() == SqlCommand.OR ) postArgs.append( "&-lop=or" );
 						postArgs.append( whereClause );
 						if( command.getMaxRows() != null ) {
@@ -436,49 +440,57 @@ public class StatementProcessor {
 	private String urlEncodedValue(Object value, boolean applyFormatter, String wildcardsToEscape, boolean isEqualsQualifier) throws SQLException {
 		try {
 			StringBuffer buffer = new StringBuffer();
-			if (isEqualsQualifier) {
+			if( "=".equals( value ) ) {
+				//This is a special case where we are searching for an empty value.
 				buffer.append("%3D"); // one encoded "equals" sign, signifying field content match. Used to use two, which is more precise, but horribly slow. --jsb
-			}
-			if (applyFormatter ) {
-				// all the things we were checking for subclass java.util.Date, just check once.
-				// FIX!!! need to URLEncode formatted values too -ssb
-				if (value instanceof java.sql.Time) {
-					value = ((DateFormat)FmRecord.timeFormat.get()).format(value);
-				} else if (value instanceof java.sql.Timestamp) {
-					value = ((DateFormat)FmRecord.timestampFormat.get()).format(value);
-				} else if ( value instanceof java.sql.Date ) {
-					DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
-					dateFormat.setTimeZone( defaultTimeZone );
-					value = dateFormat.format(value);
-				} else if( value instanceof DateWithZone ) {
-					Date date = ( (DateWithZone)value ).date;
-					TimeZone tz = ( (DateWithZone)value ).timeZone;
-					DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
-					dateFormat.setTimeZone( tz );
-					value = ((DateFormat) FmRecord.dateFormat.get()).format(date);
-				} else if( value instanceof TimeWithZone ) {
-					Date date = ( (TimeWithZone)value ).time;
-					TimeZone tz = ( (TimeWithZone)value ).timeZone;
-					DateFormat timeFormat = (DateFormat)FmRecord.timeFormat.get();
-					timeFormat.setTimeZone( tz );
-					value = timeFormat.format(date);
-				} else if ( value instanceof java.util.Date ) {
-					value = ((DateFormat) FmRecord.timestampFormat.get()).format(value);
+			} else if("!".equals( value ) ) {
+				//This is a special case where we are searching for for duplicates.
+				buffer.append( "%21" );
+			} else {
+				if (isEqualsQualifier) {
+					buffer.append("%3D"); // one encoded "equals" sign, signifying field content match. Used to use two, which is more precise, but horribly slow. --jsb
+				}
+				if (applyFormatter ) {
+					// all the things we were checking for subclass java.util.Date, just check once.
+					// FIX!!! need to URLEncode formatted values too -ssb
+					if (value instanceof java.sql.Time) {
+						value = ((DateFormat)FmRecord.timeFormat.get()).format(value);
+					} else if (value instanceof java.sql.Timestamp) {
+						value = ((DateFormat)FmRecord.timestampFormat.get()).format(value);
+					} else if ( value instanceof java.sql.Date ) {
+						DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
+						dateFormat.setTimeZone( defaultTimeZone );
+						value = dateFormat.format(value);
+					} else if( value instanceof DateWithZone ) {
+						Date date = ( (DateWithZone)value ).date;
+						TimeZone tz = ( (DateWithZone)value ).timeZone;
+						DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
+						dateFormat.setTimeZone( tz );
+						value = ((DateFormat) FmRecord.dateFormat.get()).format(date);
+					} else if( value instanceof TimeWithZone ) {
+						Date date = ( (TimeWithZone)value ).time;
+						TimeZone tz = ( (TimeWithZone)value ).timeZone;
+						DateFormat timeFormat = (DateFormat)FmRecord.timeFormat.get();
+						timeFormat.setTimeZone( tz );
+						value = timeFormat.format(date);
+					} else if ( value instanceof java.util.Date ) {
+						value = ((DateFormat) FmRecord.timestampFormat.get()).format(value);
+					}
+				}
+				if (wildcardsToEscape != null) {
+					String s = value == null ? "" : value.toString();
+					//s = String.valueOf( value );
+					StringBuffer escapedValue = new StringBuffer(s==null ? 1 : s.length());
+					appendEscapedFmWildcards(s, escapedValue, wildcardsToEscape);
+					buffer.append(URLEncoder.encode(escapedValue.toString(), encoding));
+				} else if (value != null) {
+					buffer.append(URLEncoder.encode(String.valueOf(value), encoding));
 				}
 			}
-			if (wildcardsToEscape != null) {
-				String s = value == null ? "" : value.toString();
-				//s = String.valueOf( value );
-				StringBuffer escapedValue = new StringBuffer(s==null ? 1 : s.length());
-				appendEscapedFmWildcards(s, escapedValue, wildcardsToEscape);
-				buffer.append(URLEncoder.encode(escapedValue.toString(), encoding));
-			} else if (value != null) {
-				buffer.append(URLEncoder.encode(String.valueOf(value), encoding));
-			}
 			String result = buffer.toString();
-			
+
 			/* FileMaker 11 requires new lines to use %0D. FileMaker 12 allows either %0A or %0D (combining both yields an extra new line).
-			Switching all occurrences of %0A to %0D will make new lines work correctly for either version. --jsb */
+						Switching all occurrences of %0A to %0D will make new lines work correctly for either version. --jsb */
 			if( is7OrLater ) result = result.replace( "%0A", "%0D" ); //Optimize - If we detected the version of FileMaker, we could skip this step if running in FM 12. --jsb
 			return result;
 		} catch (UnsupportedEncodingException e) {
