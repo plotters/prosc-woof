@@ -12,6 +12,7 @@
 301 "Record is in use by another user"
 302 "Table is in use by another user"
 303 "Database schema is in use by another user"
+400 "Find criteria are empty"
 401 "No records match the request"
 500 "Date value does not meet validation entry options"
 501 "Time value does not meet validation entry options"

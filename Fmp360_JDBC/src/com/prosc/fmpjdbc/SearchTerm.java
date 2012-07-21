@@ -35,16 +35,19 @@ public class SearchTerm {
 	public static final int CONTAINS = 8;
 	protected static final int LIKE = 9;
 
-	private int operator;
-	private FmField field;
-	private Object value;
-	private boolean isPlaceholder;
+	private final int operator;
+	private final FmField field;
+	private final Object value;
+	private final boolean isPlaceholder;
+	private final boolean specialTerm;
 
 	public SearchTerm(FmField field, int operator, Object value, boolean isPlaceholder) {
 		if (isPlaceholder && value!=null) throw new IllegalArgumentException("placeholder SearchTerms must use null for value.");
 		if ("null".equalsIgnoreCase(String.valueOf(value))) value = null;
 		this.field = field;
-		this.operator = operator;
+		
+		specialTerm = field.getColumnName().length() > 0 && field.getColumnName().charAt(0) == '-';
+		this.operator = specialTerm ? LIKE : operator; //LIKE searches don't modify the search terms at all, which is what we want for any special terms like -script or -script.param
 		this.value = value;
 		this.isPlaceholder = isPlaceholder;
 	}
@@ -67,5 +70,10 @@ public class SearchTerm {
 	/** Whether this Term is a placeHolder in a PreparedStatement. */
 	public boolean isPlaceholder() {
 		return isPlaceholder;
+	}
+
+	/** Returns true if this is a special filemaker term like -script, -script.param, or anything else that starts with a hyphen. */
+	public boolean isSpecialTerm() {
+		return specialTerm;
 	}
 }

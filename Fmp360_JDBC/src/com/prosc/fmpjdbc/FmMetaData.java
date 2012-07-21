@@ -1,5 +1,7 @@
 package com.prosc.fmpjdbc;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.UnsupportedEncodingException;
 import java.sql.*;
 import java.io.IOException;
@@ -34,16 +36,16 @@ import java.net.URLEncoder;
  */
 public class FmMetaData implements DatabaseMetaData {
 	private static final Logger log = Logger.getLogger( FmMetaData.class.getName() );
-	
+
 	private final FmConnection connection;
-	
+
 	private boolean didReadDbInfo = false;
 	//These next fields are read on demand
 	private String databaseProductName;
 	private String databaseProductVersion;
 	private int dbMajorVersion;
 	private int dbMinorVersion;
-	
+
 	//private List databaseNames;
 
 	private static AtomicInteger counter = new AtomicInteger(0);
@@ -366,7 +368,7 @@ public class FmMetaData implements DatabaseMetaData {
 	 * @return
 	 * @throws SQLException
 	 */
-	public ResultSet getColumns( String catalog, String schemaPattern, String tableNamePattern, String columnNamePattern ) throws SQLException {
+	public ResultSet getColumns( @Nullable String catalog, @Nullable String schemaPattern, String tableNamePattern, @Nullable String columnNamePattern ) throws SQLException {
 		if (logger.isLoggable(Level.FINE)) {
 			logger.log(Level.FINE, "getColumns(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + columnNamePattern + ")");
 		}
@@ -570,8 +572,8 @@ public class FmMetaData implements DatabaseMetaData {
 			Statement stmt = getConnection().createStatement();
 			boolean insertWorked = true;
 			try {
+				insertEmptyRecord( stmt, tableName );
 				//stmt.executeUpdate( "INSERT INTO '" + tableName + "'(b), VALUES(3)", Statement.RETURN_GENERATED_KEYS );
-				stmt.executeUpdate( "INSERT INTO '" + tableName + "'", Statement.RETURN_GENERATED_KEYS );
 				ResultSet rs = stmt.getGeneratedKeys();
 				try {
 					if( rs.next() ) {
@@ -585,18 +587,11 @@ public class FmMetaData implements DatabaseMetaData {
 									continue; //Don't test related fields for whether they're writeable
 								}
 								try {
-									Object value;
-									if( field.getType() == FmFieldType.DATE ) {
-										value = "1/1/2000";
-									} else if( field.getType() == FmFieldType.TIMESTAMP ) {
-										value = "1/1/2000 11:08am";
-									} else if( field.getType() == FmFieldType.TIME ) {
-										value = "11:07am";
-									} else if( field.getType() == FmFieldType.CONTAINER ) {
-										continue; //Can't write to container fields
-									} else {
-										value = "4289134";
+									String value = randomValueForType( field.getType().getSqlDataType() );
+									if( value == null ) { //This indicates a container field or some other field type that cannot be written to
+										continue;
 									}
+
 									String sql = "UPDATE \"" + tableName + "\" SET \"" + field.getColumnName() + "\"= \"" + value + "\" WHERE recid=" + recid;
 									stmt.executeUpdate( sql );
 									writeable.add( field.getColumnName() );
@@ -656,6 +651,54 @@ public class FmMetaData implements DatabaseMetaData {
 		if( writeable.contains( fieldName ) ) {
 			result.add( "UPDATE" );
 			result.add( "INSERT" ); //FIX!! It's possible that field can be inserted even if it's not readable; currently our process will not detect that.
+		}
+		return result;
+	}
+
+	public void insertEmptyRecord( Statement stmt, String tableName ) throws SQLException {
+		List<String> requiredColumns = new LinkedList<String>();
+		List<String> requiredValues = new LinkedList<String>();
+		final ResultSet columns = getColumns( null, null, tableName, null );
+		while( columns.next() ) {
+			if( columns.getInt( 11 ) == DatabaseMetaData.columnNoNulls ) {
+				requiredColumns.add( columns.getString( 4 ) );
+				requiredValues.add( randomValueForType( columns.getInt( 5 ) ) );
+			}
+		}
+
+		StringBuilder sql = new StringBuilder( 256 );
+		sql.append("INSERT INTO '" + tableName + "'");
+		if( requiredColumns.size() > 0 ) {
+			sql.append( '(' ) ;
+
+			String delim="";
+			for( String column : requiredColumns ) {
+				sql.append( delim + column );
+				delim = ",";
+			}
+			sql.append( ") VALUES(" );
+			delim = "";
+			for( String value : requiredValues ) {
+				sql.append( delim + "'" + value + "'" );
+				delim=",";
+			}
+			sql.append( ")" );
+		}
+		stmt.executeUpdate( sql.toString(), Statement.RETURN_GENERATED_KEYS );
+	}
+
+	public String randomValueForType( int dataType ) {
+		String result;
+		if( dataType == Types.DATE ) {
+			result = "1/1/2000";
+		} else if( dataType == Types.TIMESTAMP ) {
+			result = "1/1/2000 11:08am";
+		} else if( dataType == Types.TIME ) {
+			result = "11:07am";
+		} else if( dataType == Types.BLOB ) { //Can't write to container fields
+			result = null;
+		} else {
+			result = "4289134";
 		}
 		return result;
 	}

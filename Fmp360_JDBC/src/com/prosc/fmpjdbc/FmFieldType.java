@@ -1,5 +1,7 @@
 package com.prosc.fmpjdbc;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
 import java.sql.Blob;
@@ -39,8 +41,8 @@ import java.math.BigDecimal;
 public class FmFieldType implements Cloneable {
 	private static final Logger log = Logger.getLogger( FmFieldType.class.getName() );
 
-	static final Map typesByName = new HashMap(6);
-	static final Collection publishedTypes = new LinkedList();
+	static final Map<String, FmFieldType> typesByName = new HashMap<String, FmFieldType>(6);
+	static final Collection<FmFieldType> publishedTypes = new LinkedList<FmFieldType>();
 	static final FmFieldList resultSetFormat = new FmFieldList();
 	static final FmFieldType TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP, CONTAINER;
 
@@ -70,9 +72,9 @@ public class FmFieldType implements Cloneable {
 		CONTAINER.setSearchable( (short)DatabaseMetaData.typePredNone);
 		
 		FmFieldType[] types = new FmFieldType[] { TEXT, NUMBER, DATE, TIME, TIMESTAMP };
-		for( int n=0; n<types.length; n++ ) {
-			typesByName.put( types[n].getTypeName(), types[n] );
-			publishedTypes.add( types[n] );
+		for( FmFieldType type : types ) {
+			typesByName.put( type.getTypeName(), type );
+			publishedTypes.add( type );
 		}
 		typesByName.put( RECID.getTypeName(), RECID ); //Separate because this is not a published type
 		typesByName.put( "CONTAINER", CONTAINER ); //Needs special handling because we name it "BLOB", not "CONTAINER" like FileMaker.
@@ -232,7 +234,7 @@ public class FmFieldType implements Cloneable {
 		return literalPrefix;
 	}
 
-	public void setLiteralPrefix(String literalPrefix) {
+	public void setLiteralPrefix( @Nullable String literalPrefix) {
 		this.literalPrefix = literalPrefix;
 	}
 
@@ -240,7 +242,7 @@ public class FmFieldType implements Cloneable {
 		return literalSuffix;
 	}
 
-	public void setLiteralSuffix(String literalSuffix) {
+	public void setLiteralSuffix( @Nullable String literalSuffix) {
 		this.literalSuffix = literalSuffix;
 	}
 
