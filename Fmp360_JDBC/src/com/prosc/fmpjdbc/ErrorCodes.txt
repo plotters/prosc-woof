@@ -16,6 +16,7 @@
 401 "No records match the request"
 500 "Date value does not meet validation entry options"
 501 "Time value does not meet validation entry options"
+502 "Number value does not meet validation entry options"
 504 "Value in field is not unique as required in validation entry options"
 507 "Value in field failed calculation test of validation entry option"
 509 "Field requires a valid value" - Often happens when a new record is inserted, but not all required values are supplied in the INSERT statement.
@@ -30,6 +31,5 @@
 #This is not in FM documentation
 8003 "Record is in use by another user"
 
-*see FileMaker Server 7 Advanced Custom Web Publishing Guide p.89 for all error codes
-
+#*see FileMaker Server 7 Advanced Custom Web Publishing Guide p.89 for all error codes
 #A comment

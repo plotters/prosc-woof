@@ -281,7 +281,7 @@ public class FmResultSetRequest extends FmRequest {
 
 				tableOccurrence = attributes.getValue( "table" );
 
-				fmTable =  new FmTable( attributes.getValue("database") );
+				fmTable = new FmTable( attributes.getValue("database") );
 			}
 			else if ("metadata".equals(qName)) {
 				parsedXML.append( tabs(tabCount) );

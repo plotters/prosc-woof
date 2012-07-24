@@ -19,6 +19,9 @@ package com.prosc.fmpjdbc;
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Represents a Filemaker layout, so the FmStatement class knows how to construct the URL for a table.  This is used primarily to uniquely identify FmField objects with identical names.
  * Much of the previous functionality of FmTable has been moved to {@link FmFieldList}.
@@ -26,30 +29,20 @@ package com.prosc.fmpjdbc;
  * @author sbarnum
  */
 public class FmTable {
-	private String name;
-	private String alias;
-	private String databaseName;
-	private String originalName;
+	private final String name;
+	private final String alias;
+	private final String databaseName;
+	private final String originalName;
 
 	/**
-	 * Create a new table object.
+	 * Create a new table object with a null alias and a catalog separator of '.' and '|'
 	 * @param name The name of the table, and an optional prefix containing the database name followed by a period.
 	 * <p>
 	 * Example: perform a SELECT on the person layout of the staff.fp7 database.
 	 * <code>SELECT t0.firstName f0, t0.lastName f1 FROM staff.person t0</code>
 	 */
 	public FmTable(String name) {
-		this.originalName = name;
-		int index = name.indexOf('.');
-		if (index == -1) {
-			index = name.indexOf('|');
-		}
-		if (index > 0) {
-			this.databaseName = name.substring(0, index);
-			this.name = name.substring(index+1);
-		} else {
-			this.name = name;
-		}
+		this( name, null, ".|" );
 	}
 
 	/**
@@ -58,8 +51,30 @@ public class FmTable {
 	 * @param alias the table alias, or null if no table alias is used.
 	 */
 	public FmTable(String name, String alias) {
-		this(name);
+		this( name, alias, ".|" );
+	}
+
+	/** Create a new table object which uses a name, alias, and catalogSeparator.
+	 * 
+	 * @param catalogSeparators Each character in this string is used as a separator to distinguish the database name from the layout name. It is typically set to "|.". This
+	 * means that a table named "MyDatabase|MyTable" or "MyDatabase.MyTable" will have a db name of MyDatabase and a layout name of MyTable.
+	 */
+	public FmTable( @NotNull String name, @Nullable String alias, @Nullable String catalogSeparators ) {
 		this.alias = alias;
+		
+		this.originalName = name;
+		int index = -1;
+		for( char c : catalogSeparators.toCharArray() ) {
+			index = name.indexOf( c );
+			if( index >= 0 ) break;
+		}
+		if (index > 0) {
+			this.databaseName = name.substring(0, index);
+			this.name = name.substring(index+1);
+		} else {
+			this.databaseName = null;
+			this.name = name;
+		}
 	}
 
 	/** Returns the name of the table. */
