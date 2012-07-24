@@ -40,7 +40,7 @@ public class FmStatement implements Statement {
 
 	//---These methods must be implemented---
 	public ResultSet executeQuery( String s ) throws SQLException {
-		SqlCommand command = new SqlCommand(s);
+		SqlCommand command = new SqlCommand(s, connection.getCatalogSeparator() );
 		processor = new StatementProcessor(this, command);
 		processor.execute();
 		return processor.getResultSet();
@@ -51,7 +51,7 @@ public class FmStatement implements Statement {
 	}
 
 	public boolean execute( String s ) throws SQLException {
-		SqlCommand command = new SqlCommand(s);
+		SqlCommand command = new SqlCommand(s, connection.getCatalogSeparator() );
 		processor = new StatementProcessor(this, command);
 		processor.execute();
 		return processor.hasResultSet();
@@ -87,7 +87,7 @@ public class FmStatement implements Statement {
 	}
 
 	public boolean execute( String s, int i ) throws SQLException {
-		SqlCommand command = new SqlCommand(s);
+		SqlCommand command = new SqlCommand(s, connection.getCatalogSeparator() );
 		processor = new StatementProcessor(this, command);
 		if( i == Statement.RETURN_GENERATED_KEYS ) {
 			processor.setReturnGeneratedKeys( true );
@@ -98,7 +98,7 @@ public class FmStatement implements Statement {
 
 
 	public int executeUpdate( String s, int i ) throws SQLException {
-		SqlCommand command = new SqlCommand(s);
+		SqlCommand command = new SqlCommand(s, connection.getCatalogSeparator() );
 		processor = new StatementProcessor(this, command);
 		if( i == Statement.RETURN_GENERATED_KEYS ) {
 			processor.setReturnGeneratedKeys( true );

@@ -69,15 +69,17 @@ public class SqlCommand {
 	private List<SearchTerm> searchTerms;
 	private List<SortTerm> sortTerms;
 	private List<AssignmentTerm> assignmentTerms;
+	private final String catalogSeparator;
 
 	public SqlCommand(String sql) throws SqlParseException {
-		this( sql, null );
+		this( sql, "." );
 	}
 
 	public SqlCommand(String sql, @Nullable String catalogSeparator) throws SqlParseException {
 		if (sql == null) throw new IllegalArgumentException("sql must not be null.");
 		if (sql.length() < 8) throw new IllegalArgumentException("sql command is too short.");
 		this.sql = sql;
+		this.catalogSeparator = catalogSeparator;
 		fields = new FmFieldList();
 		sortTerms = new LinkedList<SortTerm>();
 		searchTerms = new LinkedList<SearchTerm>();
@@ -469,7 +471,7 @@ public class SqlCommand {
 					queryPart = ASSIGNED_FIELDS;
 				} else {
 					if (table == null) {
-						table = new FmTable(string);
+						table = new FmTable(string, null, catalogSeparator);
 					} else {
 						// table alias, not interested
 					}
@@ -520,7 +522,7 @@ public class SqlCommand {
 				return; // first sqlCode is always "INTO"
 			}
 			if (queryPart == TABLES) {
-				table = new FmTable(string);
+				table = new FmTable(string, null, catalogSeparator);
 				queryPart = ASSIGNED_FIELDS;
 			} else if (queryPart == ASSIGNED_FIELDS) {
 				if ("values".equals(lower)) {
@@ -614,7 +616,7 @@ public class SqlCommand {
 				} else if ("limit".equals(lower)) {
 					queryPart = LIMIT;
 				} else if (table == null) {
-					table = new FmTable(string);
+					table = new FmTable(string, null, catalogSeparator);
 					for (Iterator<FmField> iterator = fields.iterator(); iterator.hasNext();) {
 						FmField selectFieldPlaceholder = iterator.next();
 						selectFieldPlaceholder.setTable(table);

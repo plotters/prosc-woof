@@ -726,7 +726,7 @@ public class FmXmlRequest extends FmRequest {
 				setProductVersion(attributes.getValue("VERSION")); // productVersion = attributes.getValue("VERSION");
 			} else if ("DATABASE".equals(qName)) {
 				fmLayout = attributes.getValue( "LAYOUT" );
-				fmTable =  new FmTable( attributes.getValue("NAME") );
+				fmTable = new FmTable( attributes.getValue("NAME") );
 				totalRecordCount = Long.valueOf( attributes.getValue( "RECORDS" ) );
 
 				if (fieldDefinitions == null) {
@@ -943,6 +943,11 @@ public class FmXmlRequest extends FmRequest {
 			}
 			n++;
 		}
+	}
+	
+	/** Does a search for all records that we have access to. This assumes that some records are restricted, and also that the primary key requires strict numeric types. */
+	public void testFindAllRecords() throws Exception {
+		
 	}
 
 	public static class HttpAuthenticationException extends FileMakerException {

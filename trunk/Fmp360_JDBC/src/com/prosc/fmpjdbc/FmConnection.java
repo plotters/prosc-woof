@@ -305,8 +305,13 @@ public class FmConnection implements Connection {
 		catalog = s;
 	}
 
-	public String getCatalog() throws SQLException {
+	public String getCatalog() {
 		return catalog;
+	}
+
+	/** In older versions of JDBC driver, this would be "|." because each of these characters can serve as a separator. Now it is just "." */
+	public String getCatalogSeparator() {
+		return ".";
 	}
 
 	//---These methods can be ignored

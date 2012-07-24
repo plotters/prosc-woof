@@ -162,15 +162,19 @@ public class AdvancedDriverTests extends TestCase {
 		String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
 		statement7.executeUpdate( "INSERT INTO "+tableName+" (firstName, lastName, emailAddress) values('Fred', 'flintstone', 'fred@rubble.com')", Statement.RETURN_GENERATED_KEYS );
 		ResultSet rs = statement7.getGeneratedKeys();
-		rs.next();
-		Object id = rs.getObject( "ID" );
+		try {
+			rs.next();
+			Object id = rs.getObject( "ID" );
 
-		if (jdbc7.fmVersion < 7){connection7.setCatalog("Contacts");} //Need to set the db if using 6, right?
-		connection7.prepareCall("capitalizeLastNames").execute();
-		//rs.close();
-		rs = statement7.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
-		rs.next();
-		assertEquals( "FLINTSTONE", rs.getString("lastName") );
+			if (jdbc7.fmVersion < 7){connection7.setCatalog("Contacts");} //Need to set the db if using 6, right?
+			connection7.prepareCall("capitalizeLastNames").execute();
+			//rs.close();
+			rs = statement7.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
+			rs.next();
+			assertEquals( "FLINTSTONE", rs.getString("lastName") );
+		} finally {
+			rs.close();
+		}
 	}
 	
 	public void testStoredProcedureQueryAndParam() throws SQLException {
@@ -754,7 +758,7 @@ public class AdvancedDriverTests extends TestCase {
 //		assertTrue("Query should complete in less than 3 seconds", System.currentTimeMillis() - startTime < 3000 );
 		System.out.println("Done with the query");
 		int rowCount = 0;
-		while( resultSet.next() ) { // && rowCount < 1000 ) { //Get the first 1000 rows
+		while( resultSet.next() && rowCount < 1000 ) { //Get the first 1000 rows
 			rowCount++;
 			System.out.println( rowCount + ": " + resultSet.getObject(1) + " / " + resultSet.getObject(2) + " / " + resultSet.getObject(3) + " / " + resultSet.getObject(4) );
 		}
@@ -929,6 +933,19 @@ public class AdvancedDriverTests extends TestCase {
 			assertEquals( "Two", array[1] );
 			assertEquals( "Four", array[3] );
 			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
+		} finally {
+			rs.close();
+		}
+	}
+
+	/** This fetches all records from a table. It assumes that we only want to get accessible records based on privilege set, and also that we're
+	 * using strict numeric data type for primary key (which does not allow wildcard searches)
+	 * @throws Exception
+	 */
+	public void testFetchAllAccessibleRecords() throws Exception {
+		final FmResultSet rs = (FmResultSet)statement7.executeQuery( "SELECT ID FROM CONTACTS WHERE ID != '' LIMIT 1" );
+		try {
+			System.out.println("Found count is " + rs.getFoundCount());
 		} finally {
 			rs.close();
 		}
