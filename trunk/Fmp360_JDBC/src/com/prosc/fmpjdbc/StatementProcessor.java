@@ -441,8 +441,11 @@ public class StatementProcessor {
 		try {
 			StringBuffer buffer = new StringBuffer();
 			if( "=".equals( value ) ) {
-				//This is a special case where we are searching for an empty value.
-				buffer.append("%3D"); // one encoded "equals" sign, signifying field content match. Used to use two, which is more precise, but horribly slow. --jsb
+				//This is a special case where we are searching for an empty value. This DOES NOT work with FileMaker 11.
+				buffer.append("%3D"); // one encoded "equals" sign, signifying field content match.
+			} else if("==".equals( value ) ) {
+				//This is a special case where we are searching for an empty value. This DOES work with FileMaker 11.
+				buffer.append("%3D%3D"); // two encoded "equals" signs, signifying field content match.
 			} else if("!".equals( value ) ) {
 				//This is a special case where we are searching for for duplicates.
 				buffer.append( "%21" );
