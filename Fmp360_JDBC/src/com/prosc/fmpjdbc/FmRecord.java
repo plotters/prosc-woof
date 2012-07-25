@@ -59,7 +59,9 @@ public class FmRecord {
 		}
 	};
 
-	private Long recordId;
+	/** Record IDs are typically Long values, but with ESS tables it can be a String like this: ROW MODID="0" RECORDID="RID_!19" */
+	private String recordId;
+	
 	private Long modCount;
 	private FmFieldList fieldList;
 	
@@ -67,7 +69,7 @@ public class FmRecord {
 	private Object[] rawValues;
 	private int[] valueCounts;
 
-	FmRecord(FmFieldList fieldList, Long recordId, Long modCount) {
+	FmRecord(FmFieldList fieldList, String recordId, Long modCount) {
 		this.fieldList = fieldList;
 		this.rawValues = new Object[fieldList.size()];
 		this.valueCounts = new int[ fieldList.size() ];
@@ -76,7 +78,7 @@ public class FmRecord {
 	}
 
 
-	public Long getRecordId() {
+	public String getRecordId() {
 		return recordId;
 	}
 

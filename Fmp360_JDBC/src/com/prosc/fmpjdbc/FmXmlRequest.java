@@ -676,14 +676,14 @@ public class FmXmlRequest extends FmRequest {
 				}
 				columnIndex++;
 				if( columnIndex == recIdColumnIndex ) {
-					currentRow.addRawValue( currentRow.getRecordId().toString(), columnIndex );
+					currentRow.addRawValue( currentRow.getRecordId(), columnIndex );
 					columnIndex++;
 				}
 			} else if ("ROW".equals(qName)) {
 				foundDataForRow = false;
 				//dt.markTime("  Starting row");
 				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
-				currentRow = new FmRecord(fieldDefinitions, Long.valueOf(attributes.getValue("RECORDID")), Long.valueOf(attributes.getValue("MODID")));
+				currentRow = new FmRecord(fieldDefinitions, attributes.getValue("RECORDID"), Long.valueOf(attributes.getValue("MODID")));
 				columnIndex = -1;
 				//columnDataIndex = -1;
 				fieldPositionIterator = usedFieldArray.iterator();
@@ -812,7 +812,7 @@ public class FmXmlRequest extends FmRequest {
 				}
 				sizeEstimate = 0; // set it to 0 and start estimating again
 				if( columnIndex == recIdColumnIndex && columnIndex != -1 ) { //This is necessary in case the record id is the last selected field; it won't be caught in the begin of the <COL> element.
-					currentRow.addRawValue( currentRow.getRecordId().toString(), columnIndex );
+					currentRow.addRawValue( currentRow.getRecordId(), columnIndex );
 					columnIndex++;
 				}
 				//records.add(currentRow);

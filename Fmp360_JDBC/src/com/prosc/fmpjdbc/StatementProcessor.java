@@ -1,5 +1,7 @@
 package com.prosc.fmpjdbc;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.*;
@@ -123,8 +125,8 @@ public class StatementProcessor {
 
 			Iterator recordIdIterator = null;
 			boolean findAny = true;
-			for( Iterator it = command.getSearchTerms().iterator(); it.hasNext(); ) {
-				SearchTerm eachTerm = (SearchTerm)it.next();				
+			for( Iterator<SearchTerm> it = command.getSearchTerms().iterator(); it.hasNext(); ) {
+				SearchTerm eachTerm = it.next();				
 				if( "recid".equals( eachTerm.getField().getColumnName().toLowerCase() ) ) { //Throw away all other params, just use recid
 					Object value = eachTerm.getValue();
 					if( eachTerm.isPlaceholder() ) {
@@ -149,7 +151,7 @@ public class StatementProcessor {
 				String wildcardsToEscape;
 				eachTermSegments[0] = "";
 				final int operator = eachTerm.getOperator();
-				eachTermSegments[3] = new Integer( operator );
+				eachTermSegments[3] = operator;
 				if( operator == SearchTerm.LIKE ) {
 					wildcardsToEscape = WILDCARDS_LIKE;
 				} else if (operator == SearchTerm.EQUALS) {
@@ -230,7 +232,7 @@ public class StatementProcessor {
 
 			FmXmlRequest actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 					connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-			Long recordId;
+			String recordId;
 
 			boolean recordIdIsPreset;
 			int rowCount = 0;
@@ -306,7 +308,7 @@ public class StatementProcessor {
 					while( recordIdIterator.hasNext() ) {
 						atLeastOneRecord = true;
 						if( recordIdIsPreset ) {
-							recordId = (Long)recordIdIterator.next();
+							recordId = (String)recordIdIterator.next();
 						} else {
 							recordId = ( (FmRecord)recordIdIterator.next() ).getRecordId();
 						}
@@ -352,7 +354,7 @@ public class StatementProcessor {
 					}
 					while( recordIdIterator.hasNext() ) {
 						if( recordIdIsPreset ) {
-							recordId = (Long)recordIdIterator.next();
+							recordId = (String)recordIdIterator.next();
 						} else {
 							recordId = ( (FmRecord)recordIdIterator.next() ).getRecordId();
 						}
@@ -431,15 +433,16 @@ public class StatementProcessor {
 
 	/**
 	 * Appends a key/value pair to a StringBuffer, performing appropriate formatting, character escaping, and other actions.
+	 *
 	 * @param value
 	 * @param applyFormatter
 	 * @param wildcardsToEscape
 	 * @param isEqualsQualifier Whether the key/value pair signifies an EQUALS search, in which case an escaped "=" sign will be prepended to the value, indicating to Filemaker that it should perform an exact search.
 	 * @throws SQLException
 	 */
-	private String urlEncodedValue(Object value, boolean applyFormatter, String wildcardsToEscape, boolean isEqualsQualifier) throws SQLException {
+	private String urlEncodedValue(Object value, boolean applyFormatter, @Nullable String wildcardsToEscape, boolean isEqualsQualifier) throws SQLException {
 		try {
-			StringBuffer buffer = new StringBuffer();
+			StringBuilder buffer = new StringBuilder();
 			if( "=".equals( value ) ) {
 				//This is a special case where we are searching for an empty value. This DOES NOT work with FileMaker 11.
 				buffer.append("%3D"); // one encoded "equals" sign, signifying field content match.
@@ -457,27 +460,27 @@ public class StatementProcessor {
 					// all the things we were checking for subclass java.util.Date, just check once.
 					// FIX!!! need to URLEncode formatted values too -ssb
 					if (value instanceof java.sql.Time) {
-						value = ((DateFormat)FmRecord.timeFormat.get()).format(value);
+						value = FmRecord.timeFormat.get().format( value );
 					} else if (value instanceof java.sql.Timestamp) {
-						value = ((DateFormat)FmRecord.timestampFormat.get()).format(value);
+						value = FmRecord.timestampFormat.get().format( value );
 					} else if ( value instanceof java.sql.Date ) {
-						DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
+						DateFormat dateFormat = FmRecord.dateFormat.get();
 						dateFormat.setTimeZone( defaultTimeZone );
 						value = dateFormat.format(value);
 					} else if( value instanceof DateWithZone ) {
 						Date date = ( (DateWithZone)value ).date;
 						TimeZone tz = ( (DateWithZone)value ).timeZone;
-						DateFormat dateFormat = (DateFormat)FmRecord.dateFormat.get();
+						DateFormat dateFormat = FmRecord.dateFormat.get();
 						dateFormat.setTimeZone( tz );
-						value = ((DateFormat) FmRecord.dateFormat.get()).format(date);
+						value = FmRecord.dateFormat.get().format( date );
 					} else if( value instanceof TimeWithZone ) {
 						Date date = ( (TimeWithZone)value ).time;
 						TimeZone tz = ( (TimeWithZone)value ).timeZone;
-						DateFormat timeFormat = (DateFormat)FmRecord.timeFormat.get();
+						DateFormat timeFormat = FmRecord.timeFormat.get();
 						timeFormat.setTimeZone( tz );
 						value = timeFormat.format(date);
 					} else if ( value instanceof java.util.Date ) {
-						value = ((DateFormat) FmRecord.timestampFormat.get()).format(value);
+						value = FmRecord.timestampFormat.get().format( value );
 					}
 				}
 				if (wildcardsToEscape != null) {

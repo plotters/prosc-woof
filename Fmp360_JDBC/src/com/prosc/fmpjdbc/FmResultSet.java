@@ -351,7 +351,7 @@ public class FmResultSet implements ResultSet {
 
 	public String getString( String s ) throws SQLException {
 		if( "recid".equals( s ) ) {
-			return String.valueOf( currentRecord.getRecordId() );
+			return currentRecord.getRecordId();
 		}
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
@@ -397,7 +397,7 @@ public class FmResultSet implements ResultSet {
 
 	public int getInt(String s) throws SQLException {
 		if( "recid".equals( s ) ) {
-			long longValue = currentRecord.getRecordId();
+			long longValue = Long.valueOf( currentRecord.getRecordId() );
 			return (int)longValue;
 		}
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
@@ -413,7 +413,7 @@ public class FmResultSet implements ResultSet {
 
 	public long getLong(String s) throws SQLException {
 		if( "recid".equals( s ) ) {
-			return currentRecord.getRecordId();
+			return Long.valueOf( currentRecord.getRecordId() );
 		}
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		try {
