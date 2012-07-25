@@ -123,7 +123,7 @@ public class StatementProcessor {
 			/** Contains keys used in the where segment, used to identify duplicates, which is handy for doing ranged searches. */
 			Map whereSegmentKeys = new HashMap( command.getSearchTerms().size() );
 
-			Iterator recordIdIterator = null;
+			Iterator<?> recordIdIterator = null; //This could either be an iterator of Strings or FMRecord objects.
 			boolean findAny = true;
 			for( Iterator<SearchTerm> it = command.getSearchTerms().iterator(); it.hasNext(); ) {
 				SearchTerm eachTerm = it.next();				
@@ -133,8 +133,8 @@ public class StatementProcessor {
 						value = params.elementAt(currentParam++);
 					}
 					whereClause = new StringBuffer( "&-recid=" + value );
-					List<Long> recordIds = new LinkedList<Long>();
-					recordIds.add( Long.valueOf( value.toString() ) );
+					List<String> recordIds = new LinkedList<String>();
+					recordIds.add( String.valueOf( value ) );
 					recordIdIterator = recordIds.iterator();
 					break;
 				} else if( findAny && ! eachTerm.isSpecialTerm() ) { //We need to know if there are any search terms that do not start with a hyphen, to know whether to do a -find or -findany. --jsb

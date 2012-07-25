@@ -577,7 +577,7 @@ public class FmMetaData implements DatabaseMetaData {
 				ResultSet rs = stmt.getGeneratedKeys();
 				try {
 					if( rs.next() ) {
-						long recid = rs.getLong( "recid" ); //which field is the primary key? How will we delete this row when we're done?
+						String recid = rs.getString( "recid" ); //which field is the primary key? How will we delete this row when we're done?
 						try {
 							for( FmField field : lastRawFields.getFields() ) {
 								if( field.isReadOnly() ) {
