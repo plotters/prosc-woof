@@ -684,7 +684,13 @@ public class FmMetaData implements DatabaseMetaData {
 			}
 			sql.append( ")" );
 		}
-		stmt.executeUpdate( sql.toString(), Statement.RETURN_GENERATED_KEYS );
+		try {
+			stmt.executeUpdate( sql.toString(), Statement.RETURN_GENERATED_KEYS );
+		} catch( SQLException e ) {
+			if( e.getErrorCode() == 303 ) {
+				throw new SQLException( "You or somebody else on the network has the database field definitions window open. This must be closed before proceeding.", e.getSQLState(), 303 );
+			} else throw e;
+		}
 	}
 
 	public String randomValueForType( int dataType ) {
