@@ -741,7 +741,7 @@ public class FmMetaData implements DatabaseMetaData {
 			rsColumns.add( new FmField(dummyTable, "DECIMAL_DIGITS", null, FmFieldType.NUMBER, false) ); //6 DECIMAL_DIGITS short => scale - Null is returned for data types where DECIMAL_DIGITS is not applicable.
 			rsColumns.add( new FmField(dummyTable, "PSEUDO_COLUMN", null, FmFieldType.NUMBER, false) ); //7 PSEUDO_COLUMN short => whether this is pseudo column like an Oracle ROWID
 
-			FmRecord result = new FmRecord( rsColumns, 0L, 0L );
+			FmRecord result = new FmRecord( rsColumns, "0", 0L );
 
 			FmField versionField = versionCandidates.get( 0 );
 			result.addRawValue( "" + versionField.getColumnName(), 1 );
@@ -794,7 +794,7 @@ public class FmMetaData implements DatabaseMetaData {
 			rsColumns.add( new FmField(dummyTable, "KEY_SEQ", null, FmFieldType.NUMBER, false) ); //3
 			rsColumns.add( new FmField(dummyTable, "PK_NAME", null, FmFieldType.TEXT, false) ); //3
 
-			FmRecord result = new FmRecord( rsColumns, 0L, 0L );
+			FmRecord result = new FmRecord( rsColumns, "0", 0L );
 			//TABLE_CAT String => table catalog (may be null)
 			//TABLE_SCHEM String => table schema (may be null)
 			result.addRawValue( table, 2 ); //TABLE_NAME String => table name

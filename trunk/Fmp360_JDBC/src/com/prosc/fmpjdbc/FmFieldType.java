@@ -171,7 +171,7 @@ public class FmFieldType implements Cloneable {
 	private short maximumScale = 100; //FIX!!! I don't really know what this is asking for --jsb
 	private int numberPrecisionRadix = 10;
 
-	private FmFieldType(String internalTypeName, String externalTypeName, int sqlDataType, int precision, Class javaClass) {
+	private FmFieldType(String internalTypeName, String externalTypeName, int sqlDataType, int precision, Class<?> javaClass) {
 		this.internalTypeName = internalTypeName;
 		this.externalTypeName = externalTypeName;
 		this.sqlDataType = sqlDataType;
