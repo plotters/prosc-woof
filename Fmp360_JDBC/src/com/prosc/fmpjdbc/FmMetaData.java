@@ -668,6 +668,7 @@ public class FmMetaData implements DatabaseMetaData {
 
 		StringBuilder sql = new StringBuilder( 256 );
 		sql.append("INSERT INTO '" + tableName + "'");
+		String plainSql = sql.toString();
 		if( requiredColumns.size() > 0 ) {
 			sql.append( '(' ) ;
 
@@ -687,7 +688,9 @@ public class FmMetaData implements DatabaseMetaData {
 		try {
 			stmt.executeUpdate( sql.toString(), Statement.RETURN_GENERATED_KEYS );
 		} catch( SQLException e ) {
-			if( e.getErrorCode() == 303 ) {
+			if( e.getErrorCode() == 201 ) { //This indicates that a field cannot be modified. If a field has both required validation and prevent modification of auto-entered values, this will occur (as is often the case with primary keys)
+				stmt.executeUpdate( plainSql, Statement.RETURN_GENERATED_KEYS );
+			} else if( e.getErrorCode() == 303 ) {
 				throw new SQLException( "You or somebody else on the network has the database field definitions window open. This must be closed before proceeding.", e.getSQLState(), 303 );
 			} else throw e;
 		}
