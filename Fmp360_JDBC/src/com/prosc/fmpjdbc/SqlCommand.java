@@ -451,7 +451,7 @@ public class SqlCommand {
 	/** Handles UPDATE operator queries. */
 	private class UpdateParser extends Parser {
 		void handleWhitespaceTerminatedSqlCode(StringBuffer buffer) throws SqlParseException {
-			handleSqlCode(buffer);
+			handleSqlCode(buffer, false);
 		}
 
 		int getInitialQueryPart() {
@@ -463,11 +463,11 @@ public class SqlCommand {
 		}
 
 
-		void handleSqlCode(StringBuffer buffer) throws SqlParseException {
+		void handleSqlCode(StringBuffer buffer, final boolean isQuotedIdentifier) throws SqlParseException {
 			String string = buffer.toString();
 			String lowercase = string.toLowerCase();
 			if (queryPart == TABLES) {
-				if ("set".equals(lowercase)) {
+				if (!isQuotedIdentifier && "set".equals(lowercase)) {
 					queryPart = ASSIGNED_FIELDS;
 				} else {
 					if (table == null) {
@@ -477,9 +477,9 @@ public class SqlCommand {
 					}
 				}
 			} else if (queryPart == ASSIGNED_FIELDS) {
-				if ("where".equals(lowercase)) {
+				if (!isQuotedIdentifier && "where".equals(lowercase)) {
 					queryPart = WHERE_CLAUSE;
-				} else if ("order".equals(lowercase)) {
+				} else if (!isQuotedIdentifier && "order".equals(lowercase)) {
 					queryPart = ORDERBY_CLAUSE;
 				} else {
 					if (currentAssignmentField == null) {
@@ -498,7 +498,7 @@ public class SqlCommand {
 		}
 
 		void handleIdentifier(StringBuffer buffer) throws SqlParseException {
-			handleSqlCode(buffer);
+			handleSqlCode(buffer, true);
 		}
 
 	}
@@ -513,7 +513,7 @@ public class SqlCommand {
 			return TABLES;
 		}
 
-		void handleSqlCode(StringBuffer buffer) throws SqlParseException {
+		void handleSqlCode(StringBuffer buffer, final boolean quotedIdentifier) throws SqlParseException {
 			String string = buffer.toString();
 			String lower = string.toLowerCase();
 			buffer.setLength(0);
@@ -525,7 +525,7 @@ public class SqlCommand {
 				table = new FmTable(string, null, catalogSeparator);
 				queryPart = ASSIGNED_FIELDS;
 			} else if (queryPart == ASSIGNED_FIELDS) {
-				if ("values".equals(lower)) {
+				if (!quotedIdentifier && "values".equals(lower)) {
 					if (assignedFieldNames.size() == 0) {
 						// need to get the field names from metadata!
 						throw new SqlParseException("No field list was specified before values: " + sql);
@@ -544,7 +544,7 @@ public class SqlCommand {
 		}
 
 		void handleWhitespaceTerminatedSqlCode(StringBuffer buffer) throws SqlParseException {
-			handleSqlCode(buffer);
+			handleSqlCode(buffer, false);
 		}
 
 		void handleComma() throws SqlParseException {
@@ -565,11 +565,11 @@ public class SqlCommand {
 		}
 
 		void handleString(StringBuffer buffer) throws SqlParseException {
-			handleSqlCode(buffer);
+			handleSqlCode(buffer, false);
 		}
 
 		void handleIdentifier(StringBuffer buffer) throws SqlParseException {
-			handleSqlCode(buffer);
+			handleSqlCode(buffer, true);
 		}
 	}
 
@@ -581,16 +581,16 @@ public class SqlCommand {
 			return SELECTED_FIELDS;
 		}
 
-		void handleSqlCode(StringBuffer buffer) throws SqlParseException {
+		void handleSqlCode(StringBuffer buffer, final boolean isQuotedIdentifier) throws SqlParseException {
 			String string = buffer.toString();
 			String lower = string.toLowerCase();
 			buffer.setLength(0);
 			if (queryPart == SELECTED_FIELDS) {
-				if ("from".equals(lower)) {
+				if (!isQuotedIdentifier && "from".equals(lower)) {
 					queryPart = TABLES;
-				} else if ("as".equals(lower)) {
+				} else if (!isQuotedIdentifier && "as".equals(lower)) {
 					// this is a field alias, ignore it
-				} else if ("distinct".equals(lower)) {
+				} else if (!isQuotedIdentifier && "distinct".equals(lower)) {
 					throw new SqlParseException("DISTINCT not supported: " + sql);
 				} else {
 					if (currentSelectFieldPlaceholder == null) {
@@ -609,11 +609,11 @@ public class SqlCommand {
 					}
 				}
 			} else if (queryPart == TABLES) {
-				if ("where".equals(lower)) {
+				if (!isQuotedIdentifier && "where".equals(lower)) {
 					queryPart = WHERE_CLAUSE;
-				} else if ("order".equals(lower)) {
+				} else if (!isQuotedIdentifier && "order".equals(lower)) {
 					queryPart = ORDERBY_CLAUSE;
-				} else if ("limit".equals(lower)) {
+				} else if (!isQuotedIdentifier && "limit".equals(lower)) {
 					queryPart = LIMIT;
 				} else if (table == null) {
 					table = new FmTable(string, null, catalogSeparator);
@@ -627,15 +627,15 @@ public class SqlCommand {
 			} else if (queryPart == WHERE_CLAUSE) {
 				parseWhereSql(string, lower);
 			} else if (queryPart == ORDERBY_CLAUSE) {
-				if ("by".equals(lower)) {
+				if (!isQuotedIdentifier && "by".equals(lower)) {
 					// this is the "BY" part of "ORDER BY", ignore it
-				} else if (currentSortTerm != null && "asc".equals(lower)) {
+				} else if (!isQuotedIdentifier && currentSortTerm != null && "asc".equals(lower)) {
 					currentSortTerm.order = SortTerm.ASCENDING;
 					currentSortTerm = null;
-				} else if (currentSortTerm != null && "desc".equals(lower)) {
+				} else if (!isQuotedIdentifier && currentSortTerm != null && "desc".equals(lower)) {
 					currentSortTerm.order = SortTerm.DESCENDING;
 					currentSortTerm = null;
-				} else if ("limit".equals(lower)) {
+				} else if (!isQuotedIdentifier && "limit".equals(lower)) {
 					queryPart = LIMIT;
 				} else {
 					currentSortTerm = new SortTerm(getFieldWithNameOrAlias(string), SortTerm.ASCENDING);
@@ -653,7 +653,7 @@ public class SqlCommand {
 		}
 
 		void handleWhitespaceTerminatedSqlCode(StringBuffer buffer) throws SqlParseException {
-			handleSqlCode(buffer);
+			handleSqlCode(buffer, false);
 		}
 
 		void handleComma() throws SqlParseException {
@@ -666,7 +666,7 @@ public class SqlCommand {
 		}
 
 		void handleIdentifier(StringBuffer buffer) throws SqlParseException {
-			handleSqlCode(buffer);
+			handleSqlCode(buffer, true);
 		}
 	}
 
