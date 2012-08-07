@@ -169,7 +169,7 @@ public class SqlCommandTest extends TestCase {
 		FmField firstField = command.getFields().get(0);
 		assertEquals("staff", firstField.getTable().getDatabaseName());
 		assertEquals("person", firstField.getTable().getName());
-		assertEquals("firstName", firstField.getColumnName());
+		assertEquals("t0.firstName", firstField.getColumnName());
 		assertEquals(command.getTable(), firstField.getTable());
 
 		command = new SqlCommand("SELECT t0.firstName f0, t0.lastName f1 FROM person t0");
@@ -221,5 +221,11 @@ public class SqlCommandTest extends TestCase {
 		eachField = (FmField) iterator.next();
 		assertEquals("f2[3]", eachField.getColumnName());
 		//assertEquals(3, eachField.getRepetition());
+	}
+
+	public void testReservedWords() throws Exception {
+		SqlCommand cmd = new SqlCommand("SELECT \"fred\", \"from\", \"joe\" FROM people");
+		assertEquals(3, cmd.getFields().size());
+		assertEquals("people", cmd.getTable().getName());
 	}
 }
