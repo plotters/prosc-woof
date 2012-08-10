@@ -295,6 +295,7 @@ public class FmConnection implements Connection {
 		return prepareStatement( s, Statement.NO_GENERATED_KEYS );
 	}
 
+	/** @deprecated It's usually better to use prepareStatement instead, like this: SELECT * FROM SomeTable WHERE -script=foo AND -script.param=bar */
 	public CallableStatement prepareCall( String s ) throws SQLException {
 		FmCallableStatement fmcs = new FmCallableStatement(this);
 		fmcs.setScriptName(s);

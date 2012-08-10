@@ -372,7 +372,14 @@ public class FmRecord {
 		try {
 			DateFormat format = dateFormat.get();
 			format.setTimeZone(zone);
-			java.util.Date date = format.parse( rawValue );
+			java.util.Date date;
+			try {
+				date = format.parse( rawValue );
+			} catch( ParseException e ) {
+				final SimpleDateFormat fallback1 = new SimpleDateFormat( "MM.dd.yyyy" );
+				fallback1.setTimeZone( zone );
+				date = fallback1.parse( rawValue );
+			}
 			if (log.isLoggable( Level.FINE)) {
 				log.fine( "Return date " + date + " for raw value " + rawValue );
 			}
