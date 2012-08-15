@@ -113,7 +113,7 @@ public class FmConnection implements Connection {
 			} catch( UnsupportedEncodingException e ) {
 				throw new RuntimeException(e);
 			}
-			String postArgs = "-db=" + encodedDBName + "&-lay=ProscNoSuchTable&-view";
+			String postArgs = "-db=" + encodedDBName + "&-lay=ProscNoSuchTable&-view"; //Optimize Why not do -layoutnames instead? That way we don't have to throw and catch an exception. --jsb
 			try {
 				request.doRequest( postArgs );
 			} catch( FmXmlRequest.HttpAuthenticationException e ) {
