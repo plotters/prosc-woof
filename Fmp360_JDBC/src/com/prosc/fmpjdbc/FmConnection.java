@@ -119,6 +119,9 @@ public class FmConnection implements Connection {
 			} catch( FmXmlRequest.HttpAuthenticationException e ) {
 				//Username and password are invalid
 				e.setConnection( this );
+				String pwTemp = getPassword();
+				if( pwTemp == null ) pwTemp = "";
+				log.config( "Authorization with username '" + getUsername() + "' and password length " + pwTemp.length() + " failed for URL " + request.getFullUrl() );
 				SQLException sqle = new SQLException( e.getMessage(), ErrorCodes.AUTH_INVALID, e.getErrorCode() );
 				sqle.initCause( e );
 				throw sqle;

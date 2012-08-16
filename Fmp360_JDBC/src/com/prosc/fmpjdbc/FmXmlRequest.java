@@ -113,6 +113,10 @@ public class FmXmlRequest extends FmRequest {
 	public void setPostPrefix(String s) {
 		postPrefix = s;
 	}
+	
+	String getFullUrl() {
+		return fullUrl;
+	}
 
 
 	public void doRequest(String input) throws IOException, SQLException {
