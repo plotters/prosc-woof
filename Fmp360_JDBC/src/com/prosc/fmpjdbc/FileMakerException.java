@@ -98,13 +98,17 @@ public class FileMakerException extends SQLException {
 		if( params != null ) {
 			msg.append( " / SQL params: " + params );
 		}
-		if( requestUrl != null ) {
+		/*if( requestUrl != null ) {
 			msg.append( " / request URL: " + requestUrl );
-		}
+		}*/
 		if( extraParams ) {
 			msg.append( ")" );
 		}
 		return msg.toString();
+	}
+
+	public String getRequestUrl() {
+		return requestUrl;
 	}
 
 	protected static String getErrorMessage(Integer errorCode) {
