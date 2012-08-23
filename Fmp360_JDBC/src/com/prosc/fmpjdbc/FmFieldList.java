@@ -64,15 +64,15 @@ public class FmFieldList {
 
 	/**
 	 * Returns the index of the field whose column name is case-insensitive equal to to the provided <code>columnName</code>.
-	 * @param columnName The columnName to search for, with optional repetition index brackets.
+	 * @param columnName The columnName to search for. Do not include repeating field brackets.
 	 * @param startingIndex the index to start searching from. You can call this method multiple times with different startingIndexes to get multiple column indexes with the same name.
 	 * @return the index of the matching field, or -1 for no match.
 	 */
-	public int indexOfFieldWithColumnName(String columnName, int startingIndex) {
+	int indexOfFieldWithColumnName(String columnName, int startingIndex) {
 		int fieldCount = fields.size();
 		for( int n=startingIndex; n< fieldCount; n++ ) {
 			FmField fmField = fields.get( n );
-			if( fmField.getColumnName().equalsIgnoreCase( columnName ) ) return n;
+			if( fmField.getColumnNameNoRep().equalsIgnoreCase( columnName ) ) return n;
 		}
 		return -1;
 	}

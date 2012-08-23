@@ -2,15 +2,17 @@ package com.prosc.fmpjdbc;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.sql.*;
-import java.math.BigDecimal;
 import java.io.InputStream;
 import java.io.Reader;
-import java.sql.Date;
-import java.util.*;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.net.URL;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -123,12 +125,6 @@ public class FmResultSet implements ResultSet {
 	}
 	//OPTIMIZE make all methods final
 
-	private SQLException handleFormattingException(Exception e, int position) {
-		log.log(Level.WARNING, e.toString());
-		String columnName = fieldDefinitions.get( position - 1 ).getColumnName();
-		return handleFormattingException(e, columnName);
-	}
-
 	private SQLException handleFormattingException(Exception e, String columnName) {
 		log.log(Level.WARNING, e.toString(), e);
 		SQLException sqlException = new SQLException( e.toString() + " (requested column '" + columnName + "' / zero-indexed row: " + rowNum + ")" );
@@ -214,130 +210,270 @@ public class FmResultSet implements ResultSet {
 	}
 
 
-	public String getString( int i ) throws SQLException {
+	public String getString( String s ) throws SQLException { return getString( fieldDefinitions.indexOfFieldWithAlias( s ), s ); }
+	public String getString( int i ) throws SQLException { return getString( i-1, null ); }
+	private String getString( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
-		String result;
-		if( Types.BLOB == fieldDefinitions.get( i - 1 + columnOffset ).getType().getSqlDataType() ) {
-			FmBlob fmBlob = (FmBlob)getBlob( i );
-			if( fmBlob == null ) return null;
-			result = fmBlob.getURL().toExternalForm();
-		} else {
-			result = currentRecord.getString(i - 1 + columnOffset, repetitionCurrentIndex );
+		if( "recid".equals( s ) ) {
+			return currentRecord.getRecordId();
 		}
-		log.log(Level.FINEST, result);
-		return result;
+		if (i == -1) {
+			throw new SQLException( "'" + s + "' is not a field on the requested layout." );
+		}
+
+		try {
+			String result;
+			final FmField field = fieldDefinitions.get( i );
+			if( Types.BLOB == field.getType().getSqlDataType() ) {
+				FmBlob fmBlob = (FmBlob)getBlob( i );
+				if( fmBlob == null ) return null;
+				result = fmBlob.getURL().toExternalForm();
+			} else {
+				int whichRep = field.getRepetition( repetitionCurrentIndex );
+				result = currentRecord.getString(i + columnOffset, whichRep );
+			}
+			log.log(Level.FINEST, result);
+			return result;
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
+
+	public boolean getBoolean(String s) throws SQLException {
+		return getBoolean( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public boolean getBoolean( int i ) throws SQLException {
+		return getBoolean( i - 1, null );
+	}
+	private boolean getBoolean( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
-		return currentRecord.getBoolean(i - 1 + columnOffset, repetitionCurrentIndex );
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+		try {
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getBoolean(i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
+
+	public byte getByte(String s) throws SQLException {
+		return getByte( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public byte getByte( int i ) throws SQLException {
+		return getByte( i - 1, null );
+	}
+	private byte getByte( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getByte(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (NumberFormatException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getByte( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
+
+	public short getShort(String s) throws SQLException {
+		return getShort( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public short getShort( int i ) throws SQLException {
+		return getShort( i-1, null );
+	}
+	private short getShort( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getShort(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (NumberFormatException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getShort(i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
+	public int getInt(String s) throws SQLException {
+		return getInt( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public int getInt( int i ) throws SQLException {
+		return getInt( i - 1, null );
+	}
+	private int getInt( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getInt(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (NumberFormatException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getInt( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
+	public long getLong(String s) throws SQLException {
+		return getLong( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public long getLong( int i ) throws SQLException {
+		return getLong( i - 1, null );
+	}
+	private long getLong( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getLong(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (NumberFormatException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getLong( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
+	public float getFloat(String s) throws SQLException {
+		return getFloat( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public float getFloat( int i ) throws SQLException {
+		return getFloat( i - 1, null );
+	}
+	private float getFloat( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getFloat(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (NumberFormatException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getFloat( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
+	public double getDouble(String s) throws SQLException {
+		return getDouble( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public double getDouble( int i ) throws SQLException {
+		return getDouble( i - 1, null );
+	}
+	private double getDouble( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getDouble(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (NumberFormatException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getDouble( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
-	// Deprecated but implemented
-	public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
-		checkResultSet();
-		BigDecimal value = getBigDecimal(columnIndex);
-		try {
-			return value.setScale(scale, BigDecimal.ROUND_HALF_UP );
-		} catch (ArithmeticException e) {
-			throw handleFormattingException(e, columnIndex);
-		}
+	public Date getDate(String s) throws SQLException {
+		return getDate( fieldDefinitions.indexOfFieldWithAlias( s ), s, null );
 	}
-
-
+	public Date getDate( String s, Calendar calendar ) throws SQLException {
+		return getDate( fieldDefinitions.indexOfFieldWithAlias( s ), s, calendar );
+	}
 	public Date getDate( int i ) throws SQLException {
+		return getDate( i-1, null, null );
+	}
+	public Date getDate( int i, Calendar calendar ) throws SQLException {
+		return getDate( i-1, null, calendar );
+	}
+	private Date getDate( int i, @Nullable String s, @Nullable Calendar calendar ) throws SQLException {
 		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getDate(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			if( calendar == null ) {
+				return currentRecord.getDate(i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+			} else {
+				return currentRecord.getDate(i + columnOffset, field.getRepetition( repetitionCurrentIndex ), calendar.getTimeZone() );
+			}
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
+
+	public Time getTime(String s) throws SQLException {
+		return getTime( fieldDefinitions.indexOfFieldWithAlias( s ), s, null );
+	}
+	public Time getTime( String s, Calendar calendar ) throws SQLException {
+		return getTime( fieldDefinitions.indexOfFieldWithAlias( s ), calendar );
+	}
 	public Time getTime( int i ) throws SQLException {
+		return getTime( i - 1, null, null );
+	}
+	public Time getTime( int i, Calendar calendar ) throws SQLException {
+		return getTime( i-1, null, calendar );
+	}
+	private Time getTime( int i, @Nullable String s, @Nullable Calendar calendar ) throws SQLException {
 		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getTime(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			if( calendar == null ) {
+				return currentRecord.getTime( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+			} else {
+				return currentRecord.getTime( i + columnOffset, field.getRepetition( repetitionCurrentIndex ), calendar.getTimeZone() );
+			}
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
+	public Timestamp getTimestamp(String s) throws SQLException {
+		return getTimestamp( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public Timestamp getTimestamp( int i ) throws SQLException {
+		return getTimestamp( i - 1, (String)null );
+	}
+	private Timestamp getTimestamp( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
-		if (log.isLoggable(Level.FINER)) {
-			log.log(Level.FINER, String.valueOf(i));
-		}
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getTimestamp(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (IllegalArgumentException e) {
-			throw handleFormattingException( e, i );
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getTimestamp( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
+	public Blob getBlob(String s) throws SQLException {
+		return getBlob( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
 	public Blob getBlob( int i ) throws SQLException {
+		return getBlob( i - 1, null );
+	}
+	private Blob getBlob( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
-		if (log.isLoggable(Level.FINER)) {
-			log.log(Level.FINER, String.valueOf(i));
-		}
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
-			return currentRecord.getBlob(i - 1 + columnOffset, repetitionCurrentIndex, connection );
-		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e, i);
+			final FmField field = fieldDefinitions.get( i );
+			return currentRecord.getBlob( i + columnOffset, field.getRepetition( repetitionCurrentIndex ), connection );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
+	}
+
+	public BigDecimal getBigDecimal(String s) throws SQLException {
+		return getBigDecimal( fieldDefinitions.indexOfFieldWithAlias( s ), -1, s );
+	}
+	public BigDecimal getBigDecimal(String s, int scale) throws SQLException {
+		return getBigDecimal( fieldDefinitions.indexOfFieldWithAlias( s ), scale, s );
+	}
+	public BigDecimal getBigDecimal( int i ) throws SQLException {
+		return getBigDecimal( i - 1, -1, null );
+	}
+	public BigDecimal getBigDecimal( int i, int scale ) throws SQLException {
+		return getBigDecimal( i - 1, scale, null );
+	}
+	private BigDecimal getBigDecimal( int i, int scale, @Nullable String s ) throws SQLException {
+		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+		try {
+			final FmField field = fieldDefinitions.get( i );
+			BigDecimal result = currentRecord.getBigDecimal(i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
+			if( scale != -1 ) {
+				result = result.setScale( scale, BigDecimal.ROUND_HALF_UP );
+			}
+			return result;
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
 		}
 	}
 
@@ -349,151 +485,60 @@ public class FmResultSet implements ResultSet {
 		return blob.getURL();
 	}
 
-	public String getString( String s ) throws SQLException {
-		if( "recid".equals( s ) ) {
-			return currentRecord.getRecordId();
-		}
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if( rowNum == -1 || isAfterLast ) throw new IllegalStateException("The ResultSet is not positioned on a valid row.");
-		try {
-			if (i == -1) {
-				throw new SQLException( "'" + s + "' is not a field on the requested layout." );
-			}
-			return currentRecord.getString(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public boolean getBoolean(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getBoolean(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public byte getByte(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getByte(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public short getShort(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getShort(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public int getInt(String s) throws SQLException {
-		if( "recid".equals( s ) ) {
-			long longValue = Long.valueOf( currentRecord.getRecordId() );
-			return (int)longValue;
-		}
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) {
-				throw new SQLException(s + " is not a field on the requested layout.");
-			}
-			return currentRecord.getInt(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public long getLong(String s) throws SQLException {
-		if( "recid".equals( s ) ) {
-			return Long.valueOf( currentRecord.getRecordId() );
-		}
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) {
-				throw new SQLException(s + " is not a field on the requested layout.");
-			}
-			return currentRecord.getLong(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public float getFloat(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getFloat(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public double getDouble(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getDouble(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	// Deprecated method but implemented
-	public BigDecimal getBigDecimal(String s, int i) throws SQLException {
-		int columnIndex = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (columnIndex == -1) throw new SQLException(s + " is not a defined field.");
-		return getBigDecimal(columnIndex, i);
-	}
-
-
-	public Date getDate(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getDate(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public Time getTime(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getTime(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public Timestamp getTimestamp(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getTimestamp(i + columnOffset, repetitionCurrentIndex );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public Blob getBlob( String s ) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getBlob(i + 1);
-	}
-
 	public URL getURL( String s ) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		if (i == -1) throw new SQLException(s + " is not a defined field.");
 		return getURL(i + 1);
+	}
+
+	public Object getObject(String s) throws SQLException {
+		return getObject( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
+	public Object getObject( int i ) throws SQLException {
+		return getObject( i - 1, (String)null );
+	}
+	private Object getObject( int i, @Nullable String s ) throws SQLException {
+		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+		try {
+			final FmField field = fieldDefinitions.get( i );
+			Object result = currentRecord.getObject(i + columnOffset, field.getRepetition( repetitionCurrentIndex ), connection );
+			if( wasNull() ) result = null;
+			return result;
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
+	}
+
+
+	public byte[] getBytes(String s) throws SQLException {
+		return getBytes( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
+	public byte[] getBytes( int i ) throws SQLException {
+		return getBytes( i - 1, null );
+	}
+	private byte[] getBytes( int i, @Nullable String s ) throws SQLException {
+		Blob blob = getBlob( i, s );
+		if( blob == null ) return new byte[0];
+		long length = blob.length();
+		if( length > Integer.MAX_VALUE ) throw new SQLException("Could not return a byte array, result size (" + length + ") is too large.");
+		return blob.getBytes( 0, (int)length );
+	}
+
+	public Array getArray(String s) throws SQLException {
+		return getArray( fieldDefinitions.indexOfFieldWithAlias( s ), s );
+	}
+	public Array getArray( int i ) throws SQLException {
+		return getArray( i - 1, null );
+	}
+	private Array getArray( int i, @Nullable String s ) throws SQLException {
+		checkResultSet();
+		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
+		try {
+			return currentRecord.getArray( i + columnOffset, this );
+		} catch (Exception e) {
+			throw handleFormattingException(e, s);
+		}
 	}
 
 	public SQLWarning getWarnings() throws SQLException {
@@ -508,43 +553,10 @@ public class FmResultSet implements ResultSet {
 		return metaData;
 	}
 
-	public Object getObject( int i ) throws SQLException {
-		checkResultSet();
-		Object result = currentRecord.getObject(i - 1 + columnOffset, repetitionCurrentIndex, connection);
-		if (wasNull()) result = null;
-		if (log.isLoggable(Level.FINER)) {
-			log.log(Level.FINER, "getObject(" + i + ") is " + result);
-		}
-		return result;
-	}
-
-	public Object getObject(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) {
-			throw new SQLException(s + " is not a defined field.");
-		}
-		return getObject(i + 1);
-	}
-
 	public int findColumn(String s) throws SQLException {
 		int i = fieldDefinitions.indexOfFieldWithAlias(s);
 		if (i == -1) throw new SQLException(s + " is not a defined field.");
 		return i + 1;
-	}
-
-	public BigDecimal getBigDecimal( int i ) throws SQLException {
-		checkResultSet();
-		try {
-			return currentRecord.getBigDecimal(i - 1 + columnOffset, repetitionCurrentIndex );
-		} catch (NumberFormatException e) {
-			throw handleFormattingException(e, i);
-		}
-	}
-
-	public BigDecimal getBigDecimal(String s) throws SQLException {
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		if (i == -1) throw new SQLException(s + " is not a defined field.");
-		return getBigDecimal(i + 1);
 	}
 
 
@@ -568,77 +580,8 @@ public class FmResultSet implements ResultSet {
 		return fieldDefinitions.wasNull;
 	}
 
-	public byte[] getBytes( int i ) throws SQLException {
-		checkResultSet();
-		Blob blob = getBlob(i);
-		if( blob == null ) return new byte[0];
-		long length = blob.length();
-		if( length > Integer.MAX_VALUE ) throw new SQLException("Could not return a byte array, result size (" + length + ") is too large.");
-		return blob.getBytes( 0, (int)length );
-	}
-
-	public Date getDate( int i, Calendar calendar ) throws SQLException {
-		checkResultSet();
-		try {
-			return currentRecord.getDate(i - 1 + columnOffset, repetitionCurrentIndex, calendar.getTimeZone());
-		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e, i);
-		}
-	}
-
-	public Date getDate( String s, Calendar calendar ) throws SQLException {
-		checkResultSet();
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getDate(i + columnOffset, repetitionCurrentIndex, calendar.getTimeZone());
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
-	public Time getTime( int i, Calendar calendar ) throws SQLException {
-		checkResultSet();
-		try {
-			return currentRecord.getTime( i - 1 + columnOffset, repetitionCurrentIndex, calendar.getTimeZone() );
-		} catch (IllegalArgumentException e) {
-			throw handleFormattingException(e, i);
-		}
-	}
-
-	public Time getTime( String s, Calendar calendar ) throws SQLException {
-		checkResultSet();
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getTime(i + columnOffset, repetitionCurrentIndex, calendar.getTimeZone());
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
-	}
-
 	public Statement getStatement() throws SQLException {
 		return statement;
-	}
-
-	public Array getArray( int i ) throws SQLException { //I think we could use this for repeating fields --jsb		
-		checkResultSet();
-		try {
-			return currentRecord.getArray( i - 1 + columnOffset, this );
-		} catch (NumberFormatException e) {
-			throw handleFormattingException(e, i);
-		}
-	}
-
-	public Array getArray( String s ) throws SQLException {
-		checkResultSet();
-		int i = fieldDefinitions.indexOfFieldWithAlias(s);
-		try {
-			if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
-			return currentRecord.getArray(i + columnOffset, this );
-		} catch (Exception e) {
-			throw handleFormattingException(e, s);
-		}
 	}
 
 	//---These methods do not have to be implemented, but technically could be
@@ -675,10 +618,6 @@ public class FmResultSet implements ResultSet {
 
 	public int getFetchSize() throws SQLException {
 		throw handleMissingMethod( "getFetchSize is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public byte[] getBytes( String s ) throws SQLException {
-		throw handleMissingMethod( "getBytes (" + s + ") is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public InputStream getBinaryStream( int i ) throws SQLException {

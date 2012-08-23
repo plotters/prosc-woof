@@ -62,11 +62,10 @@ public class FmXmlRequest extends FmRequest {
 	private String postArgs;
 	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 	private volatile boolean isStreamOpen = false;
-	private int recIdColumnIndex = -1;
 	private long requestStartTime;
 
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
-	private Set<FmField> missingFields;
+	private Set<String> missingFields;
 	private RuntimeException creationStackTrace;
 	private String username;
 	private String fullUrl;
@@ -113,7 +112,7 @@ public class FmXmlRequest extends FmRequest {
 	public void setPostPrefix(String s) {
 		postPrefix = s;
 	}
-	
+
 	String getFullUrl() {
 		return fullUrl;
 	}
@@ -303,21 +302,21 @@ public class FmXmlRequest extends FmRequest {
 						if( ! ignore ) {
 							log.log(Level.WARNING, "The parsing thread was in the middle of parsing data from FM when an IOException occurred.", ioe );
 							//log.info("There was an error, so i'm setting all of the variables and continuing");
-							onErrorSetAllVariables(ioe);
+							onErrorSetAllVariables(ioe, xmlHandler.getCurrentColumnName()  );
 							//throw new RuntimeException(ioe);
 						}
 					} catch( StopParsingException e ) {
 						//It's safe to ignore these, because once we've been closed, the client is not going to be requesting any more data
 					} catch (SAXException e) {
 						//log.fine("There was SAXException: " + e.getMessage() + ", so the parsing thread is setting all of the threading variables to true and notifying all threads.\n Here's the stack trace: ");
-						onErrorSetAllVariables(e);
+						onErrorSetAllVariables(e, xmlHandler.getCurrentColumnName()  );
 						//throw new RuntimeException(e);
 					} catch (RuntimeException e) {
 						//log.fine("There was an error in the parsing thread: " + e.getMessage() + ", so the parsing thread is setting all of the threading " + "variables to true and notifying all threads.");
-						onErrorSetAllVariables(e);
+						onErrorSetAllVariables(e, xmlHandler.getCurrentColumnName()  );
 						//throw new RuntimeException(e);
 					} catch( Error e ) {
-						onErrorSetAllVariables( e );
+						onErrorSetAllVariables( e, xmlHandler.getCurrentColumnName() );
 					} finally {
 						recordIterator.setFinished();
 					}
@@ -339,17 +338,7 @@ public class FmXmlRequest extends FmRequest {
 
 	}
 
-	private synchronized void onErrorSetAllVariables(Throwable t) {
-		String fieldName = null;
-		if( t instanceof StopParsingException ) {
-			//We were stopped normally, parsing thread was intentionally interrupted
-		} else {
-			try {
-				fieldName = columnNames.get( columnIndex + 1 );
-			} catch( Exception e ) {
-				log.info( "Error occured while parsing XML data; couldn't tell which field caused the error." );
-			}
-		}
+	private synchronized void onErrorSetAllVariables(Throwable t, String fieldName ) {
 		recordIterator.setStoredError(t, fieldName );
 		productVersionIsSet = true;
 		databaseNameIsSet = true;
@@ -402,7 +391,7 @@ public class FmXmlRequest extends FmRequest {
 		}
 		return databaseName;
 	}
-	
+
 	public long getTotalRecordCount() {
 		getDatabaseName(); //Do this first to make sure that we've read the headers in the XML
 		return totalRecordCount;
@@ -479,12 +468,7 @@ public class FmXmlRequest extends FmRequest {
 			Thread.currentThread().interrupt();
 		}
 		if( getErrorCode() == 0 && missingFields != null && missingFields.size() > 0 ) {
-			List<String> missingFieldNames = new LinkedList<String>();
-			for( FmField missingField : missingFields ) {
-				missingFieldNames.add( ( missingField ).getColumnName() );
-			}
-			closeRequest();
-			throw new MissingFieldException("The requested fields are not on the layout: " + missingFieldNames, 102, fmLayout, missingFieldNames );
+			throw new MissingFieldException("The requested fields are not on the layout: " + missingFields, 102, fmLayout, missingFields );
 		}
 		return fieldDefinitions;
 	}
@@ -544,8 +528,6 @@ public class FmXmlRequest extends FmRequest {
 	 */
 	private volatile ResultQueue recordIterator; // FIX! does this really need to be volatile? -ssb
 
-	private int columnIndex;
-	private List<String> columnNames = new LinkedList<String>();
 	private volatile int errorCode;
 
 	private boolean fieldDefinitionsListIsSet = false;
@@ -567,6 +549,25 @@ public class FmXmlRequest extends FmRequest {
 	 * If the former, the next fieldPositionPointer is gotten, and data is set.  If the latter, any data is ignored.
 	 */
 	private class FmXmlHandler extends org.xml.sax.helpers.DefaultHandler {
+		class Column {
+			String name;
+			int[] targetIndices;
+			private int maxRepetitions;
+
+			public Column( String name, int[] indices, int maxRepetitions ) {
+				this.name = name;
+				this.targetIndices = indices;
+				this.maxRepetitions = maxRepetitions;
+			}
+
+			public void setDataInRow(StringBuilder data, FmRecord row) {
+				if( targetIndices != null ) {
+					final String newValue = data.toString();
+					row.addRawValue(newValue, targetIndices, maxRepetitions );
+				}
+			}
+		}
+
 		//private StringBuffer requestContent = new StringBuffer();
 		//private static final boolean debugMode = false; //If true, then the content of the XML will be stored in requestContent
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
@@ -581,8 +582,8 @@ public class FmXmlRequest extends FmRequest {
 		/**
 		 * Contains string data for the current data element being parsed
 		 */
-		private transient StringBuffer currentData = new StringBuffer(255); // OPTIMIZE! use a StringBuilder instead
-		private boolean foundDataForColumn;
+		private transient StringBuilder currentData = new StringBuilder(255);
+		//private boolean foundDataForColumn;
 		private boolean foundDataForRow;
 		private boolean foundColStart = false; // added to fix a bug with columns that only have an end element - mww
 		//private int columnDataIndex;
@@ -590,9 +591,11 @@ public class FmXmlRequest extends FmRequest {
 		/**
 		 * Maps data indices in the XML data with data indices in the currentRow.  If a field in the XML data is not used, the value of that index will be -1.
 		 */
-		private List<FieldPositionPointer> usedFieldArray = new ArrayList<FieldPositionPointer>(64); // The array used by the characters() method in xmlHandler.
-		private FieldPositionPointer fieldPositionPointer;
-		private Iterator<FieldPositionPointer> fieldPositionIterator;
+		private List<Column> xmlColumns = new ArrayList<Column>( 64 );
+		private Iterator<Column> columnIterator;
+		private Column currentColumn;
+		private int currentRep=0;
+
 		private int nodeType;
 		private static final int NODE_TYPE_ERROR = 1;
 		private static final int NODE_TYPE_DATA = 2;
@@ -625,6 +628,10 @@ public class FmXmlRequest extends FmRequest {
 			return emptyInput;
 		}
 
+		public String getCurrentColumnName() {
+			return currentColumn == null ? null : currentColumn.name;
+		}
+
 		public void startDocument() {
 			//if( debugMode ) requestContent.append( "Starting document\n" );
 			log.log(Level.FINEST, "Start parsing response");
@@ -647,58 +654,29 @@ public class FmXmlRequest extends FmRequest {
 			if (log.isLoggable(Level.FINEST)) {
 				log.finest("Starting element qName = " + qName + " for " + this);
 			}
-			if ("DATA".equals(qName)) {
-				if( foundDataForColumn ) {
-					// this is not the first DATA in the COL. It's either a repeating field or portal
-					// FIX!! if a portal, only return the first item -ssb
-					if (fieldPositionPointer != null && fieldPositionPointer.isRepeating) {
-						fieldPositionPointer = fieldPositionIterator.next();
-						/*if( fieldPositionPointer.matchedSquareBrackets ) {
-							fieldPositionPointer = fieldPositionIterator.next();
-						} else {
-							//Keep fieldPositionPointer the same value. This means that additional DATA elements will be appended to the FmRercord
-						}*/
-					} else {
-						fieldPositionPointer = null; // ignore any other data
-					}
-				} else {
-					// this is the first <DATA> element in the <COL>
-					foundDataForColumn = true;
-					foundDataForRow = true;
-				}
-
-				//currentData.delete( 0, currentData.length() );
-				currentData = new StringBuffer( 255 ); // OPTIMIZE! just call reset() on the existing currentData instead
+			if( "DATA".equals( qName ) ) {
+				//Do nothing, this is just an optimization to break out of the else loop sooner	
+			} else if ("ROW".equals(qName)) {
+				foundDataForRow = false;
+				final String recidString = attributes.getValue( "RECORDID" );
+				currentRow = new FmRecord(fieldDefinitions, recidString, Long.valueOf(attributes.getValue("MODID")));
+				columnIterator = xmlColumns.iterator();
+				currentColumn = columnIterator.next(); //This is always the 'recid' column
+				currentColumn.setDataInRow( new StringBuilder( recidString ), currentRow );
 			} else if ("COL".equals(qName)) {
-				foundDataForColumn = false;
 				foundColStart = true; // added to fix a bug with columns that only have an end element - mww
-				//columnDataIndex++;
 				try {
-					fieldPositionPointer = fieldPositionIterator.next();
+					currentColumn = columnIterator.next();
 				} catch( NoSuchElementException e ) {
 					throw e;
 				}
-				columnIndex++;
-				if( columnIndex == recIdColumnIndex ) {
-					currentRow.addRawValue( currentRow.getRecordId(), columnIndex );
-					columnIndex++;
-				}
-			} else if ("ROW".equals(qName)) {
-				foundDataForRow = false;
-				//dt.markTime("  Starting row");
-				//This refers directly to the fieldDefinitions instance variable, because we don't care if we're missing fields and we don't want a checked exception. --jsb
-				currentRow = new FmRecord(fieldDefinitions, attributes.getValue("RECORDID"), Long.valueOf(attributes.getValue("MODID")));
-				columnIndex = -1;
-				//columnDataIndex = -1;
-				fieldPositionIterator = usedFieldArray.iterator();
 			}
 			// One-shot nodes
 			else if ("FIELD".equals(qName)) {
 				String fieldName = attributes.getValue("NAME");
-				columnNames.add( fieldName );
 
 				String fieldType = attributes.getValue("TYPE");
-				FmFieldType theType = (FmFieldType)FmFieldType.typesByName.get(fieldType);
+				FmFieldType theType = FmFieldType.typesByName.get(fieldType);
 				boolean allowsNulls = "YES".equals(attributes.getValue("EMPTYOK"));
 				int maxRepeat = Integer.parseInt(attributes.getValue("MAXREPEAT"));
 
@@ -712,15 +690,9 @@ public class FmXmlRequest extends FmRequest {
 					FmField fmField = new FmField(fmTable, fieldName, fieldName, theType, allowsNulls, isReadOnly, isAutoEnter, maxRepeat, isGlobal, isCalc, isSummary );
 					fieldDefinitions.add(fmField);
 				}
-				if (maxRepeat > 1) { // this is a repeating field.  handle each repetition as a virtual field.
-					for (int eachRepIndex =1; eachRepIndex <= maxRepeat; eachRepIndex++) {
-						//handleParsedMetaDataField(fieldName, eachRepIndex, 0, theType, allowsNulls);
-						handleParsedMetaDataField(fieldName, eachRepIndex, maxRepeat, theType, allowsNulls);
-					}
-				} else {
-					handleParsedMetaDataField(fieldName, 0, maxRepeat, theType, allowsNulls);
-				}
-
+				handleParsedMetaDataField(fieldName, maxRepeat, theType, allowsNulls);
+			} else if( "METADATA".equals( qName ) ) { //Create a virtual 'recid' column
+				handleParsedMetaDataField( "recid", 1, FmFieldType.RECID, false );
 			} else if ("RESULTSET".equals(qName)) {
 				setFoundCount( Integer.valueOf( attributes.getValue( "FOUND" ) ) ); //foundCount = Integer.valueOf(attributes.getValue("FOUND")).intValue();
 				log.log(Level.FINE, "Resultset size: " + foundCount);
@@ -747,49 +719,36 @@ public class FmXmlRequest extends FmRequest {
 		/**
 		 * Handle a field which was parsed in the metadata.  This will set the usedFieldArrayIndex, remove the field from missingFields, and set some metadata on the FmField object in the fieldDefintions list.
 		 * @param fieldName
-		 * @param repetitionIndex for non-repeating fields, this should be zero.
 		 * @param theType
 		 * @param allowsNulls
 		 */
-		private void handleParsedMetaDataField(String fieldName, int repetitionIndex, int maxRepetitions, FmFieldType theType, boolean allowsNulls) {
-			String adjustedName = maxRepetitions == 1 ? fieldName : fieldName + "[" + repetitionIndex + "]";
+		private void handleParsedMetaDataField(String fieldName, int maxRepetitions, FmFieldType theType, boolean allowsNulls) {
 			int whichColumn = -1;
-			boolean foundOneOccurrence = false;
-			boolean matchedSquareBrackets = false;
-			int[] indeces = new int[1];
+			int[] targetIndices = null;
 			do {
 				int indexToTry = whichColumn + 1;
-				whichColumn = fieldDefinitions.indexOfFieldWithColumnName(adjustedName, indexToTry );
-				if (whichColumn == -1 && maxRepetitions > 1) {
-					// this may be a repetition of a repeating field, which does not have a [] bracket.  Look for a fieldDefinition name without the brackets
-					whichColumn = fieldDefinitions.indexOfFieldWithColumnName(fieldName, indexToTry );
-				} else {
-					matchedSquareBrackets = true;
-				}
+				whichColumn = fieldDefinitions.indexOfFieldWithColumnName(fieldName, indexToTry );
 				if (whichColumn != -1) { // set the type and nullable if this is a field in the field definitions
 					FmField fmField = fieldDefinitions.get(whichColumn);
 					fmField.setType(theType);
+					fmField.setMaxReps( maxRepetitions );
 					fmField.setNullable(allowsNulls);
-					if( foundOneOccurrence ) { //We've already found at least one occurrence in the SELECT field list; this is a subsequent one
-						int[] biggerArray = new int[ indeces.length + 1 ]; //Copy into a bigger array and add this index to the end
-						System.arraycopy( indeces, 0, biggerArray, 0, indeces.length );
-						biggerArray[ biggerArray.length -1 ] = whichColumn;
-						indeces = biggerArray;
-					} else {
-						indeces[0] = whichColumn;
-						foundOneOccurrence = true;
+
+					if( targetIndices == null ) {
+						targetIndices = new int[1];
+						targetIndices[0] = whichColumn;
 						if( missingFields != null ) { //Remove this from the list of missing fields
-							missingFields.remove(fmField);
+							missingFields.remove(fieldName);
 						}
+					} else { //We've already found at least one occurrence in the SELECT field list; this is a subsequent one
+						int[] biggerArray = new int[ targetIndices.length + 1 ]; //Copy into a bigger array and add this index to the end
+						System.arraycopy( targetIndices, 0, biggerArray, 0, targetIndices.length );
+						biggerArray[ biggerArray.length -1 ] = whichColumn;
+						targetIndices = biggerArray;
 					}
 				}
 			} while( whichColumn != -1 );
-			if( foundOneOccurrence ) {
-				usedFieldArray.add( new FieldPositionPointer( indeces, repetitionIndex !=0, maxRepetitions, matchedSquareBrackets ) );
-			} else {
-				usedFieldArray.add( new FieldPositionPointer( new int[0], repetitionIndex !=0, maxRepetitions, matchedSquareBrackets ) ); // ignore this field
-			}
-
+			xmlColumns.add( new Column(fieldName, targetIndices, maxRepetitions) );
 		}
 
 		public void endDocument() throws SAXException {
@@ -799,9 +758,17 @@ public class FmXmlRequest extends FmRequest {
 		public void endElement(String uri, String localName, String qName) throws SAXException {
 			//if( debugMode ) requestContent.append( "</" + qName + ">" );
 			if( "DATA".equals(qName) ) {
-				if (fieldPositionPointer != null) {
-					fieldPositionPointer.setDataInRow(currentData, currentRow);
-				}
+
+				//foundDataForColumn = true;
+				foundDataForRow = true;
+				currentColumn.setDataInRow( currentData, currentRow );
+				currentRep++;
+
+				// OPTIMIZE! Not sure which is faster, calling setLength(0), delete() or creating new object --jsb
+				//currentData.setLength(0);
+				//currentData.delete( 0, currentData.length() );
+				currentData = new StringBuilder( 255 );
+
 			}
 			if ("ROW".equals(qName)) {
 				if( foundDataForRow ) { //If this is false, then record-level privileges prevented us from seeing this record; don't add it to the list of records.
@@ -815,52 +782,19 @@ public class FmXmlRequest extends FmRequest {
 					log.config( "Skipped an empty row, record ID " + currentRow.getRecordId() );
 				}
 				sizeEstimate = 0; // set it to 0 and start estimating again
-				if( columnIndex == recIdColumnIndex && columnIndex != -1 ) { //This is necessary in case the record id is the last selected field; it won't be caught in the begin of the <COL> element.
-					currentRow.addRawValue( currentRow.getRecordId(), columnIndex );
-					columnIndex++;
-				}
-				//records.add(currentRow);
 			}
 			if("COL".equals(qName)){ // added to fix a bug with columns that only have an end element - mww
-				if( ! foundDataForColumn ) { //If there is a related field but the relationship is invalid, then FM does not contain a <DATA> element. We need to catch that specially and treat it as null.
-					if (fieldPositionPointer != null) {
-						currentData.setLength(0);
-						fieldPositionPointer.setDataInRow(currentData, currentRow); //FIX!! This should actually be null instead of an empty string, but currently that will throw a NPE - need to fix many things to support this. --jsb
-					}
+				if( currentRep == 0 ) { //If there is a related field but the relationship is invalid, then FM does not contain a <DATA> element. We need to catch that specially and treat it as null.
+					currentData.setLength( 0 );
+					currentColumn.setDataInRow( currentData, currentRow ); //FIX!! This should actually be null instead of an empty string, but currently that will throw a NPE - need to fix many things to support this. --jsb
 				}
-				if(!foundColStart){ // do only if there was no start COL element
-					fieldPositionPointer = fieldPositionIterator.next();
-					columnIndex++;
-					if( columnIndex == recIdColumnIndex ) {
-						// no need to set the data since there is none
-						//currentRow.setRawValue(currentRow.getRecordId().toString(), columnIndex);
-						columnIndex++;
-					}
-					foundColStart = false;
+				if(!foundColStart){ // do only if there was no start COL element FIX! This doesn't seem necessary to me --jsb
+					currentColumn = columnIterator.next();
 				}
+				currentRep = 0;
 			}
 			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
-				//usedFieldArray = new int[allFieldNames.size()];
-				//missingFields = new LinkedHashSet( fieldDefinitions.getFields() );
-				//
-				//int i = 0;
-				//Iterator it = allFieldNames.iterator();
-				//
-				//while ( it.hasNext() ) {
-				//	String aFieldName = (String)it.next();
-				//
-				//	int columnIndex;
-				//
-				//	if ( (columnIndex = fieldDefinitions.indexOfFieldWithColumnName(aFieldName)) > -1) {
-				//		// Get the index of the fieldName w.r.t fieldDefinitions, and put that value into the usedFieldArray
-				//		usedFieldArray[i] = columnIndex;
-				//		missingFields.remove( fieldDefinitions.get( columnIndex ) );
-				//	} else {
-				//		usedFieldArray[i] = -1; // This field columnName will not be used.
-				//	}
-				//	i++;
-				//}
-				// when i come to the metadata tag, i know all of the fields that are going to be in the table, so
+=				// when i come to the metadata tag, i know all of the fields that are going to be in the table, so
 				// I can let people get the fieldDefinitions
 
 				synchronized (FmXmlRequest.this) { // this is different from the other attributes in the xml, since this one is being built on the fly and the variable is not just being "set" once we're finished reading it
@@ -884,7 +818,7 @@ public class FmXmlRequest extends FmRequest {
 					setErrorCode(Integer.parseInt(new String(ch, start, length)));
 					break;
 				case NODE_TYPE_DATA:
-					if (fieldPositionPointer != null && fieldPositionPointer.targetIndeces.length > 0 ) {
+					if( currentColumn != null && currentColumn.targetIndices != null ) {
 						currentData.append(ch, start, length);
 					}
 					break;
@@ -892,32 +826,6 @@ public class FmXmlRequest extends FmRequest {
 		} // end of characters
 
 	}
-
-	/** A FieldPositionPointer exists for each COL element in the result XML, and has an array of indeces to write to when it gets data. For example, if you did "SELECT firstName, firstName FROM people', and
-	 * assuming that the people layout only had three fields 'firstName', 'middleName', 'lastName' there would be three FieldPositionPointers - the firstName would have indeces of 0 and 1, and the second and
-	 * third would contain no indeces at all, because their values are not requested in the SELECT statement.
-	 */
-	private static class FieldPositionPointer {
-		private int[] targetIndeces;
-		private boolean isRepeating;
-		private int maxRepetitions;
-		private boolean matchedSquareBrackets;
-
-		public FieldPositionPointer( int[] targetIndeces, boolean repeating, int maxRepetitions, boolean matchedSquareBrackets ) {
-			this.targetIndeces = targetIndeces;
-			isRepeating = repeating;
-			this.maxRepetitions = maxRepetitions;
-			this.matchedSquareBrackets = matchedSquareBrackets;
-		}
-
-		public void setDataInRow(StringBuffer data, FmRecord row) {
-			final String newValue = data.toString();
-			for( int targetIndex : targetIndeces ) {
-				row.addRawValue(newValue, targetIndex, maxRepetitions );
-			}
-		}
-	}
-
 
 	/**
 	 *  Use this to set the fields that are actually used in the select statement.
@@ -933,25 +841,15 @@ public class FmXmlRequest extends FmRequest {
 			useSelectFields = true;
 		}
 
-		//missingFields = new LinkedHashSet( fieldDefinitions.getFields() ); // this will be trimmed down as metadata is parsed
-		missingFields = new LinkedHashSet<FmField>( fieldDefinitions.size() );
-		int n=0;
+		missingFields = new LinkedHashSet<String>( fieldDefinitions.size() );
 		for( FmField eachField : fieldDefinitions.getFields() ) {
 			if( "recid".equalsIgnoreCase( eachField.getColumnName() ) ) {
 				eachField.setNullable( false );
 				eachField.setReadOnly( true );
 				eachField.setType( FmFieldType.RECID );
-				recIdColumnIndex = n;
-			} else {
-				missingFields.add( eachField );
 			}
-			n++;
+			missingFields.add( eachField.getColumnNameNoRep() );
 		}
-	}
-	
-	/** Does a search for all records that we have access to. This assumes that some records are restricted, and also that the primary key requires strict numeric types. */
-	public void testFindAllRecords() throws Exception {
-		
 	}
 
 	public static class HttpAuthenticationException extends FileMakerException {

@@ -39,14 +39,17 @@ import java.sql.SQLException;
 public class StatementProcessor {
 	private final static String DISPLAY_LAYOUT_MARKER="^^";
 	private final static TimeZone defaultTimeZone = TimeZone.getDefault();
-	private SqlCommand command;
-	private FmStatement statement;
+	
+	private final SqlCommand command;
+	private final FmStatement statement;
+	private final int fmVersion;
+	private final String maxRecords;
+	private final String encoding;
+	
 	private int updateRowCount = 0;
 	//private FmRecord insertedRecord;
 	private Vector params;
-	private boolean is7OrLater = true;
-	private final String encoding;
-	private final String maxRecords;
+	private boolean is7OrLater = true; //For some reason I can't set this to final, don't know why...?
 	static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
 	//static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
 	static final String WILDCARDS_LIKE = null;// note: this is null b/c when using LIKE we would like to pass in search strings exactly like we would in FileMaker
@@ -62,9 +65,10 @@ public class StatementProcessor {
 		this.command = command;
 		this.statement = statement;
 		FmConnection connection = (FmConnection)statement.getConnection();
-		is7OrLater = connection.getFmVersion() >= 7;
-		maxRecords = connection.getProperties().getProperty( "maxrecords", "all" );
-		encoding = is7OrLater ? "UTF-8" : "ISO-8859-1";
+		this.fmVersion = connection.getFmVersion();
+		this.is7OrLater = true; //connection.getFmVersion() >= 7;
+		this.maxRecords = connection.getProperties().getProperty( "maxrecords", "all" );
+		this.encoding = is7OrLater ? "UTF-8" : "ISO-8859-1";
 	}
 
 	/**
@@ -109,7 +113,11 @@ public class StatementProcessor {
 				AssignmentTerm eachTerm = (AssignmentTerm)it.next();
 				//String encodedParam;
 				updateClause.append("&");
-				updateClause.append( URLEncoder.encode(eachTerm.getField().getColumnName(), "UTF-8") + "=" );
+				String columnName = eachTerm.getField().getColumnName();
+				if( fmVersion >= 12 ) { //FileMaker 12 and later expect repetitions to use parentheses instead of square brackets --jsb FIX!!! Make this conditional on FM version
+					columnName = columnName.replace( '[', '(' ).replace( ']', ')' );
+				}
+				updateClause.append( URLEncoder.encode( columnName, "UTF-8") + "=" );
 				if( eachTerm.isPlaceholder() ) {
 					// OPIMIZE!! there is a lot of string creation going on inside loops.  Everything could just be appeneded to the buffers instead, including formatter functions. -ssb
 					updateClause.append( urlEncodedValue( params.elementAt( currentParam ), true, null, false) );
@@ -136,11 +144,15 @@ public class StatementProcessor {
 					List<String> recordIds = new LinkedList<String>();
 					recordIds.add( String.valueOf( value ) );
 					recordIdIterator = recordIds.iterator();
+					findAny = false;
 					break;
 				} else if( findAny && ! eachTerm.isSpecialTerm() ) { //We need to know if there are any search terms that do not start with a hyphen, to know whether to do a -find or -findany. --jsb
 					findAny = false;
 				}
 				String fieldName = eachTerm.getField().getColumnName(); //FIX!! use fully qualified table names for related fields
+				if( fmVersion >= 12 ) { //FileMaker 12 expects repetitions to be indicated with parentheses, not square brackets.
+					fieldName = fieldName.replace( '[', '(' ).replace( ']', ')' );
+				}
 				/**
 				 * 0: the operator
 				 * 1: the ampersand, field name, and equals sign

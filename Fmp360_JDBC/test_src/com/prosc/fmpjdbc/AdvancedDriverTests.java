@@ -4,8 +4,6 @@ import junit.framework.TestCase;
 
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
-import java.util.logging.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -19,20 +17,20 @@ import com.prosc.shared.IOUtils;
  * Created by IntelliJ IDEA. User: jesse Date: Apr 20, 2005 Time: 10:43:32 PM
  */
 public class AdvancedDriverTests extends TestCase {
-	private Connection connection7;
+	private Connection connection12;
 	//private Connection connection6;
-	private Statement statement7;
+	private Statement statement12;
 	//private Statement statement6;
-	private JDBCTestUtils jdbc7;
+	private JDBCTestUtils jdbc12;
 	//private JDBCTestUtils jdbc6;
 
 	//private Logger logger;
 
 
 	protected void setUp() throws Exception {
-		jdbc7 = new JDBCTestUtils();
-		connection7 = jdbc7.getConnection();
-		statement7 = connection7.createStatement();
+		jdbc12 = new JDBCTestUtils();
+		connection12 = jdbc12.getConnection();
+		statement12 = connection12.createStatement();
 
 		//jdbc6 = new JDBCTestUtils();
 		//jdbc6.setFmVersion(6);
@@ -43,8 +41,8 @@ public class AdvancedDriverTests extends TestCase {
 	}
 
 	protected void tearDown() throws Exception {
-		statement7.close();
-		connection7.close();
+		statement12.close();
+		connection12.close();
 		//statement6.close();
 		//connection6.close();
 	}
@@ -78,7 +76,7 @@ public class AdvancedDriverTests extends TestCase {
 
 		String tableName =  "Contacts";
 		String sql = "SELECT * FROM " + tableName + " where lastName='Leong' and emailAddress='kungfudude@mcgyver.com'";
-		ResultSet resultSet = statement7.executeQuery( sql );
+		ResultSet resultSet = statement12.executeQuery( sql );
 		int rowCount = 0;
 		while( resultSet.next() ) {
 			rowCount++;
@@ -95,7 +93,7 @@ public class AdvancedDriverTests extends TestCase {
 		long start = System.currentTimeMillis();
 		String tableName = "Contacts";
 		String sql = "SELECT * FROM "+tableName+" where lastName='Leong' and firstName='Al' LIMIT 3";
-		ResultSet resultSet = statement7.executeQuery( sql );
+		ResultSet resultSet = statement12.executeQuery( sql );
 		int rowCount = 0;
 		while( resultSet.next() ) {
 			rowCount++;
@@ -111,22 +109,22 @@ public class AdvancedDriverTests extends TestCase {
 
 	/** @TestPasses */
 	public void testEscapeFMWildCards() throws SQLException {
-		String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		statement7.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
+		String tableName = jdbc12.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		statement12.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
 
 		//  insert record containing wildcards
 		String sql = "INSERT INTO \""+tableName+"\" (firstName, lastName, emailAddress, city) values('Wildcards', 'Test', 'wildcards@justatest.com', 'a@b*c#d?e!f=g<h>i\"j' )";
-		int rowCount = statement7.executeUpdate( sql );
+		int rowCount = statement12.executeUpdate( sql );
 		assertEquals( 1, rowCount );
 
 		//search for wildcards
 		sql = "SELECT firstName FROM "+tableName+" where city = 'a@b*c#d?e!f=g<h>i\"j'";
-		ResultSet rs = statement7.executeQuery( sql );
+		ResultSet rs = statement12.executeQuery( sql );
 		assertTrue("Did not find a match when searching using special chars", rs.next());
 		assertEquals( "Wildcards", rs.getObject("firstName") );
 
 		//Delete wild card record
-		rowCount = statement7.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
+		rowCount = statement12.executeUpdate( "DELETE FROM \""+tableName+"\" where city = 'a@b*c#d?e!f=g<h>i\"j' ");
 		assertTrue( "Should have found 1 row to delete, not " + rowCount, rowCount == 1 ); // FIX!! is there something wrong with the count returned from deletes? -ssb
 	}
 
@@ -142,8 +140,8 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testGetStoredProcedures() throws SQLException {
-		if (jdbc7.fmVersion < 7){connection7.setCatalog("Contacts");} //Need to set the db if using 6, right?
-		ResultSet procedures = connection7.getMetaData().getProcedures(null, null, null); //ddtek driver does not implement this
+		if ( jdbc12.fmVersion < 7){connection12.setCatalog("Contacts");} //Need to set the db if using 6, right?
+		ResultSet procedures = connection12.getMetaData().getProcedures(null, null, null); //ddtek driver does not implement this
 		int scriptCount = 0;
 		while( procedures.next() ) {
 			System.out.println("Script columnName: " + procedures.getString("PROCEDURE_NAME") );
@@ -158,18 +156,18 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws SQLException
 	 */
 	public void testExecuteStoredProcedure() throws SQLException {
-		connection7.prepareCall("capitalizeLastNames").execute();
-		String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-		statement7.executeUpdate( "INSERT INTO "+tableName+" (firstName, lastName, emailAddress) values('Fred', 'flintstone', 'fred@rubble.com')", Statement.RETURN_GENERATED_KEYS );
-		ResultSet rs = statement7.getGeneratedKeys();
+		connection12.prepareCall("capitalizeLastNames").execute();
+		String tableName = jdbc12.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+		statement12.executeUpdate( "INSERT INTO "+tableName+" (firstName, lastName, emailAddress) values('Fred', 'flintstone', 'fred@rubble.com')", Statement.RETURN_GENERATED_KEYS );
+		ResultSet rs = statement12.getGeneratedKeys();
 		try {
 			rs.next();
 			Object id = rs.getObject( "ID" );
 
-			if (jdbc7.fmVersion < 7){connection7.setCatalog("Contacts");} //Need to set the db if using 6, right?
-			connection7.prepareCall("capitalizeLastNames").execute();
+			if ( jdbc12.fmVersion < 7){connection12.setCatalog("Contacts");} //Need to set the db if using 6, right?
+			connection12.prepareCall("capitalizeLastNames").execute();
 			//rs.close();
-			rs = statement7.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
+			rs = statement12.executeQuery( "SELECT lastName FROM "+tableName+" where ID='" + id + "'" );
 			rs.next();
 			assertEquals( "FLINTSTONE", rs.getString("lastName") );
 		} finally {
@@ -178,7 +176,7 @@ public class AdvancedDriverTests extends TestCase {
 	}
 	
 	public void testStoredProcedureQueryAndParam() throws SQLException {
-		CallableStatement call = connection7.prepareCall( "find by state" );
+		CallableStatement call = connection12.prepareCall( "find by state" );
 		call.setString( "-script.param", "FL\nGA" );
 		ResultSet rs = call.executeQuery();
 		int foundCount=0;
@@ -191,7 +189,7 @@ public class AdvancedDriverTests extends TestCase {
 	}
 	
 	public void testStoredProcedureWithNoResults() throws SQLException {
-		CallableStatement call = connection7.prepareCall( "find by state" );
+		CallableStatement call = connection12.prepareCall( "find by state" );
 		call.setString( "-script.param", "UT" );
 		ResultSet rs = call.executeQuery();
 		int foundCount=0;
@@ -217,10 +215,10 @@ public class AdvancedDriverTests extends TestCase {
 	 * @TestPasses
 	 * */
 	public void testPreparedStatement() throws SQLException {
-		String tableName = jdbc7.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
-		statement7.executeUpdate( "DELETE FROM " + tableName + " WHERE \"Alternate Mime Type\"='JDBC testing' "); // cleanup
+		String tableName = jdbc12.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
+		statement12.executeUpdate( "DELETE FROM " + tableName + " WHERE \"Alternate Mime Type\"='JDBC testing' "); // cleanup
 		//
-		PreparedStatement insertStatement = connection7.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\", \"Date created\") values(?,?,'JDBC testing',?,?,?,?)");
+		PreparedStatement insertStatement = connection12.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\", \"Date created\") values(?,?,'JDBC testing',?,?,?,?)");
 		java.util.Date now = new java.util.Date();
 		insertStatement.setString( 1, "100");
 		insertStatement.setString( 2, "video/mpeg" );
@@ -242,7 +240,7 @@ public class AdvancedDriverTests extends TestCase {
 		rs.next();
 		Object id3 = rs.getString("ID");
 		//FIX!! Should we store the record ID in getGeneratedKeys()?
-		rs = statement7.executeQuery( "select * from portrait where ID='" + id1 + "'");
+		rs = statement12.executeQuery( "select * from portrait where ID='" + id1 + "'");
 		assertTrue( rs.next() );
 		assertEquals( 100, rs.getInt("contactID") );
 		assertEquals( "video/mpeg", rs.getString("mimeType") );
@@ -253,7 +251,7 @@ public class AdvancedDriverTests extends TestCase {
 		long roundedTime = (time / 1000) * 1000; // trim milliseconds from time, since we're not storing that.
 		assertEquals((roundedTime), rs.getTimestamp("Picture taken").getTime() );
 		assertTrue( rs.isLast() );
-		rs = statement7.executeQuery( "select * from portrait where ID='" + id3 + "'");
+		rs = statement12.executeQuery( "select * from portrait where ID='" + id3 + "'");
 		assertTrue( rs.isBeforeFirst() );
 		rs.next();
 		//assertNull( rs.getObject("mimeType") );
@@ -262,7 +260,7 @@ public class AdvancedDriverTests extends TestCase {
 		assertEquals( 102, rs.getInt("contactID") );
 		rs.next();
 		assertTrue( rs.isAfterLast() );
-		int rowCount = statement7.executeUpdate( "DELETE from Portrait where \"alternate mime type\" = \"JDBC testing\" ");
+		int rowCount = statement12.executeUpdate( "DELETE from Portrait where \"alternate mime type\" = \"JDBC testing\" ");
 		assertEquals( 3, rowCount );
 	}
 
@@ -270,8 +268,8 @@ public class AdvancedDriverTests extends TestCase {
 
 	//Test containers/BLOBs
 	public Blob testContainerFields() throws SQLException, IOException {
-		String tableName = jdbc7.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
-		ResultSet rs = statement7.executeQuery("SELECT contactID, portrait from " + tableName + " where contactID != null");
+		String tableName = jdbc12.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
+		ResultSet rs = statement12.executeQuery("SELECT contactID, portrait from " + tableName + " where contactID != null");
 		Blob eachValue = null;
 		int successCount = 0;
 		while( rs.next() ) {
@@ -348,7 +346,7 @@ public class AdvancedDriverTests extends TestCase {
 
 	/** This test passes. */
 	public void testSingleTableAliasing() throws SQLException {
-		PreparedStatement ps = connection7.prepareStatement( "SELECT t0.city,t0.emailAddress, t0.firstName, t0.ID, t0.lastName FROM Contacts t0 where t0.city=?" );
+		PreparedStatement ps = connection12.prepareStatement( "SELECT t0.city,t0.emailAddress, t0.firstName, t0.ID, t0.lastName FROM Contacts t0 where t0.city=?" );
 		ps.setString( 1, "San Francisco" );
 		ResultSet rs = ps.executeQuery();
 		rs.next();
@@ -357,7 +355,7 @@ public class AdvancedDriverTests extends TestCase {
 
 	public  void testFmpRecordIDs1() throws SQLException {
 		//Make sure that we get record ids when requested in the select statement
-		ResultSet rs = statement7.executeQuery( "SELECT recId, firstName, lastName FROM Contacts WHERE firstName='Robin'" );
+		ResultSet rs = statement12.executeQuery( "SELECT recId, firstName, lastName FROM Contacts WHERE firstName='Robin'" );
 		rs.next();
 		assertEquals( rs.getObject(1).getClass(), Integer.class ); //getObject on recId should return an Integer
 		int recId = rs.getInt( 1 );
@@ -365,26 +363,26 @@ public class AdvancedDriverTests extends TestCase {
 		rs.close();
 
 		//Now try updating with that record ID
-		statement7.executeUpdate( "UPDATE Contacts SET firstName='Robin' WHERE recId=" + recId );
+		statement12.executeUpdate( "UPDATE Contacts SET firstName='Robin' WHERE recId=" + recId );
 		//rs = statement7.getGeneratedKeys();
 		//rs.next();
 		//assertNotNull( rs.getObject( "Mod count" ) );
 		//rs.close();
 
 		//Now try updating with record ID with prepared statements
-		PreparedStatement ps = connection7.prepareStatement( "UPDATE Contacts SET firstName=? WHERE recID=?" );
+		PreparedStatement ps = connection12.prepareStatement( "UPDATE Contacts SET firstName=? WHERE recID=?" );
 		ps.setString( 1, "Robin" );
 		ps.setInt( 2, recId );
 		assertEquals( 1, ps.executeUpdate() );
 
 		//Now see if we get the record ID in a newly created record
-		assertEquals( 1, statement7.executeUpdate( "INSERT INTO Contacts(firstName) VALUES(\"recid test\") " ) );
-		ResultSet keys = statement7.getGeneratedKeys();
+		assertEquals( 1, statement12.executeUpdate( "INSERT INTO Contacts(firstName) VALUES(\"recid test\") " ) );
+		ResultSet keys = statement12.getGeneratedKeys();
 		keys.next();
 		recId = keys.getInt( "recid" );
 
 		//Now test a deletion by the record ID
-		assertEquals( 1, statement7.executeUpdate( "DELETE FROM Contacts WHERE recId = " + recId ) );
+		assertEquals( 1, statement12.executeUpdate( "DELETE FROM Contacts WHERE recId = " + recId ) );
 	}
 
 	/*public void testGeneratedKeys() {
@@ -394,17 +392,17 @@ public class AdvancedDriverTests extends TestCase {
 	/** This test does not apply to the ddtek driver.
 	 * @TestFails */
 	public void testFmpRecordIDs2() throws SQLException {
-		if( jdbc7.use360driver ) {
-			String tableName = jdbc7.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
-			statement7.executeUpdate( "DELETE from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Start out with an empty record set
-			int rowCount = statement7.executeUpdate("INSERT INTO "+tableName+" (firstName, lastName) values('Robin', 'Williams')" );
+		if( jdbc12.use360driver ) {
+			String tableName = jdbc12.fmVersion >= 7 ? "Contacts" : "Contacts.Contacts"; //Need to include the db & layout name if using 6, right?
+			statement12.executeUpdate( "DELETE from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Start out with an empty record set
+			int rowCount = statement12.executeUpdate("INSERT INTO "+tableName+" (firstName, lastName) values('Robin', 'Williams')" );
 			assertEquals( 1, rowCount );
 
-			ResultSet generatedKeys = statement7.getGeneratedKeys();
+			ResultSet generatedKeys = statement12.getGeneratedKeys();
 			generatedKeys.next();
 			int recId = generatedKeys.getInt("recId"); //Generated keys should always include a column for "recId"; // FIX!! this fails.  Not implemented -ssb
 
-			ResultSet rs = statement7.executeQuery("SELECT * from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Should not return a recId, since we do not explicitly ask for it
+			ResultSet rs = statement12.executeQuery("SELECT * from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Should not return a recId, since we do not explicitly ask for it
 			rs.next();
 			try {
 				rs.getInt("recId");
@@ -413,7 +411,7 @@ public class AdvancedDriverTests extends TestCase {
 				//This is correct - we did not specify recId as one of the search terms
 			}
 
-			rs = statement7.executeQuery("SELECT firstName, lastName, recId, state, city from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Should get back a recId that matches the one from our insertion
+			rs = statement12.executeQuery("SELECT firstName, lastName, recId, state, city from "+tableName+" where firstName='Robin' and lastName='Williams' "); //Should get back a recId that matches the one from our insertion
 			rs.next();
 			assertEquals( recId, rs.getInt(3) );
 			assertEquals( recId, rs.getInt("recId") );
@@ -424,7 +422,7 @@ public class AdvancedDriverTests extends TestCase {
 				//This is correct - get by name is case sensitive
 			}
 
-			rs = statement7.executeQuery("SELECT firstName, RECID, lastName from "+tableName+" where city='San Francisco' or ReCiD=" + recId ); //Search terms are not case-sensitive
+			rs = statement12.executeQuery("SELECT firstName, RECID, lastName from "+tableName+" where city='San Francisco' or ReCiD=" + recId ); //Search terms are not case-sensitive
 			rs.next();
 			assertEquals(recId, rs.getInt("RECID") );
 			assertFalse( rs.next() ); //Shouldn't be more than one matching record
@@ -435,10 +433,10 @@ public class AdvancedDriverTests extends TestCase {
 
 	/** This test passes. */
 	public void testPreparedStatementBindings() throws SQLException {
-		statement7.executeUpdate("DELETE FROM Portrait WHERE \"Floating point\" is NULL" );
-		statement7.executeUpdate("INSERT INTO PORTRAIT(\"Floating point\", mimeType) values(NULL, 'image/jpg')");
-		statement7.executeUpdate("INSERT INTO PORTRAIT(\"Floating point\", mimeType) values(NULL, 'image/jpg')");
-		PreparedStatement statement = connection7.prepareStatement("SELECT * FROM Portrait WHERE \"Floating point\" IS NULL and mimeType=?");
+		statement12.executeUpdate("DELETE FROM Portrait WHERE \"Floating point\" is NULL" );
+		statement12.executeUpdate("INSERT INTO PORTRAIT(\"Floating point\", mimeType) values(NULL, 'image/jpg')");
+		statement12.executeUpdate("INSERT INTO PORTRAIT(\"Floating point\", mimeType) values(NULL, 'image/jpg')");
+		PreparedStatement statement = connection12.prepareStatement("SELECT * FROM Portrait WHERE \"Floating point\" IS NULL and mimeType=?");
 		statement.setString(1, "image/jpg");
 		ResultSet rs = statement.executeQuery();
 		int foundCount = 0;
@@ -457,11 +455,11 @@ public class AdvancedDriverTests extends TestCase {
 
 		java.sql.Timestamp testTimestamp = new Timestamp(1000000000000L);
 
-		statement7.executeUpdate("DELETE FROM Portrait WHERE \"Date created\" = " + testDateString );
+		statement12.executeUpdate("DELETE FROM Portrait WHERE \"Date created\" = " + testDateString );
 
-		statement7.executeUpdate("INSERT INTO PORTRAIT(\"Date created\") VALUES('" + testDateString + "')" ); //Create 1 record
+		statement12.executeUpdate("INSERT INTO PORTRAIT(\"Date created\") VALUES('" + testDateString + "')" ); //Create 1 record
 
-		PreparedStatement insertDates = connection7.prepareStatement("INSERT INTO Portrait(\"Date created\", \"Time inserted\", \"Picture taken\") values(?,?,?)" );
+		PreparedStatement insertDates = connection12.prepareStatement("INSERT INTO Portrait(\"Date created\", \"Time inserted\", \"Picture taken\") values(?,?,?)" );
 		insertDates.setDate( 1, testDate );
 		insertDates.setTime( 2, testTime );
 		insertDates.setTimestamp( 3, testTimestamp );
@@ -469,7 +467,7 @@ public class AdvancedDriverTests extends TestCase {
 		insertDates.executeUpdate(); //Create 3 records
 
 		//Try a select with a prepared statement
-		PreparedStatement selectedDatesPS = connection7.prepareStatement("SELECT * FROM Portrait WHERE \"Date created\" = ? AND \"Time inserted\" = ? AND \"Picture taken\" = ?" );
+		PreparedStatement selectedDatesPS = connection12.prepareStatement("SELECT * FROM Portrait WHERE \"Date created\" = ? AND \"Time inserted\" = ? AND \"Picture taken\" = ?" );
 		selectedDatesPS.setDate( 1, testDate );
 		selectedDatesPS.setTime( 2, testTime );
 		selectedDatesPS.setTimestamp( 3, testTimestamp );
@@ -484,13 +482,13 @@ public class AdvancedDriverTests extends TestCase {
 		assertTrue( "Should have found exactly 2 records, found " + foundCount, foundCount == 2 );
 
 		//Now try with hard-coded select
-		rs = statement7.executeQuery("SELECT * FROM PORTRAIT WHERE \"Date created\" = " + testDateString );
+		rs = statement12.executeQuery("SELECT * FROM PORTRAIT WHERE \"Date created\" = " + testDateString );
 		foundCount = 0;
 		while( rs.next() ) foundCount++;
 		assertTrue( "Should have found exactly 3 records, found " + foundCount, foundCount == 3 );
 
 		//Now try with hard-coded delete
-		foundCount = statement7.executeUpdate("DELETE FROM Portrait WHERE \"Date created\" = " + testDateString );
+		foundCount = statement12.executeUpdate("DELETE FROM Portrait WHERE \"Date created\" = " + testDateString );
 		assertTrue( "Should have deleted exactly 3 records, found " + foundCount, foundCount == 3 );
 	}
 
@@ -516,7 +514,7 @@ public class AdvancedDriverTests extends TestCase {
 	 * */
 	public void testBasicDataTypesNotImpl() throws SQLException {
 		Set supportedTypes = new HashSet();
-		ResultSet rs = connection7.getMetaData().getTypeInfo();
+		ResultSet rs = connection12.getMetaData().getTypeInfo();
 		while( rs.next() ) {
 			supportedTypes.add( new Integer(rs.getInt("DATA_TYPE")) );
 		}
@@ -562,7 +560,7 @@ public class AdvancedDriverTests extends TestCase {
 	 */
 	public void testOptionalDataTypesNotImpl() throws SQLException {
 		Set supportedTypes = new HashSet();
-		ResultSet rs = connection7.getMetaData().getTypeInfo();
+		ResultSet rs = connection12.getMetaData().getTypeInfo();
 		while( rs.next() ) {
 			supportedTypes.add( new Integer(rs.getInt("DATA_TYPE")) );
 		}
@@ -595,7 +593,7 @@ public class AdvancedDriverTests extends TestCase {
 
 	public void testRangeSearchesNotImpl() throws SQLException {
 		//Now try a date range
-		PreparedStatement ps = connection7.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where gpa >= ? and gpa <= ?");
+		PreparedStatement ps = connection12.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where gpa >= ? and gpa <= ?");
 		//ps = connection.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where gpa <= ?");
 		ps.setFloat(1, 1.0f );
 		ps.setFloat(2, 3.5f );
@@ -607,14 +605,14 @@ public class AdvancedDriverTests extends TestCase {
 		Timestamp startRange = new Timestamp( new GregorianCalendar(2003,1,1).getTimeInMillis() );
 		Timestamp endRange = new Timestamp( new java.util.Date().getTime() );
 		//First try a single date criteria
-		ps = connection7.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where \"Timestamp created\" > ?");
+		ps = connection12.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where \"Timestamp created\" > ?");
 		ps.setTimestamp( 1, startRange );
 		rs = ps.executeQuery();
 		resultCount = 0;
 		while (rs.next()) resultCount++;
 		assertTrue( resultCount > 100 );
 		//Now try a date range
-		ps = connection7.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where \"Timestamp created\" > ? and \"Timestamp created\" < ?");
+		ps = connection12.prepareStatement("SELECT ID, firstName, lastName, \"Timestamp created\" from Contacts where \"Timestamp created\" > ? and \"Timestamp created\" < ?");
 		ps.setTimestamp( 1, startRange );
 		ps.setTimestamp( 2, endRange );
 		rs = ps.executeQuery();
@@ -624,7 +622,7 @@ public class AdvancedDriverTests extends TestCase {
 	}
 
 	public void testGetColumnNamesFm7() throws SQLException {
-		ResultSet rs = connection7.getMetaData().getColumns("Contacts", null, "Calc Test", null);
+		ResultSet rs = connection12.getMetaData().getColumns("Contacts", null, "Calc Test", null);
 
 		do {
 			rs.next();
@@ -635,7 +633,7 @@ public class AdvancedDriverTests extends TestCase {
 	}
 	
 	public void testGetColumnPrivileges() throws SQLException {
-		DatabaseMetaData metaData = connection7.getMetaData();
+		DatabaseMetaData metaData = connection12.getMetaData();
 
 		String db = "Contacts";
 		String table = "Calc test";
@@ -653,7 +651,7 @@ public class AdvancedDriverTests extends TestCase {
 	}
 	
 	public void testGetExportedKeys() throws SQLException {
-		DatabaseMetaData metaData = connection7.getMetaData();
+		DatabaseMetaData metaData = connection12.getMetaData();
 
 		ResultSet rs = metaData.getExportedKeys( "Contacts", null, "Contacts" );
 		while( rs.next() ) {
@@ -712,10 +710,10 @@ public class AdvancedDriverTests extends TestCase {
 	 */
 	public void testManyColumnsSpeed() throws SQLException {
 		System.out.println("Starting testLargeTableSpeed()");
-		String tableName = jdbc7.fmVersion >= 7 ? "ManyTextFields" : "ManyTextFields.Layout #2"; //Need to include the db & layout name if using 6, right?
+		String tableName = jdbc12.fmVersion >= 7 ? "ManyTextFields" : "ManyTextFields.Layout #2"; //Need to include the db & layout name if using 6, right?
 		for( int n=0; n<5; n++ ) {
 			java.util.Date then = new java.util.Date();
-			ResultSet resultSet = statement7.executeQuery( "select * from \"" + tableName + "\"" );
+			ResultSet resultSet = statement12.executeQuery( "select * from \"" + tableName + "\"" );
 			assertTrue( "There should be at least 300 fields on this layout", resultSet.getMetaData().getColumnCount() >= 300 );
 			long elapsedTime = new java.util.Date().getTime() - then.getTime();
 			System.out.println( "elapsed time: " + elapsedTime + "ms" );
@@ -724,7 +722,7 @@ public class AdvancedDriverTests extends TestCase {
 	}
 
 	public void testResultSetMetaData() throws SQLException {
-		ResultSet rs = statement7.executeQuery( "SELECT mimeType, contactID, \"Date created\", \"Time inserted\", \"Picture taken\", portrait FROM Portrait" );
+		ResultSet rs = statement12.executeQuery( "SELECT mimeType, contactID, \"Date created\", \"Time inserted\", \"Picture taken\", portrait FROM Portrait" );
 		ResultSetMetaData metaData = rs.getMetaData();
 		int n=0;
 		assertEquals( String.class.getName(), metaData.getColumnClassName( ++n ) );
@@ -748,7 +746,7 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws Exception
 	 */
 	public void testLargeResultSet() throws Exception {
-		FmConnection fmConnection = new FmConnection(jdbc7.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
+		FmConnection fmConnection = new FmConnection( jdbc12.getJdbcUrl("Extremely Large Database"), new Properties());// contacts.fp7
 		Statement statement = fmConnection.createStatement();
 
 		String tableName = "Many records";
@@ -783,13 +781,13 @@ public class AdvancedDriverTests extends TestCase {
 
 		{ //Test FM7
 			String sql = "INSERT INTO Contacts (firstName) values(?)";
-			PreparedStatement ps = connection7.prepareStatement( sql );
+			PreparedStatement ps = connection12.prepareStatement( sql );
 			ps.setString( 1, value ); //This is the critical line - we pass the string to the prepared statement instead of embedding it in the SQL
 			ps.execute();
 			ResultSet rs = ps.getGeneratedKeys();
 			rs.next();
 			int pk = rs.getInt( "ID" );
-			rs = connection7.createStatement().executeQuery( "SELECT firstName FROM Contacts WHERE ID=" + pk );
+			rs = connection12.createStatement().executeQuery( "SELECT firstName FROM Contacts WHERE ID=" + pk );
 			rs.next();
 			assertEquals( value, rs.getString(1) );
 			rs.close();
@@ -836,14 +834,14 @@ public class AdvancedDriverTests extends TestCase {
 
 		try {
 			String sql = "SELECT * FROM Contacts_minimal where lastName='BARNUM' and firstName='Benjamin' and zip='94109'";
-			statement7.executeQuery( sql );
+			statement12.executeQuery( sql );
 			fail("Should fail with an error 102");
 		} catch( SQLException e ) {
 			assertEquals( 102, e.getErrorCode() );
 		}
 
 		String sql = "SELECT * FROM Contacts^^Contacts_minimal where lastName='BARNUM' and firstName='Benjamin' and zip='94109'";
-		ResultSet rs = statement7.executeQuery( sql );
+		ResultSet rs = statement12.executeQuery( sql );
 		rs.next();
 		rs.getObject( "lastName" );
 		rs.getObject( "firstName" );
@@ -858,7 +856,7 @@ public class AdvancedDriverTests extends TestCase {
 	/** This tries to fetch 3 different records in a single query by their ID numbers */
 	public void testOrSearches() throws SQLException {
 		String sql = "SELECT * FROM Contacts where ID='2' or ID='3' or ID='4'";
-		ResultSet rs = statement7.executeQuery( sql );
+		ResultSet rs = statement12.executeQuery( sql );
 		try {
 			int count=0;
 			while( rs.next() ) count++;
@@ -872,17 +870,17 @@ public class AdvancedDriverTests extends TestCase {
 		//String japaneseName = "my_??????";
 		String japaneseName = "my_\u30a4\u30d9\u30f3\u30c8\u7ba1\u7406";
 		String urlEncodedVersion = URLEncoder.encode( japaneseName, "utf-8" );
-		Connection connection = jdbc7.getConnection( japaneseName, "Admin", "" );
+		Connection connection = jdbc12.getConnection( japaneseName, "Admin", "" );
 		connection.close();
 	}
 	
 	/** Records that are restricted in FileMaker privilege sets should be skipped over when iterating the rows of the ResultSet. */
 	public void testRecordLevelSecurity() throws SQLException {
-		jdbc7 = new JDBCTestUtils();
-		connection7 = jdbc7.getConnection( jdbc7.dbName, "limited", "limited");
-		statement7 = connection7.createStatement();
+		jdbc12 = new JDBCTestUtils();
+		connection12 = jdbc12.getConnection( jdbc12.dbName, "limited", "limited");
+		statement12 = connection12.createStatement();
 
-		ResultSet rs = statement7.executeQuery( "SELECT * FROM Company" );
+		ResultSet rs = statement12.executeQuery( "SELECT * FROM Company" );
 		int totalRecords = ((FmResultSet)rs).getFoundCount();
 		int visibleRecords = 0;
 		while( rs.next() ) {
@@ -893,13 +891,15 @@ public class AdvancedDriverTests extends TestCase {
 	}
 	
 	public void testRepeatingFields() throws Exception {
-		statement7.execute( "INSERT INTO Contacts(firstName,lastName,repeating[2],repeating[4], emailAddress) VALUES ('Jesse', 'Barnum', 'Two', 'Four', 'jesse@360works.com')", Statement.RETURN_GENERATED_KEYS );
-		ResultSet rs = statement7.getGeneratedKeys();
+		ResultSet rs;
+		
+		/*statement12.execute( "INSERT INTO Contacts(firstName,lastName,repeating[2],repeating[4], emailAddress) VALUES ('Jesse', 'Barnum', 'Two', 'Four', 'jesse@360works.com')", Statement.RETURN_GENERATED_KEYS );
+		ResultSet rs = statement12.getGeneratedKeys();
 		String recid;
 		try {
 			rs.next();
 			recid = rs.getString( "recid" );
-			assertEquals( "Jesse", rs.getString( "firstName" ) );
+			*//*assertEquals( "Jesse", rs.getString( "firstName" ) );
 			Object[] array = (Object[])rs.getArray( "repeating" ).getArray();
 			assertEquals( "Two", array[1] );
 			assertEquals( "Four", array[3] );
@@ -908,24 +908,30 @@ public class AdvancedDriverTests extends TestCase {
 			//assertEquals( "Two", rs.getString( "repeating[2]" ) );
 			//assertEquals( "Four", rs.getString( "repeating[4]" ) );
 			
-			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
+			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );*//*
 		} finally {
 			rs.close();
-		}
+		}*/
 		
-		rs = statement7.executeQuery( "SELECT firstName,lastName,repeating[2], repeating[4], repeating[8], emailAddress FROM Contacts WHERE recid=" + recid );
+		String recid = "9662";
+		
+		rs = statement12.executeQuery( "SELECT firstName,lastName,repeating[2], repeating[4], repeating[8], emailAddress FROM Contacts WHERE recid=" + recid );
 		try {
 			rs.next();
 			assertEquals( "Jesse", rs.getString( "firstName" ) );
+			assertEquals( "Jesse", rs.getString( 1 ) );
+			assertEquals( "Two", rs.getString( 3 ) );
 			assertEquals( "Two", rs.getString( "repeating[2]" ) );
 			assertEquals( "Four", rs.getString( "repeating[4]" ) );
+			assertEquals( "Four", rs.getString( 4 ) );
 			//assertEquals( "Eight", rs.getString( "repeating[8]" ) ); //Can't insert repeating[8] because we're only showing 4 repetitions on the layout. --jsb
 			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
+			assertEquals( "jesse@360works.com", rs.getString( 6 ) );
 		} finally {
 			rs.close();
 		}
 		
-		rs = statement7.executeQuery( "SELECT * FROM Contacts WHERE recid=" + recid );
+		rs = statement12.executeQuery( "SELECT * FROM Contacts WHERE recid=" + recid );
 		try {
 			rs.next();
 			assertEquals( "Jesse", rs.getString( "firstName" ) );
@@ -936,6 +942,37 @@ public class AdvancedDriverTests extends TestCase {
 		} finally {
 			rs.close();
 		}
+		
+		//Test selecting the same field more than once, mixed with repetitions
+		rs = statement12.executeQuery( "SELECT firstName, firstName, lastName, repeating[2], repeating[2], repeating[4], emailAddress, emailAddress FROM Contacts WHERE recid=" + recid );
+		try {
+			rs.next();
+			assertEquals( "Jesse", rs.getString( 1 ) );
+			assertEquals( "Jesse", rs.getString( 2 ) );
+			assertEquals( "Two", rs.getString( 4 ) );
+			assertEquals( "Four", rs.getString( "repeating[4]" ) );
+			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
+			assertEquals( "jesse@360works.com", rs.getString( 7 ) );
+			assertEquals( "jesse@360works.com", rs.getString( 8 ) );
+		} finally {
+			rs.close();
+		}
+		
+		//Test selections without specifying repetition - should return first repetition
+		rs = statement12.executeQuery( "SELECT firstName,lastName,repeating,anotherRepeat,emailAddress FROM Contacts WHERE recid=" + recid );
+		try {
+			rs.next();
+			assertEquals( "Jesse", rs.getString( "firstName" ) );
+			assertEquals( "Jesse", rs.getString( 1 ) );
+			//assertEquals( "Eight", rs.getString( "repeating[8]" ) ); //Can't insert repeating[8] because we're only showing 4 repetitions on the layout. --jsb
+			assertEquals( null, rs.getString( "repeating" ) ); //The first repetition is empty
+			assertEquals( null, rs.getString( 3 ) );
+			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
+			assertEquals( "jesse@360works.com", rs.getString( 5 ) );
+		} finally {
+			rs.close();
+		}
+		
 	}
 
 	/** This fetches all records from a table. It assumes that we only want to get accessible records based on privilege set, and also that we're
@@ -943,7 +980,7 @@ public class AdvancedDriverTests extends TestCase {
 	 * @throws Exception
 	 */
 	public void testFetchAllAccessibleRecords() throws Exception {
-		final FmResultSet rs = (FmResultSet)statement7.executeQuery( "SELECT ID FROM CONTACTS WHERE ID != '' LIMIT 1" );
+		final FmResultSet rs = (FmResultSet)statement12.executeQuery( "SELECT ID FROM CONTACTS WHERE ID != '' LIMIT 1" );
 		try {
 			System.out.println("Found count is " + rs.getFoundCount());
 		} finally {
