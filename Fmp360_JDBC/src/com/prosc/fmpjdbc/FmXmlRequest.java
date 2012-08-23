@@ -71,6 +71,7 @@ public class FmXmlRequest extends FmRequest {
 	private String fullUrl;
 	private Thread parsingThread;
 	private SQLException metadataError;
+	private Integer fmVersion;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion) {
 		try {
@@ -373,7 +374,23 @@ public class FmXmlRequest extends FmRequest {
 		// some thread stuff
 		productVersion = pv;
 		productVersionIsSet = true;
+
+		try {
+			String versionString = productVersion;
+			int mark = versionString.indexOf( '.' );
+			if( mark > 0 ) {
+				versionString = versionString.substring( 0, mark );
+			}
+			fmVersion = Integer.valueOf( versionString );
+		} catch( NumberFormatException e1 ) {
+			log.log( Level.WARNING, "Could not parse product version " + productVersion, e1 );
+		}
+
 		notifyAll();
+	}
+
+	public Integer getFmVersion() {
+		return fmVersion;
 	}
 
 	public synchronized String getDatabaseName() {
@@ -700,6 +717,7 @@ public class FmXmlRequest extends FmRequest {
 			} else if ("PRODUCT".equals(qName)) {
 				setDatabaseName(attributes.getValue("NAME")); // databaseName = attributes.getValue("NAME");
 				setProductVersion(attributes.getValue("VERSION")); // productVersion = attributes.getValue("VERSION");
+				setErrorCode( Integer.valueOf( currentData.toString() ) ); //This is the value read from the <ERRORCODE>foo</ERRORCODE> section
 			} else if ("DATABASE".equals(qName)) {
 				fmLayout = attributes.getValue( "LAYOUT" );
 				fmTable = new FmTable( attributes.getValue("NAME") );
@@ -815,7 +833,7 @@ public class FmXmlRequest extends FmRequest {
 					log.log(Level.WARNING, "Unexpected character data : " + new String(ch, start, length));
 					break;
 				case NODE_TYPE_ERROR:
-					setErrorCode(Integer.parseInt(new String(ch, start, length)));
+					currentData.append( ch, start, length );
 					break;
 				case NODE_TYPE_DATA:
 					if( currentColumn != null && currentColumn.targetIndices != null ) {
