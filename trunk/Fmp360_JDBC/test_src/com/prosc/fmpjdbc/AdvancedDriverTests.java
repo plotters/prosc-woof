@@ -376,7 +376,7 @@ public class AdvancedDriverTests extends TestCase {
 		assertEquals( 1, ps.executeUpdate() );
 
 		//Now see if we get the record ID in a newly created record
-		assertEquals( 1, statement12.executeUpdate( "INSERT INTO Contacts(firstName) VALUES(\"recid test\") " ) );
+		assertEquals( 1, statement12.executeUpdate( "INSERT INTO Contacts(firstName) VALUES(\"recid test\") ", Statement.RETURN_GENERATED_KEYS ) );
 		ResultSet keys = statement12.getGeneratedKeys();
 		keys.next();
 		recId = keys.getInt( "recid" );
@@ -893,13 +893,12 @@ public class AdvancedDriverTests extends TestCase {
 	public void testRepeatingFields() throws Exception {
 		ResultSet rs;
 		
-		/*statement12.execute( "INSERT INTO Contacts(firstName,lastName,repeating[2],repeating[4], emailAddress) VALUES ('Jesse', 'Barnum', 'Two', 'Four', 'jesse@360works.com')", Statement.RETURN_GENERATED_KEYS );
-		ResultSet rs = statement12.getGeneratedKeys();
+		statement12.execute( "INSERT INTO Contacts(firstName,lastName,repeating[2],repeating[4], emailAddress) VALUES ('Jesse', 'Barnum', 'Two', 'Four', 'jesse@360works.com')", Statement.RETURN_GENERATED_KEYS );
+		rs = statement12.getGeneratedKeys();
 		String recid;
 		try {
 			rs.next();
 			recid = rs.getString( "recid" );
-			*//*assertEquals( "Jesse", rs.getString( "firstName" ) );
 			Object[] array = (Object[])rs.getArray( "repeating" ).getArray();
 			assertEquals( "Two", array[1] );
 			assertEquals( "Four", array[3] );
@@ -908,12 +907,12 @@ public class AdvancedDriverTests extends TestCase {
 			//assertEquals( "Two", rs.getString( "repeating[2]" ) );
 			//assertEquals( "Four", rs.getString( "repeating[4]" ) );
 			
-			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );*//*
+			assertEquals( "jesse@360works.com", rs.getString( "emailAddress" ) );
 		} finally {
 			rs.close();
-		}*/
+		}
 		
-		String recid = "9662";
+		//String recid = "9662";
 		
 		rs = statement12.executeQuery( "SELECT firstName,lastName,repeating[2], repeating[4], repeating[8], emailAddress FROM Contacts WHERE recid=" + recid );
 		try {
