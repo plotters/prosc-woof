@@ -284,6 +284,9 @@ public class FmResultSet implements ResultSet {
 	}
 	private short getShort( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if( "recid".equals( s ) ) {
+			return Short.valueOf( currentRecord.getRecordId() );
+		}
 		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
 			final FmField field = fieldDefinitions.get( i );
@@ -301,6 +304,9 @@ public class FmResultSet implements ResultSet {
 	}
 	private int getInt( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if( "recid".equals( s ) ) {
+			return Integer.valueOf( currentRecord.getRecordId() );
+		}
 		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
 			final FmField field = fieldDefinitions.get( i );
@@ -318,6 +324,9 @@ public class FmResultSet implements ResultSet {
 	}
 	private long getLong( int i, @Nullable String s ) throws SQLException {
 		checkResultSet();
+		if( "recid".equals( s ) ) {
+			return Long.valueOf( currentRecord.getRecordId() );
+		}
 		if (i == -1) throw new SQLException(s + " is not a field on the requested layout.");
 		try {
 			final FmField field = fieldDefinitions.get( i );

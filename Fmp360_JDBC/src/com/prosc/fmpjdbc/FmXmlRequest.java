@@ -847,8 +847,9 @@ public class FmXmlRequest extends FmRequest {
 				eachField.setNullable( false );
 				eachField.setReadOnly( true );
 				eachField.setType( FmFieldType.RECID );
+			} else {
+				missingFields.add( eachField.getColumnNameNoRep() );
 			}
-			missingFields.add( eachField.getColumnNameNoRep() );
 		}
 	}
 
