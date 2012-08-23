@@ -141,19 +141,10 @@ public class FmConnection implements Connection {
 				SQLException sqlE = new SQLException( "Could not connect to database: " + e.getMessage() );
 				sqlE.initCause( e );
 				throw sqlE;
-			} catch( FileMakerException e ) {
-				if( request.getErrorCode() == 105 ) { //Success, our username/password is valid and there is no such layout
-					try {
-						String versionString = request.getProductVersion();
-						int mark = versionString.indexOf( '.' );
-						if( mark > 0 ) {
-							versionString = versionString.substring( 0, mark );
-						}
-						fmVersion = Integer.valueOf( versionString );
-					} catch( NumberFormatException e1 ) {
-						log.log( Level.WARNING, "Could not parse product version " + request.getProductVersion(), e1 );
-					}
-					return;
+			} catch( FileMakerException e ) {				
+				if( request.getErrorCode() == 105 ) {
+					//Success, our username/password is valid and there is no such layout
+					fmVersion = request.getFmVersion();
 				} else {
 					e.setConnection( this );
 					throw e;
