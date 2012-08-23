@@ -167,6 +167,10 @@ public class FmField {
 		return maxReps;
 	}
 
+	public void setMaxReps( int maxRepetitions ) {
+		this.maxReps = maxRepetitions;
+	}
+
 	public boolean isGlobal() {
 		return global;
 	}
@@ -236,4 +240,25 @@ public class FmField {
 		return (columnName != null ? columnName.hashCode() : 0);
 	}
 
+	public String getColumnNameNoRep() {
+		String result = columnName;
+		int mark = result.indexOf( '[' );
+		if( mark > 0 ) result = result.substring( 0, mark );
+		return result;
+	}
+
+	/** If this is not a repeating field, this returns 1. If it is a repeating field and it is specified with square brackets, then that repetition in the square brackets is returned. 
+	 * If it is a repeating field but no square brackets are specified in the field name, this echoes back the value passed in as  the defaultRepetition. */
+	public int getRepetition( int defaultRepetition ) {
+		if( maxReps == 1 ) return maxReps;
+		
+		int mark = columnName.indexOf( '[' );
+		if( mark == -1 ) {
+			return defaultRepetition;
+		} else {
+			int mark2 = columnName.indexOf( ']', mark+1 );
+			if( mark2 == -1 ) throw new IllegalArgumentException( columnName + " is not a valid field name; it has an opening bracket but no closing bracket" );
+			return Integer.valueOf( columnName.substring( mark+1, mark2 ) );
+		}
+	}
 }

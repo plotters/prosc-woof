@@ -52,7 +52,7 @@ public class FmConnection implements Connection {
 	//private FmXmlRequest requestHandler;
 	//private FmXmlRequest recIdHandler;
 	private FmMetaData metaData;
-	private float fmVersion;
+	private int fmVersion;
 	private String catalog;
 	private boolean isClosed;
 
@@ -75,7 +75,7 @@ public class FmConnection implements Connection {
 			packageLogger.setLevel(Level.parse(logLevel));
 		}
 		log.log(Level.CONFIG, "Connecting to " + url);
-		fmVersion = Float.valueOf( properties.getProperty( "fmversion", "7" ) );
+		fmVersion = Integer.valueOf( properties.getProperty( "fmversion", "7" ) );
 		if( fmVersion >= 7 ) {
 			//requestHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword() );
 			//recIdHandler = new FmXmlRequest( getProtocol(), getHost(), "/fmi/xml/FMPXMLRESULT.xml", getPort(), getUsername(), getPassword(), fmVersion );
@@ -143,6 +143,16 @@ public class FmConnection implements Connection {
 				throw sqlE;
 			} catch( FileMakerException e ) {
 				if( request.getErrorCode() == 105 ) { //Success, our username/password is valid and there is no such layout
+					try {
+						String versionString = request.getProductVersion();
+						int mark = versionString.indexOf( '.' );
+						if( mark > 0 ) {
+							versionString = versionString.substring( 0, mark );
+						}
+						fmVersion = Integer.valueOf( versionString );
+					} catch( NumberFormatException e1 ) {
+						log.log( Level.WARNING, "Could not parse product version " + request.getProductVersion(), e1 );
+					}
 					return;
 				} else {
 					e.setConnection( this );
@@ -213,7 +223,7 @@ public class FmConnection implements Connection {
 		}
 	}
 
-	public float getFmVersion() {
+	public int getFmVersion() {
 		return fmVersion;
 	}
 

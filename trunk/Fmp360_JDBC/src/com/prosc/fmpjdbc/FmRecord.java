@@ -61,10 +61,10 @@ public class FmRecord {
 
 	/** Record IDs are typically Long values, but with ESS tables it can be a String like this: ROW MODID="0" RECORDID="RID_!19" */
 	private String recordId;
-	
+
 	private Long modCount;
 	private FmFieldList fieldList;
-	
+
 	/** rawValues is an array that contains either String (for non-repeating) or String[] (for repeating) objects. */
 	private Object[] rawValues;
 	private int[] valueCounts;
@@ -92,13 +92,13 @@ public class FmRecord {
 
 	public String toString() {
 		return "RecordId: " + recordId + "; ModCount: " + modCount;
-		
+
 		/*StringBuilder result = new StringBuilder();
-		result.append("RecordId: " + recordId + "; ModCount: " + modCount + "; Data: ");
-		for( Object rawValue : rawValues ) {
-			result.append( "(" + rawValue + ")" );
-		}
-		return result.toString();*/
+				result.append("RecordId: " + recordId + "; ModCount: " + modCount + "; Data: ");
+				for( Object rawValue : rawValues ) {
+					result.append( "(" + rawValue + ")" );
+				}
+				return result.toString();*/
 	}
 
 	/**
@@ -134,28 +134,36 @@ public class FmRecord {
 
 	/** Provides write access directly to the String array for this FmRecord. */
 	protected void addRawValue( String newValue, int columnIndex ) {
-		addRawValue( newValue, columnIndex, 1 );
+		addRawValue( newValue, new int[] {columnIndex}, 1 );
 		rawValues[columnIndex] = newValue;
 	}
 
-	protected void addRawValue( String newValue, int columnIndex, int maxRepetitions ) {
-		ensureCapacity( columnIndex, maxRepetitions );
-		if( columnIndex >= valueCounts.length ) {
-			throw new ArrayIndexOutOfBoundsException( "Tried to set a value for column index " + columnIndex + ", but there are only " + valueCounts.length + " items in the array");
+	/** columnIndeces must be sorted in ascending order */
+	protected void addRawValue( String newValue, int[] columnIndices, int maxRepetitions ) {
+		final int firstColumn = columnIndices[0]; //We will actually store a reference to the same value or array in all the target indices, so we only need to worry about the first one
+		int lastColumn = columnIndices[ columnIndices.length - 1 ];
+		ensureCapacity( firstColumn, maxRepetitions );
+		if( lastColumn >= valueCounts.length ) {
+			throw new ArrayIndexOutOfBoundsException( "Tried to set a value for column index " + lastColumn + ", but there are only " + valueCounts.length + " items in the array");
 		}
-		int whichRep = 0;
+		int whichRep;
 		try {
-			whichRep = ++valueCounts[ columnIndex ];
+			whichRep = ++valueCounts[ firstColumn ];
 		} catch( RuntimeException e ) {
 			throw e;
 		}
 		if( maxRepetitions < 2 ) {
-			rawValues[ columnIndex ] = newValue;
+			rawValues[ firstColumn ] = newValue;
 		} else {
-			if( whichRep > maxRepetitions ) throw new IllegalStateException( "Called addRawValue too many times (" + whichRep + "), maxRepetitions is only " + maxRepetitions );
+			if( whichRep > maxRepetitions ) {
+				throw new IllegalStateException( "Called addRawValue too many times (" + whichRep + "), maxRepetitions is only " + maxRepetitions );
+			}
 			@SuppressWarnings({"MismatchedReadAndWriteOfArray"})
-			String[] stringArray = (String[])rawValues[columnIndex];
+			String[] stringArray = (String[])rawValues[firstColumn];
 			stringArray[ whichRep-1 ] = newValue;
+		}
+		for( int n=1; n<columnIndices.length; n++ ) { //Start at index 1, not 0, because we're only setting the values after the first one --jsb
+			rawValues[columnIndices[n]] = rawValues[firstColumn];
 		}
 	}
 
@@ -166,7 +174,7 @@ public class FmRecord {
 		} else if( rawValues[columnIndex] instanceof String[] ) {
 			String[] array = (String[])rawValues[columnIndex];
 			if( array.length < maxRepetitions ) {
-				String[] newArray = new String[ maxRepetitions ]; 
+				String[] newArray = new String[ maxRepetitions ];
 				System.arraycopy( array, 0, newArray, 0, array.length );
 				rawValues[columnIndex] = newArray;
 			}
@@ -219,7 +227,7 @@ public class FmRecord {
 	 */
 	public String getString( int columnIndex, int repetition ) { //OPTIMIZE Shouldn't need to check for both null and length 0; check to see which way FmXmlResult handles it
 		String rawValue = getRawStringValue( columnIndex, repetition );
-		
+
 		if( rawValue == null ) {
 			fieldList.wasNull = true;
 			return fieldList.get(columnIndex).isNullable() ? null : "";
