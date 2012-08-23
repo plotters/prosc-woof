@@ -794,7 +794,7 @@ public class FmXmlRequest extends FmRequest {
 				currentRep = 0;
 			}
 			if ("METADATA".equals(qName)) { // Create the usedorder array.  This is done once.
-=				// when i come to the metadata tag, i know all of the fields that are going to be in the table, so
+				// when i come to the metadata tag, i know all of the fields that are going to be in the table, so
 				// I can let people get the fieldDefinitions
 
 				synchronized (FmXmlRequest.this) { // this is different from the other attributes in the xml, since this one is being built on the fly and the variable is not just being "set" once we're finished reading it
