@@ -738,7 +738,7 @@ public class FmXmlRequest extends FmRequest {
 						targetIndices = new int[1];
 						targetIndices[0] = whichColumn;
 						if( missingFields != null ) { //Remove this from the list of missing fields
-							missingFields.remove(fieldName);
+							missingFields.remove( fieldName.toLowerCase() );
 						}
 					} else { //We've already found at least one occurrence in the SELECT field list; this is a subsequent one
 						int[] biggerArray = new int[ targetIndices.length + 1 ]; //Copy into a bigger array and add this index to the end
@@ -848,7 +848,7 @@ public class FmXmlRequest extends FmRequest {
 				eachField.setReadOnly( true );
 				eachField.setType( FmFieldType.RECID );
 			} else {
-				missingFields.add( eachField.getColumnNameNoRep() );
+				missingFields.add( eachField.getColumnNameNoRep().toLowerCase() );
 			}
 		}
 	}
