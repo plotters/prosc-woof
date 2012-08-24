@@ -242,7 +242,7 @@ public class FmXmlRequest extends FmRequest {
 					try {
 						serverStream.close(); //I turned this back on because I removed it from the parsing thread. Need to test on Windows.
 						serverStream = null;
-					} catch( IOException e ) {
+					} catch( Exception e ) {
 						log.log( Level.WARNING, "Error while closing fm XML stream: " + e.toString(), e );
 					}
 				}
@@ -287,10 +287,14 @@ public class FmXmlRequest extends FmRequest {
 						streamToParse = serverStream;
 					}
 					InputSource input = new InputSource(streamToParse);
-					//				input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() + "/fmi/xml/" );
+					
+					//Set it to supply a real system ID. This fixes Zulu-270 Publishing with multiple calendars
+					input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() + "/fmi/xml/" );
 					//input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() );
-					input.setSystemId("http://");
+					//input.setSystemId("http://");
+					
 					FmXmlHandler xmlHandler = new FmXmlHandler();
+					xmlHandler.setDocumentLocator( null );
 					try {
 						xParser.parse( input, xmlHandler );
 					} catch (IOException ioe) {
