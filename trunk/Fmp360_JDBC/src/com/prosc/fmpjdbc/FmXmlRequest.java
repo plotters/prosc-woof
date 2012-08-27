@@ -722,6 +722,7 @@ public class FmXmlRequest extends FmRequest {
 				setDatabaseName(attributes.getValue("NAME")); // databaseName = attributes.getValue("NAME");
 				setProductVersion(attributes.getValue("VERSION")); // productVersion = attributes.getValue("VERSION");
 				setErrorCode( Integer.valueOf( currentData.toString() ) ); //This is the value read from the <ERRORCODE>foo</ERRORCODE> section
+				currentData.setLength( 0 );
 			} else if ("DATABASE".equals(qName)) {
 				fmLayout = attributes.getValue( "LAYOUT" );
 				fmTable = new FmTable( attributes.getValue("NAME") );
