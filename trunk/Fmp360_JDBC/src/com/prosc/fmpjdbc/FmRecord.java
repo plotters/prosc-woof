@@ -433,16 +433,22 @@ public class FmRecord {
 			fieldList.wasNull = true;
 			return null;
 		} else fieldList.wasNull = false;
+		DateFormat format = timestampFormat.get();
 		try {
-			DateFormat format = timestampFormat.get();
 			return new java.sql.Timestamp( format.parse(rawValue).getTime() );
 		} catch( ParseException e ) {
-			IllegalArgumentException e1 = new IllegalArgumentException(e.toString() + " for column " + columnIndex + "[" + repetition + "]");
-			e1.initCause(e);
-			//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
-			//log.log( Level.WARNING, "Can't parse this as a timestamp: " + rawValue, e1 );
-			//return null;
-			throw e1;
+			try { //This is a fix for Nico Kobes in Netherlands, where he is getting dashes instead of slashes. See my bug report here: http://forums.filemaker.com/posts/d7304ce2e5 --jsb
+				//Optimize Slow to catch an exception for every date value, but I don't know whether this is happening consistently or just for certain cells, so I don't really have a choice without finding the answer to that. --jsb
+				String processedValue = rawValue.replace( '-', '/' );
+				return new java.sql.Timestamp( format.parse(processedValue).getTime() );
+			} catch( ParseException tryAgain ) {
+				IllegalArgumentException e1 = new IllegalArgumentException(e.toString() + " for column " + columnIndex + "[" + repetition + "]");
+				e1.initCause(e);
+				//FIX!! Need configurable exception handling on whether to return null or rethrow --jsb
+				//log.log( Level.WARNING, "Can't parse this as a timestamp: " + rawValue, e1 );
+				//return null;
+				throw e1;
+			}
 		}
 	}
 
