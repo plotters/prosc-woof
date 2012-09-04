@@ -100,6 +100,25 @@ public class FmRecord {
 				}
 				return result.toString();*/
 	}
+	
+	void dumpRawValues( StringBuilder writeTo ) {
+		writeTo.append( "Raw values: [" );
+		String delim = "";
+		writeTo.append( "[" );
+		for( Object value : rawValues ) {
+			if( value instanceof String[] ) {
+				writeTo.append( delim ).append( Arrays.asList( value ).toString() );
+			} else {
+				writeTo.append( delim ).append( String.valueOf( value ) );
+			}
+			delim = ",";
+		}
+		writeTo.append( "]" );
+	}
+
+	FmFieldList getFieldList() {
+		return fieldList;
+	}
 
 	/**
 	 * This is fairly inefficient - it is much faster to reference the value by its index
@@ -384,9 +403,10 @@ public class FmRecord {
 			try {
 				date = format.parse( rawValue );
 			} catch( ParseException e ) {
-				final SimpleDateFormat fallback1 = new SimpleDateFormat( "MM.dd.yyyy" );
-				fallback1.setTimeZone( zone );
-				date = fallback1.parse( rawValue );
+				//final SimpleDateFormat fallback1 = new SimpleDateFormat( "MM.dd.yyyy" );
+				//fallback1.setTimeZone( zone );
+				String normalizedDate = rawValue.replace( '.', '/' ).replace( '-', '/' );
+				date = format.parse( normalizedDate );
 			}
 			if (log.isLoggable( Level.FINE)) {
 				log.fine( "Return date " + date + " for raw value " + rawValue );
@@ -439,7 +459,7 @@ public class FmRecord {
 		} catch( ParseException e ) {
 			try { //This is a fix for Nico Kobes in Netherlands, where he is getting dashes instead of slashes. See my bug report here: http://forums.filemaker.com/posts/d7304ce2e5 --jsb
 				//Optimize Slow to catch an exception for every date value, but I don't know whether this is happening consistently or just for certain cells, so I don't really have a choice without finding the answer to that. --jsb
-				String processedValue = rawValue.replace( '-', '/' );
+				String processedValue = rawValue.replace( '-', '/' ).replace( '.', '/' );
 				return new java.sql.Timestamp( format.parse(processedValue).getTime() );
 			} catch( ParseException tryAgain ) {
 				IllegalArgumentException e1 = new IllegalArgumentException(e.toString() + " for column " + columnIndex + "[" + repetition + "]");

@@ -38,6 +38,11 @@ public class FmStatement implements Statement {
 		this.processor = processor;
 	}
 
+	@Override
+	public String toString() {
+		return processor == null ? super.toString() : processor.toString();
+	}
+
 	//---These methods must be implemented---
 	public ResultSet executeQuery( String s ) throws SQLException {
 		SqlCommand command = new SqlCommand(s, connection.getCatalogSeparator() );
