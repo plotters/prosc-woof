@@ -61,11 +61,6 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 		params = new Vector(Arrays.asList(new Object[size]));
 	}
 
-	@Override
-	public String toString() {
-		return getProcessor() == null ? super.toString() : getProcessor().toString();
-	}
-
 	public boolean execute() throws SQLException {
 		getProcessor().setParams( params );
 		try {

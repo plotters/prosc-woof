@@ -125,9 +125,29 @@ public class FmResultSet implements ResultSet {
 	}
 	//OPTIMIZE make all methods final
 
-	private SQLException handleFormattingException(Exception e, String columnName) {
-		log.log(Level.WARNING, e.toString(), e);
-		SQLException sqlException = new SQLException( e.toString() + " (requested column '" + columnName + "' / zero-indexed row: " + rowNum + ")" );
+	private SQLException handleFormattingException( Exception e, String columnName, int columnIndex ) {
+		//log.log(Level.WARNING, e.toString(), e);
+		StringBuilder sb = new StringBuilder();
+		String delimiter = "";
+		if( statement != null ) {
+			sb.append( delimiter ).append( "Failing SQL statement: " + statement.toString() );
+			delimiter = "\n";
+		}
+		if( xmlRequest != null ) {
+			sb.append(delimiter).append( "XML request URL: " + xmlRequest.getFullUrl() );
+			delimiter = "\n";
+		}
+		if( currentRecord != null ) {
+			sb.append( delimiter ).append( "Raw record fields: " + currentRecord.getFieldList() );
+			sb.append( "\n" ).append( "Raw record contents: " );
+			currentRecord.dumpRawValues( sb );
+			delimiter = "\n";
+		}
+		if( sb.length() > 0 ) {
+			log.info( sb.toString() );
+		}
+
+		SQLException sqlException = new SQLException( e.toString() + " (requested column '" + columnName + "' / zero-indexed column: " + columnIndex +  " / zero-indexed row: " + rowNum + ")" );
 		sqlException.initCause( e );
 		return sqlException;
 	}
@@ -235,7 +255,7 @@ public class FmResultSet implements ResultSet {
 			log.log(Level.FINEST, result);
 			return result;
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -253,7 +273,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getBoolean(i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -271,7 +291,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getByte( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -292,7 +312,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getShort(i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -312,7 +332,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getInt( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -332,7 +352,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getLong( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -349,7 +369,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getFloat( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -366,7 +386,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getDouble( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -393,7 +413,7 @@ public class FmResultSet implements ResultSet {
 				return currentRecord.getDate(i + columnOffset, field.getRepetition( repetitionCurrentIndex ), calendar.getTimeZone() );
 			}
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -421,7 +441,7 @@ public class FmResultSet implements ResultSet {
 				return currentRecord.getTime( i + columnOffset, field.getRepetition( repetitionCurrentIndex ), calendar.getTimeZone() );
 			}
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -438,7 +458,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getTimestamp( i + columnOffset, field.getRepetition( repetitionCurrentIndex ) );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -455,7 +475,7 @@ public class FmResultSet implements ResultSet {
 			final FmField field = fieldDefinitions.get( i );
 			return currentRecord.getBlob( i + columnOffset, field.getRepetition( repetitionCurrentIndex ), connection );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -482,7 +502,7 @@ public class FmResultSet implements ResultSet {
 			}
 			return result;
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -515,7 +535,7 @@ public class FmResultSet implements ResultSet {
 			if( wasNull() ) result = null;
 			return result;
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
@@ -546,7 +566,7 @@ public class FmResultSet implements ResultSet {
 		try {
 			return currentRecord.getArray( i + columnOffset, this );
 		} catch (Exception e) {
-			throw handleFormattingException(e, s);
+			throw handleFormattingException(e, s, i );
 		}
 	}
 
