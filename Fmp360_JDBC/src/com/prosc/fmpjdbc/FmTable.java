@@ -113,4 +113,9 @@ public class FmTable {
 	public String getDatabaseName() {
 		return databaseName;
 	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
 }
