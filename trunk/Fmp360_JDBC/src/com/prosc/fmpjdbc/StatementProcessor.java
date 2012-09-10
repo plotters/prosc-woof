@@ -48,7 +48,7 @@ public class StatementProcessor {
 	
 	private int updateRowCount = 0;
 	//private FmRecord insertedRecord;
-	private Vector params;
+	private Vector<?> params;
 	private boolean is7OrLater = true; //For some reason I can't set this to final, don't know why...?
 	static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
 	//static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
@@ -691,7 +691,7 @@ public class StatementProcessor {
 
 	}
 
-	public void setParams( Vector params ) {
+	public void setParams( Vector<?> params ) {
 		this.params = new Vector( params );
 		if (logger.isLoggable(Level.FINER)) {
 			logger.log(Level.FINER, "Setting " + params.size() + " param(s)");
@@ -706,7 +706,7 @@ public class StatementProcessor {
 		return command.getSql();
 	}
 
-	public Object getParams() {
+	public Vector<?> getParams() {
 		return params;
 	}
 

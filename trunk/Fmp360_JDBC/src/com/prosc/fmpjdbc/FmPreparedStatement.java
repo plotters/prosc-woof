@@ -58,11 +58,12 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 			AssignmentTerm eachTerm = (AssignmentTerm)it.next();
 			if( eachTerm.isPlaceholder() ) size++;
 		}
-		params = new Vector(Arrays.asList(new Object[size]));
+		getProcessor().setParams( new Vector(Arrays.asList(new Object[size])) ); //this creates a copy of the params
+		params = getProcessor().getParams(); //This stores a local reference to the params object in StatementProcessor
 	}
 
 	public boolean execute() throws SQLException {
-		getProcessor().setParams( params );
+		//getProcessor().setParams( params );
 		try {
 			getProcessor().execute();
 		} catch (RuntimeException e) {
