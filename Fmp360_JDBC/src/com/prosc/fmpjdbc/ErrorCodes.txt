@@ -17,10 +17,16 @@
 500 "Date value does not meet validation entry options"
 501 "Time value does not meet validation entry options"
 502 "Number value does not meet validation entry options"
+503 "Value in field is not within the range specified in validation entry options"
 504 "Value in field is not unique as required in validation entry options"
+506 "Value in field is not listed on the value list specified in validation entry option"
 507 "Value in field failed calculation test of validation entry option"
+508 "Invalid value entered in Find mode"
 509 "Field requires a valid value" - Often happens when a new record is inserted, but not all required values are supplied in the INSERT statement.
+510 "Related value is empty or unavailable"
 511 "Value in field exceeds maximum field size"
+512 "Record was already modified by another user"
+513 "Record must have a value in some field to be created"
 802	"Unable to open file" - Check to make sure that the database file is hosted on FileMaker Server, and that the 'fmxml' extended privilege is enabled for your privilege set.
 # 954-958 are all web-specific error codes
 954 "Unsupported XML Grammar"
