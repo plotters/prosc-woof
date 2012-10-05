@@ -581,10 +581,10 @@ public class FmXmlRequest extends FmRequest {
 				this.maxRepetitions = maxRepetitions;
 			}
 
-			public void setDataInRow(StringBuilder data, FmRecord row) {
+			public void setDataInRow(StringBuilder data, FmRecord row, int dataIndex ) {
 				if( targetIndices != null ) {
 					final String newValue = data.toString();
-					row.addRawValue(newValue, targetIndices, maxRepetitions );
+					row.addRawValue(newValue, targetIndices, maxRepetitions, dataIndex );
 				}
 			}
 		}
@@ -683,7 +683,7 @@ public class FmXmlRequest extends FmRequest {
 				currentRow = new FmRecord(fieldDefinitions, recidString, Long.valueOf(attributes.getValue("MODID")));
 				columnIterator = xmlColumns.iterator();
 				currentColumn = columnIterator.next(); //This is always the 'recid' column
-				currentColumn.setDataInRow( new StringBuilder( recidString ), currentRow );
+				currentColumn.setDataInRow( new StringBuilder( recidString ), currentRow, 1 );
 			} else if ("COL".equals(qName)) {
 				foundColStart = true; // added to fix a bug with columns that only have an end element - mww
 				try {
@@ -711,7 +711,7 @@ public class FmXmlRequest extends FmRequest {
 					FmField fmField = new FmField(fmTable, fieldName, fieldName, theType, allowsNulls, isReadOnly, isAutoEnter, maxRepeat, isGlobal, isCalc, isSummary );
 					fieldDefinitions.add(fmField);
 				}
-				handleParsedMetaDataField(fieldName, maxRepeat, theType, allowsNulls);
+				handleParsedMetaDataField(fieldName, maxRepeat, theType, allowsNulls); //FIX!! By calling it at this time, the target indeces will not be correct if the same field occurs more than once on the layout - we'll only get the column index of the first field, until we get to the duplicate field, at which point we'll get both column indeces. I don't think this actually causes a problem though --jsb
 			} else if( "METADATA".equals( qName ) ) { //Create a virtual 'recid' column
 				handleParsedMetaDataField( "recid", 1, FmFieldType.RECID, false );
 			} else if ("RESULTSET".equals(qName)) {
@@ -784,7 +784,7 @@ public class FmXmlRequest extends FmRequest {
 
 				//foundDataForColumn = true;
 				foundDataForRow = true;
-				currentColumn.setDataInRow( currentData, currentRow );
+				currentColumn.setDataInRow( currentData, currentRow, currentRep+1 );
 				currentRep++;
 
 				// OPTIMIZE! Not sure which is faster, calling setLength(0), delete() or creating new object --jsb
@@ -809,7 +809,7 @@ public class FmXmlRequest extends FmRequest {
 			if("COL".equals(qName)){ // added to fix a bug with columns that only have an end element - mww
 				if( currentRep == 0 ) { //If there is a related field but the relationship is invalid, then FM does not contain a <DATA> element. We need to catch that specially and treat it as null.
 					currentData.setLength( 0 );
-					currentColumn.setDataInRow( currentData, currentRow ); //FIX!! This should actually be null instead of an empty string, but currently that will throw a NPE - need to fix many things to support this. --jsb
+					currentColumn.setDataInRow( currentData, currentRow, 1 ); //FIX!! This should actually be null instead of an empty string, but currently that will throw a NPE - need to fix many things to support this. --jsb
 				}
 				if(!foundColStart){ // do only if there was no start COL element FIX! This doesn't seem necessary to me --jsb
 					currentColumn = columnIterator.next();
@@ -820,6 +820,11 @@ public class FmXmlRequest extends FmRequest {
 				// when i come to the metadata tag, i know all of the fields that are going to be in the table, so
 				// I can let people get the fieldDefinitions
 
+				/* Waiting until this point to add field definitions doesn't work for SELECT statements, because the XML fields don't get added to fieldDefinitions for selects. --jsb
+				for( FmField field : fieldDefinitions.getFields() ) {
+					handleParsedMetaDataField( field.getColumnName(), field.getMaxReps(), field.getType(), field.isNullable() );
+				}*/
+				
 				synchronized (FmXmlRequest.this) { // this is different from the other attributes in the xml, since this one is being built on the fly and the variable is not just being "set" once we're finished reading it
 					fieldDefinitionsListIsSet = true;
 					if( fieldDefinitions == null ) {
@@ -827,6 +832,7 @@ public class FmXmlRequest extends FmRequest {
 					}
 					FmXmlRequest.this.notifyAll();
 				}
+				
 			}
 		}
 
