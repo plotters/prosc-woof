@@ -11,10 +11,15 @@ import java.sql.SQLException;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class FmRequest {
+	protected String fullUrl;
 
 	public abstract FmFieldList getFieldDefinitions() throws IOException, SQLException;
 
 	public abstract void closeRequest();
 
 	public abstract void doRequest(String postArgs) throws IOException, SQLException;
+
+	String getFullUrl() {
+		return fullUrl;
+	}
 }
