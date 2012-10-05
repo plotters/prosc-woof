@@ -153,24 +153,21 @@ public class FmRecord {
 
 	/** Provides write access directly to the String array for this FmRecord. */
 	protected void addRawValue( String newValue, int columnIndex ) {
-		addRawValue( newValue, new int[] {columnIndex}, 1 );
+		addRawValue( newValue, new int[] {columnIndex}, 1, 1 );
 		rawValues[columnIndex] = newValue;
 	}
 
-	/** columnIndeces must be sorted in ascending order */
-	protected void addRawValue( String newValue, int[] columnIndices, int maxRepetitions ) {
+	/** columnIndeces must be sorted in ascending order
+	 * @param whichRep This is a 1-indexed value representing the repetition that is being set
+	 * */
+	protected void addRawValue( String newValue, int[] columnIndices, int maxRepetitions, int whichRep ) {
 		final int firstColumn = columnIndices[0]; //We will actually store a reference to the same value or array in all the target indices, so we only need to worry about the first one
 		int lastColumn = columnIndices[ columnIndices.length - 1 ];
 		ensureCapacity( firstColumn, maxRepetitions );
 		if( lastColumn >= valueCounts.length ) {
 			throw new ArrayIndexOutOfBoundsException( "Tried to set a value for column index " + lastColumn + ", but there are only " + valueCounts.length + " items in the array");
 		}
-		int whichRep;
-		try {
-			whichRep = ++valueCounts[ firstColumn ];
-		} catch( RuntimeException e ) {
-			throw e;
-		}
+		valueCounts[ firstColumn ] = Math.max( valueCounts[ firstColumn ], whichRep );
 		if( maxRepetitions < 2 ) {
 			rawValues[ firstColumn ] = newValue;
 		} else {
