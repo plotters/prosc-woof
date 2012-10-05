@@ -59,8 +59,12 @@ public class FmResultSetRequest extends FmRequest {
 	private InputStream serverStream;
 	private String postPrefix = "";
 
-	public FmResultSetRequest(String protocol, String host, String url, int portNumber, String username, String password) throws MalformedURLException {
-		this.theUrl = new URL(protocol, host, portNumber, url);
+	public FmResultSetRequest(String protocol, String host, String url, int portNumber, String username, String password) {
+		try {
+			this.theUrl = new URL(protocol, host, portNumber, url);
+		} catch( MalformedURLException e ) {
+			throw new IllegalArgumentException( e );
+		}
 		this.username = username;
 		if (username != null && username.length() > 0) {
 			if( password == null ) password = "";
@@ -101,6 +105,7 @@ public class FmResultSetRequest extends FmRequest {
 		theConnection.setUseCaches(false);
 		if (authString != null) theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		if (postArgs != null) {
+			fullUrl = theUrl + "?" + postPrefix + postArgs;
 			postArgs = postPrefix + postArgs;
 			log.log(Level.FINE, theUrl + "?" + postArgs);
 			theConnection.setDoOutput(true);
@@ -108,9 +113,11 @@ public class FmResultSetRequest extends FmRequest {
 			out.print(postPrefix);
 			out.println(postArgs);
 			out.close();
+		} else {
+			fullUrl = theUrl.toExternalForm();
 		}
 
-		if( theConnection.getResponseCode() == 401 ) throw new FmXmlRequest.HttpAuthenticationException( theConnection.getResponseMessage(), username );
+		if( theConnection.getResponseCode() == 401 ) throw new FmXmlRequest.HttpAuthenticationException( theConnection.getResponseMessage(), username, fullUrl );
 		serverStream = new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
 		try {
 			readResult();
@@ -371,7 +378,7 @@ public class FmResultSetRequest extends FmRequest {
 					if( "401".equals( errorCode) ) {
 						//Ignore, this means no results
 					} else {
-						FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( Integer.valueOf(errorCode) );
+						FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( Integer.valueOf(errorCode), fullUrl );
 						log.log(Level.WARNING, fileMakerException.toString());
 						throw new RuntimeException( fileMakerException );
 					}

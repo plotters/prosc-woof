@@ -68,7 +68,6 @@ public class FmXmlRequest extends FmRequest {
 	private Set<String> missingFields;
 	private RuntimeException creationStackTrace;
 	private String username;
-	private String fullUrl;
 	private Thread parsingThread;
 	private SQLException metadataError;
 	private Integer fmVersion;
@@ -114,10 +113,6 @@ public class FmXmlRequest extends FmRequest {
 		postPrefix = s;
 	}
 
-	String getFullUrl() {
-		return fullUrl;
-	}
-
 
 	public void doRequest(String input) throws IOException, SQLException {
 		synchronized( FmXmlRequest.this ) {
@@ -143,13 +138,15 @@ public class FmXmlRequest extends FmRequest {
 				if (postArgs != null) {
 					//postArgs = postPrefix + postArgs;
 					fullUrl = theUrl + "?" + postPrefix + postArgs;
-					log.log(Level.FINE, "Starting request: " + fullUrl );
 					theConnection.setDoOutput(true);
 					PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 					out.print(postPrefix);
 					out.println(postArgs);
 					out.close();
+				} else {
+					fullUrl = theUrl.toExternalForm();
 				}
+				log.log(Level.FINE, "Starting request: " + fullUrl );
 
 
 				int httpStatusCode = theConnection.getResponseCode();
@@ -162,7 +159,7 @@ public class FmXmlRequest extends FmRequest {
 					continue;
 					//throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
 				}
-				else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username );
+				else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username, fullUrl );
 				else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. The URL that generated the error is " + fullUrl );
 				else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
 				else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
@@ -489,7 +486,7 @@ public class FmXmlRequest extends FmRequest {
 			Thread.currentThread().interrupt();
 		}
 		if( getErrorCode() == 0 && missingFields != null && missingFields.size() > 0 ) {
-			throw new MissingFieldException("The requested fields are not on the layout: " + missingFields, 102, fmLayout, missingFields );
+			throw new MissingFieldException("The requested fields are not on the layout: " + missingFields, 102, fullUrl, fmLayout, missingFields );
 		}
 		return fieldDefinitions;
 	}
@@ -883,8 +880,8 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	public static class HttpAuthenticationException extends FileMakerException {
-		public HttpAuthenticationException(String message, String username) {
-			super(212, "Invalid FileMaker user account and/or password. Make sure that the FMXML extended privilege is enabled for this account. Please try again - username '" + username + "'" );
+		public HttpAuthenticationException(String message, String username, String requestUrl) {
+			super(212, "Invalid FileMaker user account and/or password. Make sure that the FMXML extended privilege is enabled for this account. Please try again - username '" + username + "'", requestUrl );
 		}
 	}
 

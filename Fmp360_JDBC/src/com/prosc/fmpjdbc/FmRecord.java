@@ -100,7 +100,7 @@ public class FmRecord {
 				}
 				return result.toString();*/
 	}
-	
+
 	void dumpRawValues( StringBuilder writeTo ) {
 		writeTo.append( "Raw values: [" );
 		String delim = "";
@@ -206,7 +206,8 @@ public class FmRecord {
 
 	public Object getObject( int columnIndex, int repetition, FmConnection connection ) {
 		Object result;
-		FmFieldType fmType = fieldList.get( columnIndex ).getType();
+		FmField field = fieldList.get( columnIndex );
+		FmFieldType fmType = field.getType();
 		int sqlType = fmType.getSqlDataType();
 
 		switch (sqlType ) {
@@ -229,7 +230,11 @@ public class FmRecord {
 			default: result = getString(columnIndex, repetition );
 		}
 
-		return result;
+		if( fieldList.wasNull && field.isNullable() ) { //FIX! This condition really ought to be in each getXXX() method, not just in getObject(), but this will cover 80% or so of the usages, I think --jsb
+			return null;
+		} else {
+			return result;
+		}
 	}
 
 	// Implementing the get methods for FmResultSet at the FmRecord level
@@ -370,11 +375,11 @@ public class FmRecord {
 			return new BigDecimal(0d);
 		} else {
 			fieldList.wasNull = false;
-		}
-		try {
-			return new BigDecimal(rawValue);
-		} catch(NumberFormatException e) { //Strip all non-numeric characters and try again
-			return new BigDecimal( NumberUtils.removeNonNumericChars( rawValue ) );
+			try {
+				return new BigDecimal(rawValue);
+			} catch(NumberFormatException e) { //Strip all non-numeric characters and try again
+				return new BigDecimal( NumberUtils.removeNonNumericChars( rawValue ) );
+			}
 		}
 	}
 

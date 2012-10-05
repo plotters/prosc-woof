@@ -1,5 +1,8 @@
 package com.prosc.fmpjdbc;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -59,30 +62,27 @@ public class FileMakerException extends SQLException {
 		}
 	}
 
-	protected FileMakerException(Integer errorCode, String errorMessage) {
-		this( errorCode, errorMessage, null );
-	}
-
 
 	protected FileMakerException(Integer errorCode, String errorMessage, String requestUrl ) {
 		super( errorMessage, null, errorCode );
 		this.requestUrl = requestUrl;
+		log.log( Level.INFO, toString() + " / requestUrl: " + requestUrl );
 	}
 
-	public static FileMakerException exceptionForErrorCode(Integer errorCode) {
-		return exceptionForErrorCode(errorCode, null, null );
+	public static FileMakerException exceptionForErrorCode(Integer errorCode, String requestUrl ) {
+		return exceptionForErrorCode(errorCode, requestUrl, null );
 	}
 
-	public static FileMakerException exceptionForErrorCode( Integer errorCode, String requestUrl, String whichLayout ) {
+	public static FileMakerException exceptionForErrorCode( Integer errorCode, @NotNull String requestUrl, @Nullable String whichLayout ) {
 		if( errorCode == 102 ) {
-			return new MissingFieldException( getErrorMessage(errorCode), 102, whichLayout, null );
+			return new MissingFieldException( getErrorMessage(errorCode), 102, requestUrl, whichLayout, null );
 		} else {
 			return new FileMakerException(errorCode, getErrorMessage(errorCode), requestUrl );
 		}
 	}
 
 	public String getMessage() {
-		StringBuffer msg = new StringBuffer( super.getMessage().length() + 512 );
+		StringBuilder msg = new StringBuilder( super.getMessage().length() + 512 );
 		msg.append( super.getMessage() );
 		boolean extraParams = false;
 		if( jdbcUrl != null || sql != null || params != null || requestUrl != null ) {

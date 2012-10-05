@@ -345,14 +345,14 @@ public class FmMetaData implements DatabaseMetaData {
 		String lookupKey = database + "~" + layoutName;
 		String result = tableOccurrenceNames.get( lookupKey );
 		if( result == null ) {
+			FmResultSetRequest request = new FmResultSetRequest( connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml", connection.getPort(), connection.getUsername(), connection.getPassword() );
 			try {
-				FmResultSetRequest request = new FmResultSetRequest( connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml", connection.getPort(), connection.getUsername(), connection.getPassword() );
 				String postArgs = "-db=" + URLEncoder.encode( database, "utf-8" ) + "&-lay=" + URLEncoder.encode( layoutName, "utf-8" ) + "&-findany";
 				request.doRequest( postArgs );
 				result = request.getTableOccurrence();
 				tableOccurrenceNames.put( lookupKey, result );
 			} catch( IOException e ) {
-				FileMakerException sqle = new FileMakerException( -1, e.getMessage() );
+				FileMakerException sqle = new FileMakerException( -1, e.getMessage(), request.getFullUrl() );
 				sqle.initCause( e );
 				throw sqle;
 			}
@@ -408,12 +408,8 @@ public class FmMetaData implements DatabaseMetaData {
 //		FmResultSetRequest handler = null;
 			FmRequest handler;
 			if( connection.getFmVersion() >= 7 ) {
-				try {
-					handler = new FmResultSetRequest(connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml",
-							connection.getPort(), connection.getUsername(), connection.getPassword());
-				} catch (MalformedURLException e) {
-					throw new RuntimeException(e);
-				}
+				handler = new FmResultSetRequest(connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml",
+						connection.getPort(), connection.getUsername(), connection.getPassword());
 			} else {
 				handler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 						connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
