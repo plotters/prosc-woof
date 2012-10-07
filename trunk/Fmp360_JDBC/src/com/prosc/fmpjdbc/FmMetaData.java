@@ -689,6 +689,8 @@ public class FmMetaData implements DatabaseMetaData {
 				stmt.executeUpdate( plainSql, Statement.RETURN_GENERATED_KEYS );
 			} else if( e.getErrorCode() == 303 ) {
 				throw new SQLException( "You or somebody else on the network has the database field definitions window open. This must be closed before proceeding.", e.getSQLState(), 303 );
+			} else if( e.getErrorCode() == 504 ) {
+				throw e; //FIX!! 504 indicates that there is already a record with this value. Since these are supposed to be meaningless values, either 1) the user has a record with that same primary key (unlikely) or there is a test record left over from previously calling this function (much more likely). --jsb
 			} else throw e;
 		}
 	}
