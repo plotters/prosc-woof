@@ -716,6 +716,6 @@ public class StatementProcessor {
 
 	@Override
 	public String toString() {
-		return this.getSQL() + " with parameters " + this.getParams();
+		return this.getSQL() + " with parameters " + this.getParams() + " and user name '" + ((FmConnection)statement.getConnection()).getUsername() + "'";
 	}
 }

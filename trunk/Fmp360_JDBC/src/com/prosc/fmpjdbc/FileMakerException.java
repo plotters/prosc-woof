@@ -66,7 +66,11 @@ public class FileMakerException extends SQLException {
 	protected FileMakerException(Integer errorCode, String errorMessage, String requestUrl ) {
 		super( errorMessage, null, errorCode );
 		this.requestUrl = requestUrl;
-		log.log( Level.INFO, toString() + " / requestUrl: " + requestUrl );
+		if( errorCode == 105 && requestUrl.contains( "ProscNoSuchTable" ) ) {
+			//Special case, this error is thrown when establishing a connection. Don't log anything.
+		} else {
+			log.log( Level.INFO, toString() + " / requestUrl: " + requestUrl );
+		}
 	}
 
 	public static FileMakerException exceptionForErrorCode(Integer errorCode, String requestUrl ) {
