@@ -1,5 +1,6 @@
 package com.prosc.fmpjdbc;
 
+import com.prosc.sql.ErrorCodes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,29 +39,12 @@ import java.util.logging.Level;
 public class FileMakerException extends SQLException {
 	private final static Logger log = Logger.getLogger( FileMakerException.class.getName() );
 	
-	private static final Properties errorMessages = new Properties();
 	//private StatementProcessor statementProcessor;
 	private String jdbcUrl;
 	private String sql;
 	private Object params;
 	private boolean ssl;
 	private String requestUrl;
-
-	static {
-		InputStream stream = FileMakerException.class.getResourceAsStream("ErrorCodes.txt");
-		if( stream == null ) log.warning( "Couldn't locate ErrorCodes.txt file; no human-readable error messages will be generated.");
-		else try {
-			errorMessages.load(stream);
-		} catch (IOException e) {
-			log.log( Level.SEVERE, "Could not load error messages resource ErrorCodes.txt", e );
-		} finally {
-			try {
-				stream.close();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
 
 
 	protected FileMakerException(Integer errorCode, String errorMessage, String requestUrl ) {
@@ -79,9 +63,9 @@ public class FileMakerException extends SQLException {
 
 	public static FileMakerException exceptionForErrorCode( Integer errorCode, @NotNull String requestUrl, @Nullable String whichLayout ) {
 		if( errorCode == 102 ) {
-			return new MissingFieldException( getErrorMessage(errorCode), 102, requestUrl, whichLayout, null );
+			return new MissingFieldException( ErrorCodes.getMessage(errorCode), 102, requestUrl, whichLayout, null );
 		} else {
-			return new FileMakerException(errorCode, getErrorMessage(errorCode), requestUrl );
+			return new FileMakerException(errorCode, ErrorCodes.getMessage(errorCode), requestUrl );
 		}
 	}
 
@@ -113,12 +97,6 @@ public class FileMakerException extends SQLException {
 
 	public String getRequestUrl() {
 		return requestUrl;
-	}
-
-	protected static String getErrorMessage(Integer errorCode) {
-		String message = errorMessages.getProperty( String.valueOf(errorCode) );
-		if( message == null ) message = "Unknown error";
-		return errorCode + ": " + message;
 	}
 
 	/*public StatementProcessor getStatemenProcessor() {
