@@ -109,21 +109,20 @@ public class StatementProcessor {
 			int currentParam = 0;
 
 			StringBuffer updateClause = new StringBuffer();
-			for( Iterator it = command.getAssignmentTerms().iterator(); it.hasNext(); ) {
-				AssignmentTerm eachTerm = (AssignmentTerm)it.next();
+			for( AssignmentTerm eachTerm : command.getAssignmentTerms() ) {
 				//String encodedParam;
-				updateClause.append("&");
+				updateClause.append( "&" );
 				String columnName = eachTerm.getField().getColumnName();
 				if( fmVersion >= 12 ) { //FileMaker 12 and later expect repetitions to use parentheses instead of square brackets --jsb FIX!!! Make this conditional on FM version
 					columnName = columnName.replace( '[', '(' ).replace( ']', ')' );
 				}
-				updateClause.append( URLEncoder.encode( columnName, "UTF-8") + "=" );
+				updateClause.append( URLEncoder.encode( columnName, "UTF-8" ) + "=" );
 				if( eachTerm.isPlaceholder() ) {
 					// OPIMIZE!! there is a lot of string creation going on inside loops.  Everything could just be appeneded to the buffers instead, including formatter functions. -ssb
-					updateClause.append( urlEncodedValue( params.elementAt( currentParam ), true, null, false) );
+					updateClause.append( urlEncodedValue( params.elementAt( currentParam ), true, null, false ) );
 					currentParam++;
 				} else {
-					updateClause.append( urlEncodedValue( eachTerm.getValue(), false, null, false) );
+					updateClause.append( urlEncodedValue( eachTerm.getValue(), false, null, false ) );
 				}
 			}
 
@@ -133,12 +132,11 @@ public class StatementProcessor {
 
 			Iterator<?> recordIdIterator = null; //This could either be an iterator of Strings or FMRecord objects.
 			boolean findAny = true;
-			for( Iterator<SearchTerm> it = command.getSearchTerms().iterator(); it.hasNext(); ) {
-				SearchTerm eachTerm = it.next();				
+			for( SearchTerm eachTerm : command.getSearchTerms() ) {
 				if( "recid".equals( eachTerm.getField().getColumnName().toLowerCase() ) ) { //Throw away all other params, just use recid
 					Object value = eachTerm.getValue();
 					if( eachTerm.isPlaceholder() ) {
-						value = params.elementAt(currentParam++);
+						value = params.elementAt( currentParam++ );
 					}
 					whereClause = new StringBuffer( "&-recid=" + value );
 					List<String> recordIds = new LinkedList<String>();
@@ -146,7 +144,7 @@ public class StatementProcessor {
 					recordIdIterator = recordIds.iterator();
 					findAny = false;
 					break;
-				} else if( findAny && ! eachTerm.isSpecialTerm() ) { //We need to know if there are any search terms that do not start with a hyphen, to know whether to do a -find or -findany. --jsb
+				} else if( findAny && !eachTerm.isSpecialTerm() ) { //We need to know if there are any search terms that do not start with a hyphen, to know whether to do a -find or -findany. --jsb
 					findAny = false;
 				}
 				String fieldName = eachTerm.getField().getColumnName(); //FIX!! use fully qualified table names for related fields
@@ -166,42 +164,33 @@ public class StatementProcessor {
 				eachTermSegments[3] = operator;
 				if( operator == SearchTerm.LIKE ) {
 					wildcardsToEscape = WILDCARDS_LIKE;
-				} else if (operator == SearchTerm.EQUALS) {
+				} else if( operator == SearchTerm.EQUALS ) {
 					wildcardsToEscape = WILDCARDS_EQUALS;
 				} else {
 					wildcardsToEscape = WILDCARDS_EQUALS;
 					String operatorString;
-					if( operator == SearchTerm.BEGINS_WITH )
-						operatorString = "bw";
-					else if( operator == SearchTerm.CONTAINS )
-						operatorString = "cn";
-					else if( operator == SearchTerm.ENDS_WITH )
-						operatorString = "ew";
-					else if( operator == SearchTerm.GREATER_THAN )
-						operatorString = "gt";
-					else if( operator == SearchTerm.GREATER_THAN_OR_EQUALS )
-						operatorString = "gte";
-					else if( operator == SearchTerm.LESS_THAN )
-						operatorString = "lt";
-					else if( operator == SearchTerm.LESS_THAN_OR_EQUALS )
-						operatorString = "lte";
-					else if( operator == SearchTerm.NOT_EQUALS )
-						operatorString = "neq";
-					else
-						throw new IllegalArgumentException("Unknown search term operator " + operator );
-					eachTermSegments[0] = "&" + URLEncoder.encode(fieldName + ".op", "UTF-8") + "=" + operatorString;
+					if( operator == SearchTerm.BEGINS_WITH ) operatorString = "bw";
+					else if( operator == SearchTerm.CONTAINS ) operatorString = "cn";
+					else if( operator == SearchTerm.ENDS_WITH ) operatorString = "ew";
+					else if( operator == SearchTerm.GREATER_THAN ) operatorString = "gt";
+					else if( operator == SearchTerm.GREATER_THAN_OR_EQUALS ) operatorString = "gte";
+					else if( operator == SearchTerm.LESS_THAN ) operatorString = "lt";
+					else if( operator == SearchTerm.LESS_THAN_OR_EQUALS ) operatorString = "lte";
+					else if( operator == SearchTerm.NOT_EQUALS ) operatorString = "neq";
+					else throw new IllegalArgumentException( "Unknown search term operator " + operator );
+					eachTermSegments[0] = "&" + URLEncoder.encode( fieldName + ".op", "UTF-8" ) + "=" + operatorString;
 				}
 				Object value;
 				boolean applyFormatter = false;
 				if( eachTerm.isPlaceholder() ) {
-					value = params.elementAt(currentParam++);
+					value = params.elementAt( currentParam++ );
 					applyFormatter = true;
 				} else {
 					value = eachTerm.getValue();
 				}
-				eachTermSegments[1] = "&" + URLEncoder.encode(fieldName, "UTF-8") + "=";
-				eachTermSegments[2] = urlEncodedValue(value, applyFormatter, wildcardsToEscape, operator == SearchTerm.EQUALS);
-				if ("%3D".equals(eachTermSegments[2]) && (eachTerm.getOperator() == SearchTerm.EQUALS)) {
+				eachTermSegments[1] = "&" + URLEncoder.encode( fieldName, "UTF-8" ) + "=";
+				eachTermSegments[2] = urlEncodedValue( value, applyFormatter, wildcardsToEscape, operator == SearchTerm.EQUALS );
+				if( "%3D".equals( eachTermSegments[2] ) && ( eachTerm.getOperator() == SearchTerm.EQUALS ) ) {
 					//FIX!! I don't think this is correct - Sam, my test shows that one equals works fine (and I'm assuming it's faster...?) --jsb
 					//eachTermSegments[2] = "%3D%3D"; // need two == signs for an exact empty match
 				}
@@ -214,16 +203,16 @@ public class StatementProcessor {
 				Object[] matchingField = (Object[])whereSegmentKeys.get( fieldName );
 				if( matchingField != null ) { //We've already used this field earlier in the qualifier
 					eachTermSegments[0] = "";
-					int op1 = ((Integer)matchingField[3]).intValue();
-					if( (op1 == SearchTerm.GREATER_THAN || op1 == SearchTerm.GREATER_THAN_OR_EQUALS) && (operator == SearchTerm.LESS_THAN || operator == SearchTerm.LESS_THAN_OR_EQUALS ) ) {
+					int op1 = (Integer)matchingField[3];
+					if( ( op1 == SearchTerm.GREATER_THAN || op1 == SearchTerm.GREATER_THAN_OR_EQUALS ) && ( operator == SearchTerm.LESS_THAN || operator == SearchTerm.LESS_THAN_OR_EQUALS ) ) {
 						eachTermSegments[2] = matchingField[2] + "..." + eachTermSegments[2];
-					} else if( (op1 == SearchTerm.LESS_THAN || op1 == SearchTerm.LESS_THAN_OR_EQUALS) && ( operator == SearchTerm.GREATER_THAN || operator == SearchTerm.GREATER_THAN_OR_EQUALS ) ) {
+					} else if( ( op1 == SearchTerm.LESS_THAN || op1 == SearchTerm.LESS_THAN_OR_EQUALS ) && ( operator == SearchTerm.GREATER_THAN || operator == SearchTerm.GREATER_THAN_OR_EQUALS ) ) {
 						eachTermSegments[2] = eachTermSegments[2] + "..." + matchingField[2];
-					} else if (command.getLogicalOperator() != SqlCommand.OR) {
-						throw new SqlParseException( "You cannot use the same search time twice unless they are being used with >, >=, <, or <= operators for ranges, or the logical operator is 'OR'.");
+					} else if( command.getLogicalOperator() != SqlCommand.OR ) {
+						throw new SqlParseException( "You cannot use the same search time twice unless they are being used with >, >=, <, or <= operators for ranges, or the logical operator is 'OR'." );
 					} else {
 						// this is an OR search.  copy the old term segment to a new location so it won't be overwritten by the next one.
-						whereSegmentKeys.put(new Double(Math.random()), matchingField);
+						whereSegmentKeys.put( Math.random(), matchingField );
 					}
 				}
 
@@ -232,8 +221,8 @@ public class StatementProcessor {
 			if( whereClause == null ) {
 				whereClause = new StringBuffer();
 				Object[] segments;
-				for( Iterator it = whereSegmentKeys.values().iterator(); it.hasNext(); ) {
-					segments = (Object[])it.next();
+				for( Object o : whereSegmentKeys.values() ) {
+					segments = (Object[])o;
 					whereClause.append( segments[0] );
 					whereClause.append( segments[1] );
 					whereClause.append( segments[2] );
@@ -253,8 +242,7 @@ public class StatementProcessor {
 					StringBuffer postArgs = new StringBuffer( 200 );
 					//FIX!!! Need to be able to get a subset of all fields on the layout
 					int sortPriority = 1;
-					for( Iterator it = command.getSortTerms().iterator(); it.hasNext(); ) {
-						SortTerm eachTerm = (SortTerm)it.next();
+					for( SortTerm eachTerm : command.getSortTerms() ) {
 						String order = eachTerm.getOrder() == SortTerm.ASCENDING ? "ascend" : "descend";
 						String fieldName = eachTerm.getField().getColumnName(); //FIX!! Use fully qualified names? Does this apply for sorting?
 						postArgs.append( "&-sortfield." + sortPriority + "=" + fieldName + "&-sortorder." + sortPriority + "=" + order );
@@ -267,7 +255,7 @@ public class StatementProcessor {
 						if( command.getLogicalOperator() == SqlCommand.OR ) postArgs.append( "&-lop=or" );
 						postArgs.append( whereClause );
 						if( command.getMaxRows() != null ) {
-							final int intValue = command.getMaxRows().intValue();
+							final int intValue = command.getMaxRows();
 							if( intValue == -1 ) { //-1 is a special 'magic' value that means findany
 								findAny = true;
 								postArgs.append( "&-max=1" );
@@ -277,7 +265,7 @@ public class StatementProcessor {
 						} else {
 							postArgs.append( "&-max=" + maxRecords );
 						}
-						if( command.getSkipRows() != null ) postArgs.append( "&-skip=" + command.getSkipRows().intValue() );
+						if( command.getSkipRows() != null ) postArgs.append( "&-skip=" + command.getSkipRows() );
 						if( findAny ) {
 							postArgs.append( "&-findany" );
 						} else {
@@ -305,47 +293,52 @@ public class StatementProcessor {
 				case SqlCommand.UPDATE:
 
 				{
+					List<FmRecord> updateRecords;
+					boolean atLeastOneRecord;
 					FmXmlRequest recIdHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 							connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-					recordIdIsPreset = ( recordIdIterator != null );
-					if( recordIdIterator == null ) { //Might already be set if we passed in a record ID for the WHERE clause
-						recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
-						recordIdIterator = recIdHandler.getRecordIterator();
-					}
-					List updateRecords = null;
-					if( returnGeneratedKeys ) {
-						updateRecords = new LinkedList();
-					}
-					boolean atLeastOneRecord = false;
-					while( recordIdIterator.hasNext() ) {
-						atLeastOneRecord = true;
-						if( recordIdIsPreset ) {
-							recordId = (String)recordIdIterator.next();
-						} else {
-							recordId = ( (FmRecord)recordIdIterator.next() ).getRecordId();
+					try {
+						recordIdIsPreset = ( recordIdIterator != null );
+						if( recordIdIterator == null ) { //Might already be set if we passed in a record ID for the WHERE clause
+							recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
+							recordIdIterator = recIdHandler.getRecordIterator();
 						}
-						//actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-						//		connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-						try {
-							actionHandler.doRequest( dbLayoutString + updateClause + "&-recid=" + recordId + "&-edit");
-							for (Iterator iterator = actionHandler.getRecordIterator(); iterator.hasNext();) {
-								Object o = iterator.next();
-								if( updateRecords != null ) {
-									updateRecords.add( o ); //If we're returning auto-generated keys, need to keep an in-memory record of all results
-								}
-								if (logger.isLoggable(Level.FINE)) {
-									logger.log(Level.FINE, "Record was updated: " + o);
-								}
-								rowCount++;
+						updateRecords = null;
+						if( returnGeneratedKeys ) {
+							updateRecords = new LinkedList<FmRecord>();
+						}
+						atLeastOneRecord = false;
+						while( recordIdIterator.hasNext() ) {
+							atLeastOneRecord = true;
+							if( recordIdIsPreset ) {
+								recordId = (String)recordIdIterator.next();
+							} else {
+								recordId = ( (FmRecord)recordIdIterator.next() ).getRecordId();
 							}
-						} catch (RuntimeException e) {
-							updateRowCount = 0;
-							throw e;
-						} finally {
-							actionHandler.closeRequest();
+							//actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+							//		connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+							try {
+								actionHandler.doRequest( dbLayoutString + updateClause + "&-recid=" + recordId + "&-edit");
+								for (Iterator<FmRecord> iterator = actionHandler.getRecordIterator(); iterator.hasNext();) {
+									FmRecord o = iterator.next();
+									if( updateRecords != null ) {
+										updateRecords.add( o ); //If we're returning auto-generated keys, need to keep an in-memory record of all results
+									}
+									if (logger.isLoggable(Level.FINE)) {
+										logger.log(Level.FINE, "Record was updated: " + o);
+									}
+									rowCount++;
+								}
+							} catch (RuntimeException e) {
+								updateRowCount = 0;
+								throw e;
+							} finally {
+								actionHandler.closeRequest();
+							}
 						}
+					} finally {
+						recIdHandler.closeRequest();
 					}
-					recIdHandler.closeRequest();
 					updateRowCount = rowCount;
 					//recIdHandler.closeRequest();
 					if( returnGeneratedKeys && atLeastOneRecord ) { //FIX!! This only returns the first update row
@@ -359,29 +352,30 @@ public class StatementProcessor {
 				{
 					FmXmlRequest recIdHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 							connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-					recordIdIsPreset = ( recordIdIterator != null );
-					if( recordIdIterator == null ) { //Might already be set if we passed in a record ID for the WHERE clause
-						recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
-						recordIdIterator = recIdHandler.getRecordIterator();
-					}
-					while( recordIdIterator.hasNext() ) {
-						if( recordIdIsPreset ) {
-							recordId = (String)recordIdIterator.next();
-						} else {
-							recordId = ( (FmRecord)recordIdIterator.next() ).getRecordId();
+					try {
+						recordIdIsPreset = ( recordIdIterator != null );
+						if( recordIdIterator == null ) { //Might already be set if we passed in a record ID for the WHERE clause
+							recIdHandler.doRequest( dbLayoutString + whereClause + "&-max=" + maxRecords + "&-find" );
+							recordIdIterator = recIdHandler.getRecordIterator();
 						}
-						actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
-								connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
-						try {
-							actionHandler.doRequest( dbLayoutString + "&-recid=" + recordId + "&-delete" );
-						} catch (RuntimeException e) {
-							throw e;
-						} finally {
-							actionHandler.closeRequest();
+						while( recordIdIterator.hasNext() ) {
+							if( recordIdIsPreset ) {
+								recordId = (String)recordIdIterator.next();
+							} else {
+								recordId = ( (FmRecord)recordIdIterator.next() ).getRecordId();
+							}
+							actionHandler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
+									connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+							try {
+								actionHandler.doRequest( dbLayoutString + "&-recid=" + recordId + "&-delete" );
+							} finally {
+								actionHandler.closeRequest();
+							}
+							rowCount++;
 						}
-						rowCount++;
+					} finally {
+						recIdHandler.closeRequest();
 					}
-					recIdHandler.closeRequest();
 					updateRowCount = rowCount;
 					//recIdHandler.closeRequest();
 				}
@@ -410,13 +404,6 @@ public class StatementProcessor {
 			e.setConnection( (FmConnection)statement.getConnection() );
 			e.setStatementProcessor( this );
 			throw e;
-		} finally {
-			try {
-				// the requests should be closed in their respective case block
-
-			} catch (Exception e) {
-				throw new RuntimeException("Exception occurred in finally clause", e);
-			}
 		}
 
 		/*if( command.getOperation() == SqlCommand.SHOW_DATABASES ) {
@@ -571,7 +558,7 @@ public class StatementProcessor {
 		StringTokenizer s = new StringTokenizer(incoming, wildcardsToEscape, true);
 		while (s.hasMoreTokens()) {
 			tk = s.nextToken();
-			if (tk.length() == 1 && wildcardsToEscape.indexOf(tk) >= 0) {
+			if (tk.length() == 1 && wildcardsToEscape.contains( tk ) ) {
 				toAppendTo.append( ESCAPE_C ).append(tk); //FIX!!! Figure out why this was here - Matt added it, but it's screwing up searches --jsb
 				//temp.append(tk);
 			} else {
@@ -692,7 +679,7 @@ public class StatementProcessor {
 	}
 
 	public void setParams( Vector<?> params ) {
-		this.params = new Vector( params );
+		this.params = new Vector<Object>( params );
 		if (logger.isLoggable(Level.FINER)) {
 			logger.log(Level.FINER, "Setting " + params.size() + " param(s)");
 		}
