@@ -33,13 +33,15 @@ import java.io.UnsupportedEncodingException;
 */
 
 /**
- * Initially, all these methods should be modified to wrap around a ddtek Connection. We can then selectively
- * start replacing them with our own methods.
- *
- * Supported properties:
- * ssl: True for ssl encryption (be sure to pass the correct SSL port in the jdbc URL). The default is false.
- * fmversion: A decimal number indicating the version of FileMaker. Versions 5 and higher are supported. The default is 7.
- * catalogseparator: A string that is used for combining the databasename and table name. For example, if this is set to "|", then "Contacts|detail" would refer to the detail layout of the Contacts database. If unspecified, this defaults to ".". This is necessary for use with EOF, because EOF will complain when creating a new EOModel if any of the layout names are the same.
+ * <p>Supported properties:</p>
+ * <ul>
+ *     <li>testCredentials: By default, when a connection is established, an HTTP request is made to the Web Publishing Engine to validate that the username and password work. This extra HTTP request can be skipped by setting this property to false.</li>
+ *     <li>ssl: True for ssl encryption (be sure to pass the correct SSL port in the jdbc URL). The default is false.</li>
+ *     <li>fmversion: A decimal number indicating the version of FileMaker. Versions 5 and higher are supported. The default is 7.</li>
+ *     <li>catalogseparator: A string that is used for combining the databasename and table name. For example, if this is set to "|", then "Contacts|detail" 
+ * would refer to the detail layout of the Contacts database. If unspecified, this defaults to ".". This is necessary for use with EOF, because EOF will 
+ * complain when creating a new EOModel if any of the layout names are the same.</li>
+ * </ul>
  */
 public class FmConnection implements Connection {
 	private static final Logger log = Logger.getLogger( FmConnection.class.getName() );
@@ -87,7 +89,7 @@ public class FmConnection implements Connection {
 		} else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker versions 5 and higher are supported.");
 
 		// lastly, check the username/pwd are valid by trying to access the db
-		if (catalog != null) {
+		if (catalog != null && Boolean.valueOf( properties.getProperty( "testcredentials", "true" ) ) ) {
 			testUsernamePassword();
 			//((FmMetaData) getMetaData()).testUsernamePassword(); // this will throw a new SQLException(FmXmlRequest.HttpAuthenticationException)
 			//FIX!! Right now, this is very inefficient and runs every time a connection is open. We shoudl 1) make it more efficient, 2) make it configurable whether to do this, and 3) perhaps skip it if the same credentials are applied multiple times --jsb
@@ -141,7 +143,7 @@ public class FmConnection implements Connection {
 				SQLException sqlE = new SQLException( "Could not connect to database: " + e.getMessage() );
 				sqlE.initCause( e );
 				throw sqlE;
-			} catch( FileMakerException e ) {				
+			} catch( FileMakerException e ) {
 				if( request.getErrorCode() == 105 ) {
 					//Success, our username/password is valid and there is no such layout
 					fmVersion = request.getFmVersion();

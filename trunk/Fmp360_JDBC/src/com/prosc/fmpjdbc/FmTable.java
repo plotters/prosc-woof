@@ -76,6 +76,13 @@ public class FmTable {
 			this.name = name;
 		}
 	}
+	
+	FmTable( @NotNull String dbName, @NotNull String tableName, @Nullable String alias, @Nullable String catalogSeparators ) {
+		this.alias = alias;
+		this.databaseName = dbName;
+		this.name = tableName;
+		this.originalName = tableName;
+	}
 
 	/** Returns the name of the table. */
 	public String getName() {
