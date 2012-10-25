@@ -63,9 +63,9 @@ public class FileMakerException extends SQLException {
 
 	public static FileMakerException exceptionForErrorCode( Integer errorCode, @NotNull String requestUrl, @Nullable String whichLayout ) {
 		if( errorCode == 102 ) {
-			return new MissingFieldException( ErrorCodes.getMessage(errorCode), 102, requestUrl, whichLayout, null );
+			return new MissingFieldException( "Error " + errorCode + ": " + ErrorCodes.getMessage(errorCode), 102, requestUrl, whichLayout, null );
 		} else {
-			return new FileMakerException(errorCode, ErrorCodes.getMessage(errorCode), requestUrl );
+			return new FileMakerException(errorCode, "Error " + errorCode + ": " + ErrorCodes.getMessage(errorCode), requestUrl );
 		}
 	}
 

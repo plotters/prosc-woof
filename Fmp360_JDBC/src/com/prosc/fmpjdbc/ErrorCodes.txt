@@ -1,3 +1,4 @@
+4 "Command is unknown" - This usually indicates a non web-safe script step, or an invalid XML URL.
 6 "File is read-only" - Check the file permissions on the server, as well as the access level restrictions for the username and password you are using.
 16 "Operation failed, request retry (for example, a user query)"
 100 "File is missing" - Either the database name was incorrectly entered, or it is not open on the FileMaker server, or XML publishing is not enabled.

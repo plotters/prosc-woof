@@ -266,7 +266,7 @@ public class FmXmlRequest extends FmRequest {
 				if( log.isLoggable( Level.CONFIG ) ) {
 					log.log( Level.CONFIG, "Warning - request was finalized without ever being closed. The stack trace that follows shows the thread that created this request. (" + theUrl + "?" + postArgs + ")", creationStackTrace );
 				} else {
-					log.warning( "Warning - request was finalized without ever being closed. Set log level to FINE to get a stack trace of when this request was created. (" + theUrl + "?" + postArgs + " )" );
+					log.warning( "Warning - request was finalized without ever being closed. Set log level to CONFIG to get a stack trace of when this request was created. (" + theUrl + "?" + postArgs + " )" );
 				}
 				closeRequest();
 			}

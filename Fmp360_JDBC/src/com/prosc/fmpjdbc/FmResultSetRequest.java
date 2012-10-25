@@ -13,9 +13,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,6 +36,7 @@ import java.util.logging.Logger;
 */
 
 /**
+ * FmResultSetRequest is used for reading column metadata from FileMaker
  * Created by IntelliJ IDEA.
  * User: brian
  * Date: Feb 23, 2006
@@ -55,9 +53,17 @@ public class FmResultSetRequest extends FmRequest {
 	private final String authString;
 	public String tableOccurrence;
 	private String fullUrl;
+	
+	private int errorCode;
+	private String fmLayout;
+	private FmFieldList fieldDefinitions;
+	private FmTable fmTable;
 
 	private InputStream serverStream;
 	private String postPrefix = "";
+
+	private boolean foundFieldDefinition = false;
+	private boolean foundNamedField = false;
 
 	public FmResultSetRequest(String protocol, String host, String url, int portNumber, String username, String password) {
 		try {
@@ -94,9 +100,9 @@ public class FmResultSetRequest extends FmRequest {
 		}
 	}
 
-	public void setPostPrefix(String s) {
-		postPrefix = s;
-	}
+	//public void setPostPrefix(String s) {
+	//	postPrefix = s;
+	//}
 
 	public void doRequest(String postArgs) throws IOException, FileMakerException {
 		if (serverStream != null) throw new IllegalStateException("You must call closeRequest() before sending another request.");
@@ -121,6 +127,13 @@ public class FmResultSetRequest extends FmRequest {
 		serverStream = new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
 		try {
 			readResult();
+			if( foundFieldDefinition && ! foundNamedField ) {
+				
+				throw new IOException( "Layout " + fmLayout + ", based on table " + tableOccurrence + " in database " + fmTable.getDatabaseName() + " returned an empty result for all field names. " +
+						"This generally indicates a permission problem accessing that table, especially if it's in an external file. Check to make sure that the username and password for the external " +
+						"file is the same as the main file, and that the FMXML extended privilege is enabled for that user in both files. " +
+						"The Web Publishing Engine might need to be stopped and started to refetch the data." );
+			}
 		} catch (SAXException e) {
 			throw new RuntimeException(e); //FIX!! Better error handling than just rethrowing?
 		} catch( RuntimeException e ) {
@@ -136,7 +149,7 @@ public class FmResultSetRequest extends FmRequest {
 		//usedFieldArray = null;
 		//allFieldNames = new ArrayList();
 		fmTable = null;
-		foundCount = 0;
+		//foundCount = 0;
 		if (serverStream != null)
 			try {
 				serverStream.close();
@@ -170,17 +183,17 @@ public class FmResultSetRequest extends FmRequest {
 	//	return databaseName;
 	//}
 
-	public int getFoundCount() {
-		return foundCount;
-	}
+	//public int getFoundCount() {
+	//	return foundCount;
+	//}
 
 	//public FmRecord getLastRecord() {
 	//	return currentRow;
 	//}
 
-	public Iterator getRecordIterator() {
-		return records.iterator(); //FIX!! Do this on a row-by-row basis instead of storing the whole list in memory
-	}
+	//public Iterator getRecordIterator() {
+	//	return records.iterator(); //FIX!! Do this on a row-by-row basis instead of storing the whole list in memory
+	//}
 
 	public FmFieldList getFieldDefinitions() {
 		return fieldDefinitions;
@@ -195,24 +208,20 @@ public class FmResultSetRequest extends FmRequest {
 	i.e  for updates and inserts etc.
 	*/
 
-	private int errorCode;
-	private String fmLayout;
-	private FmFieldList fieldDefinitions;
-	private FmTable fmTable;
 	//private boolean useSelectFields = false;
 
 	//private String productVersion;
 	//private String databaseName;
-	private int foundCount = -1;
+	//private int foundCount = -1;
 	//private FmRecord currentRow;
-	private List records = new LinkedList(); //FIX!! Temporary for development - get rid of in final version
-	private transient StringBuffer currentData = new StringBuffer(255);
+	//private List records = new LinkedList(); //FIX!! Temporary for development - get rid of in final version
+	//private transient StringBuffer currentData = new StringBuffer(255);
 	//private transient int insertionIndex;
 
 	private static transient int code = 0;
 	//private static Integer IGNORE_NODE = new Integer(code++);
-	private static Integer DATA_NODE = new Integer(code++);
-	private static Integer ERROR_NODE = new Integer(code++);
+	private static Integer DATA_NODE = code++;
+	private static Integer ERROR_NODE = code++;
 
 	//private int[] usedFieldArray; // The array used by the characters() method in xmlHandler.
 	//private List allFieldNames = new ArrayList(); // a list of Strings.  All the Field names inside the METADATA tag.
@@ -221,9 +230,9 @@ public class FmResultSetRequest extends FmRequest {
 	// ---XML parsing SAX implementation ---
 	private DefaultHandler xmlHandler = new org.xml.sax.helpers.DefaultHandler() {
 		private Integer currentNode = null;
-		private StringBuilder parsedXML = new StringBuilder( 1024 );
+		//private StringBuilder parsedXML = new StringBuilder( 1024 );
 		//private int columnIndex;
-		private int tabCount = 0;
+		//private int tabCount = 0;
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
 
 		public void fatalError(SAXParseException e) throws SAXException {
@@ -249,38 +258,38 @@ public class FmResultSetRequest extends FmRequest {
 
 		public void startDocument() {
 			log.log(Level.FINEST, "Start parsing response");
-			records = new LinkedList();
+			//records = new LinkedList();
 			currentNode = null;
-			tabCount = 0;
+			//tabCount = 0;
 		}
 
 		public void startElement(String uri, String xlocalName, String qName, Attributes attributes) {
 			if ("fmresultset".equals(qName)) {
-				parsedXML.append( tabs(tabCount) );
-				parsedXML.append( "- <fmresultset version=\"" + attributes.getValue("version") + "\">" );
-				tabCount++;
+				//parsedXML.append( tabs(tabCount) );
+				//parsedXML.append( "- <fmresultset version=\"" + attributes.getValue("version") + "\">" );
+				//tabCount++;
 			}
 			else if ("error".equals(qName)) {
 				errorCode = Integer.valueOf( attributes.getValue( "code" ) );
-				parsedXML.append( tabs(tabCount) );
-				parsedXML.append( "<error code=\"" + errorCode + "\"" );
+				//parsedXML.append( tabs(tabCount) );
+				//parsedXML.append( "<error code=\"" + errorCode + "\"" );
 			}
 			else if ("product".equals(qName)) {
-				parsedXML.append( tabs(tabCount) );
-				parsedXML.append( "<product build=\"" + attributes.getValue("build") + "\"" +
-						" name=\"" + attributes.getValue("name") + "\"" +
-						" version=\"" + attributes.getValue("version") + "\"" );
+				//parsedXML.append( tabs(tabCount) );
+				//parsedXML.append( "<product build=\"" + attributes.getValue("build") + "\"" +
+				//		" name=\"" + attributes.getValue("name") + "\"" +
+				//		" version=\"" + attributes.getValue("version") + "\"" );
 			}
 			else if ("datasource".equals(qName)) {
-				parsedXML.append( tabs(tabCount) );
+				//parsedXML.append( tabs(tabCount) );
 				fmLayout = attributes.getValue("layout");
-				parsedXML.append( "<datasource database=\"" + attributes.getValue("database") + "\"" +
-						" date-format=\"" + attributes.getValue("date-format") + "\"" +
-						" layout=\"" + fmLayout + "\"" +
-						" table=\"" + attributes.getValue("table") + "\"" +
-						" time-format=\"" + attributes.getValue("time-format") + "\"" +
-						" timestamp-format=\"" + attributes.getValue("timestamp-format") + "\"" +
-						" total-count=\"" + attributes.getValue("total-count")+ "\"" );
+				//parsedXML.append( "<datasource database=\"" + attributes.getValue("database") + "\"" +
+				//		" date-format=\"" + attributes.getValue("date-format") + "\"" +
+				//		" layout=\"" + fmLayout + "\"" +
+				//		" table=\"" + attributes.getValue("table") + "\"" +
+				//		" time-format=\"" + attributes.getValue("time-format") + "\"" +
+				//		" timestamp-format=\"" + attributes.getValue("timestamp-format") + "\"" +
+				//		" total-count=\"" + attributes.getValue("total-count")+ "\"" );
 
 				if (fieldDefinitions == null) {
 					fieldDefinitions = new FmFieldList();
@@ -288,27 +297,29 @@ public class FmResultSetRequest extends FmRequest {
 
 				tableOccurrence = attributes.getValue( "table" );
 
-				fmTable = new FmTable( attributes.getValue("database") );
+				fmTable = new FmTable( attributes.getValue("database"), tableOccurrence, null, null );
 			}
 			else if ("metadata".equals(qName)) {
-				parsedXML.append( tabs(tabCount) );
-				parsedXML.append( "- <metadata>" + "\n" );
-				tabCount++;
+				//parsedXML.append( tabs(tabCount) );
+				//parsedXML.append( "- <metadata>" + "\n" );
+				//tabCount++;
 			}
 			else if ("field-definition".equals(qName)) {
-				parsedXML.append( tabs(tabCount) );
-				parsedXML.append( "<field-definition auto-enter=\"" + attributes.getValue("auto-enter") + "\"" +
-						" global=\"" + attributes.getValue("global") + "\"" +
-						" max-repeat=\"" + attributes.getValue("max-repeat") + "\"" +
-						" name=\"" + attributes.getValue("name") + "\"" +
-						" not-empty=\"" + attributes.getValue("not-empty") + "\"" +
-						" result=\"" + attributes.getValue("result") + "\"" +
-						" type=\"" + attributes.getValue("type")+ "\"" );
+				//parsedXML.append( tabs(tabCount) );
+				//parsedXML.append( "<field-definition auto-enter=\"" + attributes.getValue("auto-enter") + "\"" +
+				//		" global=\"" + attributes.getValue("global") + "\"" +
+				//		" max-repeat=\"" + attributes.getValue("max-repeat") + "\"" +
+				//		" name=\"" + attributes.getValue("name") + "\"" +
+				//		" not-empty=\"" + attributes.getValue("not-empty") + "\"" +
+				//		" result=\"" + attributes.getValue("result") + "\"" +
+				//		" type=\"" + attributes.getValue("type")+ "\"" );
+
+				foundFieldDefinition = true;
 
 				//Field attributes: four-digit-year, global, max-repeat, numeric-only, time-of-day, name, result, not-empty, type, auto-enter
 				String fieldName = attributes.getValue("name");
 				String fieldTypeName = attributes.getValue("result");
-				FmFieldType fieldType = (FmFieldType) FmFieldType.typesByName.get(fieldTypeName.toUpperCase());
+				FmFieldType fieldType = FmFieldType.typesByName.get(fieldTypeName.toUpperCase());
 				boolean allowsNulls = "no".equals(attributes.getValue("not-empty"));
 				boolean isCalc = "calculation".equals( attributes.getValue( "type" ) );
 				boolean isSummary = "summary".equals( attributes.getValue( "type" ) );
@@ -316,49 +327,50 @@ public class FmResultSetRequest extends FmRequest {
 				boolean autoEnter = "yes".equals( attributes.getValue( "auto-enter" ) );
 				int maxReps = Integer.valueOf( attributes.getValue( "max-repeat" ) );
 				boolean global = "yes".equals( attributes.getValue( "global" ) );
-				
+
 				//Other attributes: 
 
 				if( fieldName != null && fieldName.length() > 0 ) {
+					foundNamedField = true;
 					FmField field = new FmField(fmTable, fieldName, fieldName, fieldType, allowsNulls, readOnly, autoEnter, maxReps, global, isCalc, isSummary );
 					fieldDefinitions.add(field);
 				}
 			}
 			else if ("resultset".equals(qName)) {
-				parsedXML.append( tabs(tabCount) );
-				parsedXML.append( "<field-definition count=\"" + attributes.getValue("count") + "\"" +
-						" fetch-size=\"" + attributes.getValue("fetch-size")+ "\"" );
+				//parsedXML.append( tabs(tabCount) );
+				//parsedXML.append( "<field-definition count=\"" + attributes.getValue("count") + "\"" +
+				//		" fetch-size=\"" + attributes.getValue("fetch-size")+ "\"" );
 			}
 		}
 
 		public void endElement(String uri, String localName, String qName) {
 			if ("fmresultset".equals(qName)) {
-				parsedXML.append( "</fmresultset>" + "\n" );
+				//parsedXML.append( "</fmresultset>" + "\n" );
 			}
 			else if ("error".equals(qName)) {
-				parsedXML.append( "/>" + "\n" );
+				//parsedXML.append( "/>" + "\n" );
 			}
 			else if ("product".equals(qName)) {
-				parsedXML.append( "/>" );
+				//parsedXML.append( "/>" );
 			}
 			else if ("datasource".equals(qName)) {
-				parsedXML.append( "/>" + "\n" );
+				//parsedXML.append( "/>" + "\n" );
 			}
 			else if ("metadata".equals(qName)) {
-				tabCount--;
-				parsedXML.append( tabs(tabCount) );
-				parsedXML.append( "</metadata>" + "\n" );
+				//tabCount--;
+				//parsedXML.append( tabs(tabCount) );
+				//parsedXML.append( "</metadata>" + "\n" );
 			}
 			else if ("field-definition".equals(qName)) {
-				parsedXML.append( "/>" + "\n" );
+				//parsedXML.append( "/>" + "\n" );
 			}
 			else if ("resultset".equals(qName)) {
-				parsedXML.append( "/>" + "\n" );
-				tabCount--;
+				//parsedXML.append( "/>" + "\n" );
+				//tabCount--;
 			}
 		}
 
-		private String tabs(int numTabs) {
+		/*private String tabs(int numTabs) {
 			String tabs = "";
 
 			for (int i = 0; i < numTabs; i++) {
@@ -366,11 +378,11 @@ public class FmResultSetRequest extends FmRequest {
 			}
 
 			return tabs;
-		}
+		}*/
 
 		public void characters(char ch[], int start, int length) {
 			if (currentNode == DATA_NODE) {
-				currentData.append( ch, start, length );
+				//currentData.append( ch, start, length );
 			} else if (currentNode == ERROR_NODE) {
 				if (length == 1 && ch[start] == '0'); //Error code is zero, proceed
 				else {
