@@ -107,13 +107,44 @@ public class FmResultSetRequest extends FmRequest {
 	public void doRequest(String postArgs) throws IOException, FileMakerException {
 		if (serverStream != null) throw new IllegalStateException("You must call closeRequest() before sending another request.");
 		fullUrl = theUrl.toString() + "?" + postArgs;
-		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
+		establishConnection( postArgs );
+		try {
+			readResult();
+			if( foundFieldDefinition && ! foundNamedField ) {
+				
+				throw new IOException( "Layout " + fmLayout + ", based on table " + tableOccurrence + " in database " + fmTable.getDatabaseName() + " returned an empty result for all field names. " +
+						"This generally indicates a permission problem accessing that table, especially if it's in an external file. Check to make sure that the username and password for the external " +
+						"file is the same as the main file, and that the FMXML extended privilege is enabled for that user in both files. " +
+						"The Web Publishing Engine might need to be stopped and started to refetch the data." );
+			}
+		} catch (SAXException e) {
+			serverStream.close();
+			log.info( "SAX parsing exception for url " + fullUrl );
+			log.info( "Repeating request to log the response from the server" );
+			establishConnection( postArgs );
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			byte[] buffer = new byte[8192];
+			int bytesRead;
+			while( (bytesRead=serverStream.read(buffer)) != -1 ) {
+				baos.write( buffer, 0, bytesRead );
+			}
+			log.info( "Response from server which caused the exception: " + new String( baos.toByteArray(), "utf-8" ) );
+			serverStream.close();
+			throw new RuntimeException(e); //FIX!! Better error handling than just rethrowing?
+		} catch( RuntimeException e ) {
+			Throwable t = e.getCause();
+			if( t instanceof FileMakerException ) throw (FileMakerException)t;
+			else throw e;
+		}
+	}
+
+	private void establishConnection( String postArgs ) throws IOException, FmXmlRequest.HttpAuthenticationException {HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
 		theConnection.setUseCaches(false);
 		if (authString != null) theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		if (postArgs != null) {
 			fullUrl = theUrl + "?" + postPrefix + postArgs;
 			postArgs = postPrefix + postArgs;
-			log.log(Level.FINE, theUrl + "?" + postArgs);
+			log.log( Level.FINE, theUrl + "?" + postArgs);
 			theConnection.setDoOutput(true);
 			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 			out.print(postPrefix);
@@ -125,22 +156,6 @@ public class FmResultSetRequest extends FmRequest {
 
 		if( theConnection.getResponseCode() == 401 ) throw new FmXmlRequest.HttpAuthenticationException( theConnection.getResponseMessage(), username, fullUrl );
 		serverStream = new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
-		try {
-			readResult();
-			if( foundFieldDefinition && ! foundNamedField ) {
-				
-				throw new IOException( "Layout " + fmLayout + ", based on table " + tableOccurrence + " in database " + fmTable.getDatabaseName() + " returned an empty result for all field names. " +
-						"This generally indicates a permission problem accessing that table, especially if it's in an external file. Check to make sure that the username and password for the external " +
-						"file is the same as the main file, and that the FMXML extended privilege is enabled for that user in both files. " +
-						"The Web Publishing Engine might need to be stopped and started to refetch the data." );
-			}
-		} catch (SAXException e) {
-			throw new RuntimeException(e); //FIX!! Better error handling than just rethrowing?
-		} catch( RuntimeException e ) {
-			Throwable t = e.getCause();
-			if( t instanceof FileMakerException ) throw (FileMakerException)t;
-			else throw e;
-		}
 	}
 
 	public void closeRequest() {

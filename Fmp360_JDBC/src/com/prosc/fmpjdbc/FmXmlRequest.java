@@ -353,7 +353,11 @@ public class FmXmlRequest extends FmRequest {
 		metadataError = new SQLException( "Error occurred while reading XML: " + t.toString() );
 		metadataError.initCause( t );
 
-		log.warning( "Exception " + t.toString() + " occurred while processing request: " + fullUrl );
+		if( t instanceof InterruptedException ) {
+			//This is normal, it just means the clent closed the ResultSet before reading the whole thing
+		} else {
+			log.warning( "Exception " + t.toString() + " occurred while processing request: " + fullUrl );
+		}
 		notifyAll();
 	}
 
