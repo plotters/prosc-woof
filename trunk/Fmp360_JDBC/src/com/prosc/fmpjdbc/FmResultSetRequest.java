@@ -146,6 +146,7 @@ public class FmResultSetRequest extends FmRequest {
 			postArgs = postPrefix + postArgs;
 			log.log( Level.FINE, theUrl + "?" + postArgs);
 			theConnection.setDoOutput(true);
+			theConnection.setInstanceFollowRedirects( true ); //Set this to true because OS X Lion Server always redirects all requests to https://
 			PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 			out.print(postPrefix);
 			out.println(postArgs);
