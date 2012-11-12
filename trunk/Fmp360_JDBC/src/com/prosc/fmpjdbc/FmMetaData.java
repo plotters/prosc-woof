@@ -655,11 +655,18 @@ public class FmMetaData implements DatabaseMetaData {
 	public void insertEmptyRecord( Statement stmt, String tableName ) throws SQLException {
 		List<String> requiredColumns = new LinkedList<String>();
 		List<String> requiredValues = new LinkedList<String>();
-		final ResultSet columns = getColumns( null, null, tableName, null );
+		/*final ResultSet columns = getColumns( null, null, tableName, null );
 		while( columns.next() ) {
 			if( columns.getInt( 11 ) == DatabaseMetaData.columnNoNulls ) {
 				requiredColumns.add( columns.getString( 4 ) );
 				requiredValues.add( randomValueForType( columns.getInt( 5 ) ) );
+			}
+		}*/
+		getColumns( null, null, tableName, null );
+		for( FmField field : lastRawFields.getFields() ) {
+			if( ! field.isNullable() && ! field.isAutoEnter() ) {
+				requiredColumns.add( field.getColumnName() );
+				requiredValues.add( randomValueForType( field.getType().getSqlDataType() ) );
 			}
 		}
 
@@ -671,7 +678,7 @@ public class FmMetaData implements DatabaseMetaData {
 
 			String delim="";
 			for( String column : requiredColumns ) {
-				sql.append( delim + column );
+				sql.append( delim + getIdentifierQuoteString() + column + getIdentifierQuoteString() );
 				delim = ",";
 			}
 			sql.append( ") VALUES(" );
