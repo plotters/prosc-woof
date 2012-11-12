@@ -146,7 +146,7 @@ public class FmXmlRequest extends FmRequest {
 				} else {
 					fullUrl = theUrl.toExternalForm();
 				}
-				log.log(Level.FINE, "Starting request: " + fullUrl );
+				log.log(Level.CONFIG, "Starting request: " + fullUrl );
 
 
 				int httpStatusCode = theConnection.getResponseCode();
