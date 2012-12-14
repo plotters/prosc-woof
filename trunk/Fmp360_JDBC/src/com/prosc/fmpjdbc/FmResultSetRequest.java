@@ -114,7 +114,7 @@ public class FmResultSetRequest extends FmRequest {
 				
 				throw new IOException( "Layout " + fmLayout + ", based on table " + tableOccurrence + " in database " + fmTable.getDatabaseName() + " returned an empty result for all field names. " +
 						"This generally indicates a permission problem accessing that table, especially if it's in an external file. Check to make sure that the username and password for the external " +
-						"file is the same as the main file, and that the FMXML extended privilege is enabled for that user in both files. " +
+						"file is the same as the main file, and that the FMXML extended privilege is enabled for that user in both files, and also that external data source references are using a file: prefix instead of fmnet:. " +
 						"The Web Publishing Engine might need to be stopped and started to refetch the data." );
 			}
 		} catch (SAXException e) {
