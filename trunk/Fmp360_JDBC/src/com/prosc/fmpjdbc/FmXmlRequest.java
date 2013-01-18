@@ -56,7 +56,8 @@ public class FmXmlRequest extends FmRequest {
 	/**
 	 * Parser used to extract data from the filemaker response stream
 	 */
-	private final SAXParser xParser;
+	private volatile SAXParser xParser;
+	private volatile SAXParser runningParser = null;
 	private String authString;
 	private String postPrefix = "";
 	private String postArgs;
@@ -88,12 +89,17 @@ public class FmXmlRequest extends FmRequest {
 		if (fmVersion >= 5 && fmVersion < 7) {
 			this.setPostPrefix("-format=-fmp_xml&");
 		}
+		xParser = buildParser();
+	}
+
+	private SAXParser buildParser() {
 		try {
-			xParser = javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser();
-			setFeature( "http://xml.org/sax/features/validation", false );
-			setFeature( "http://xml.org/sax/features/namespaces", false );
+			SAXParser result = javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser();
+			setFeature( result, "http://xml.org/sax/features/validation", false );
+			setFeature( result, "http://xml.org/sax/features/namespaces", false );
 			//setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
-			log.finest( "Created an XML parser; class is: " + xParser.getClass() );
+			log.finest( "Created an XML parser; class is: " + result.getClass() );
+			return result;
 		} catch( ParserConfigurationException e ) {
 			throw new RuntimeException( e );
 		} catch ( SAXException e) {
@@ -101,9 +107,9 @@ public class FmXmlRequest extends FmRequest {
 		}
 	}
 
-	private void setFeature( String feature, boolean enabled ) {
+	private void setFeature( SAXParser parser, String feature, boolean enabled ) {
 		try {
-			xParser.getXMLReader().setFeature( feature, enabled );
+			parser.getXMLReader().setFeature( feature, enabled );
 		} catch( SAXException e ) { //Ignore
 			log.warning( "Could not enable feature " + feature + " because of a SAXException: " + e );
 		}
@@ -254,6 +260,7 @@ public class FmXmlRequest extends FmRequest {
 			//} catch (IOException e) {
 			//	throw new RuntimeException(e);
 			//}
+			
 			if( xParser != null ) {
 				xParser.reset();
 			}
@@ -274,7 +281,7 @@ public class FmXmlRequest extends FmRequest {
 		//if (serverStream != null) serverStream.close();
 		super.finalize();
 	}
-
+	
 	private void readResult() throws SQLException {
 		synchronized( FmXmlRequest.this ) {
 			parsingThread = new Thread("FileMaker JDBC Parsing Thread" ) {
@@ -293,6 +300,10 @@ public class FmXmlRequest extends FmRequest {
 					FmXmlHandler xmlHandler = new FmXmlHandler();
 					xmlHandler.setDocumentLocator( null );
 					try {
+						if( runningParser != null ) { //You can't call parse() while it's still parsing XML from the last call (remember that parsing happens on a separate thread, which may not have finished), so create a new parser if the current one is still in use.
+							xParser = buildParser();
+						}
+						runningParser = xParser;
 						xParser.parse( input, xmlHandler );
 					} catch (IOException ioe) {
 						boolean ignore = false; //FIX!! Have the close() method set a thread-safe variable which is checked here, if it was closed then ignore the exception --jsb
@@ -321,6 +332,9 @@ public class FmXmlRequest extends FmRequest {
 						onErrorSetAllVariables( e, xmlHandler.getCurrentColumnName() );
 					} finally {
 						recordIterator.setFinished();
+						if( runningParser == xParser ) { //Set runningParser to null IF no other thread has changed the running parser since this one started
+							runningParser = null;
+						}
 					}
 				}
 

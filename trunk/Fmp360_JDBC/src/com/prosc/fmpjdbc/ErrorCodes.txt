@@ -35,7 +35,7 @@
 956 "Maximum number of database sessions exceeded"
 957 "Conflicting commands"
 958 "Parameter missing in query"
-959 "XML Web Publising is not enabled" - Run the FileMaker Server deployment assistant and make sure that the XML web publishing checkbox is selected.
+959 "XML Web Publishing is not enabled" - Run the FileMaker Server deployment assistant and make sure that the XML web publishing checkbox is selected.
 
 #This is not in FM documentation
 8003 "Record is in use by another user"

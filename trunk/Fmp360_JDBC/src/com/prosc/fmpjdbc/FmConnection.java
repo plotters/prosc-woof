@@ -140,7 +140,7 @@ public class FmConnection implements Connection {
 				sqlE.initCause( e );
 				throw sqlE;
 			} catch( IOException e ) {
-				SQLException sqlE = new SQLException( "Could not connect to database: " + e.getMessage() );
+				SQLException sqlE = new SQLException( "Could not connect to database at " + request.getFullUrl() + ": " + e.getMessage() );
 				sqlE.initCause( e );
 				throw sqlE;
 			} catch( FileMakerException e ) {
