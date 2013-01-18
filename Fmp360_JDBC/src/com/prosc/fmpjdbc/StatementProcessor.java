@@ -245,7 +245,7 @@ public class StatementProcessor {
 					for( SortTerm eachTerm : command.getSortTerms() ) {
 						String order = eachTerm.getOrder() == SortTerm.ASCENDING ? "ascend" : "descend";
 						String fieldName = eachTerm.getField().getColumnName(); //FIX!! Use fully qualified names? Does this apply for sorting?
-						postArgs.append( "&-sortfield." + sortPriority + "=" + fieldName + "&-sortorder." + sortPriority + "=" + order );
+						postArgs.append( "&-sortfield." + sortPriority + "=" + URLEncoder.encode( fieldName, "utf-8" ) + "&-sortorder." + sortPriority + "=" + order );
 						sortPriority++;
 					}
 					if( whereClause.length() == 0 )
