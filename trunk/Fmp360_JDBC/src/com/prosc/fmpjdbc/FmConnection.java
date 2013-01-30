@@ -233,7 +233,11 @@ public class FmConnection implements Connection {
 	}
 
 	public String getUsername() {
-		return properties.getProperty("user");
+		String result = properties.getProperty( "user" );
+		if( "[Guest]".equals( result ) ) { //Calling Get( UserName ) in FileMaker when logged in as a guest returns [Guest]
+			result = "";	
+		}
+		return result;
 	}
 
 	public String getPassword() { //FIX! Should this be public? It's needed by FmBlob
