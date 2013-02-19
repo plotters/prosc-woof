@@ -1,20 +1,22 @@
 package com.prosc.fmpjdbc;
 
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 import sun.misc.BASE64Encoder;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.HttpURLConnection;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.sql.SQLException;
-
-import org.xml.sax.*;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
