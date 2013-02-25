@@ -459,27 +459,27 @@ public class StatementProcessor {
 					// all the things we were checking for subclass java.util.Date, just check once.
 					// FIX!!! need to URLEncode formatted values too -ssb
 					if (value instanceof java.sql.Time) {
-						value = FmRecord.timeFormat.get().format( value );
+						value = new SimpleDateFormat("HH:mm:ss").format( value );
 					} else if (value instanceof java.sql.Timestamp) {
-						value = FmRecord.timestampFormat.get().format( value );
+						value = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format( value );
 					} else if ( value instanceof java.sql.Date ) {
-						DateFormat dateFormat = FmRecord.dateFormat.get();
+						DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
 						dateFormat.setTimeZone( defaultTimeZone );
 						value = dateFormat.format(value);
 					} else if( value instanceof DateWithZone ) {
 						Date date = ( (DateWithZone)value ).date;
 						TimeZone tz = ( (DateWithZone)value ).timeZone;
-						DateFormat dateFormat = FmRecord.dateFormat.get();
+						DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
 						dateFormat.setTimeZone( tz );
-						value = FmRecord.dateFormat.get().format( date );
+						value = new SimpleDateFormat("MM/dd/yyyy").format( date );
 					} else if( value instanceof TimeWithZone ) {
 						Date date = ( (TimeWithZone)value ).time;
 						TimeZone tz = ( (TimeWithZone)value ).timeZone;
-						DateFormat timeFormat = FmRecord.timeFormat.get();
+						DateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
 						timeFormat.setTimeZone( tz );
 						value = timeFormat.format(date);
 					} else if ( value instanceof java.util.Date ) {
-						value = FmRecord.timestampFormat.get().format( value );
+						value = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format( value );
 					}
 				}
 				if (wildcardsToEscape != null) {

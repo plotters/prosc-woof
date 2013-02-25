@@ -41,6 +41,8 @@ public class FmRecord {
 
 	//FIX!! If we're using FileMaker 6, we need much smarter parsers, because FM6 doesn't normalize the data in the XML
 
+	/* I switched these to not be ThreadLocals because there is no good point to clean up the ThreadLocal variables, and I doubt they're actually improving performance significantly --jsb
+	
 	final static ThreadLocal<DateFormat> timeFormat = new ThreadLocal<DateFormat>() {
 		protected DateFormat initialValue() {
 			return new SimpleDateFormat("HH:mm:ss");
@@ -57,7 +59,7 @@ public class FmRecord {
 		protected DateFormat initialValue() {
 			return new SimpleDateFormat("MM/dd/yyyy");
 		}
-	};
+	};*/
 
 	/** Record IDs are typically Long values, but with ESS tables it can be a String like this: ROW MODID="0" RECORDID="RID_!19" */
 	private String recordId;
@@ -399,7 +401,7 @@ public class FmRecord {
 			return null;
 		} else fieldList.wasNull = false;
 		try {
-			DateFormat format = dateFormat.get();
+			DateFormat format = new SimpleDateFormat("MM/dd/yyyy");
 			format.setTimeZone(zone);
 			java.util.Date date;
 			try {
@@ -436,7 +438,7 @@ public class FmRecord {
 			return null;
 		} else fieldList.wasNull = false;
 		try {
-			DateFormat format = timeFormat.get();
+			DateFormat format = new SimpleDateFormat("HH:mm:ss");
 			format.setTimeZone(timeZone);
 			return new Time( format.parse(rawValue).getTime() ); //This is where it fails
 		} catch( ParseException e ) {
@@ -455,7 +457,7 @@ public class FmRecord {
 			fieldList.wasNull = true;
 			return null;
 		} else fieldList.wasNull = false;
-		DateFormat format = timestampFormat.get();
+		DateFormat format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 		try {
 			return new java.sql.Timestamp( format.parse(rawValue).getTime() );
 		} catch( ParseException failure1 ) {
