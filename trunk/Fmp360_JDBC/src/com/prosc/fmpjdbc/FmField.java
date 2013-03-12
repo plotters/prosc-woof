@@ -155,6 +155,7 @@ public class FmField {
 		this.type = type;
 	}
 
+	/** By default this is only true for the recid fields, calculation fields, and summary fields */
 	public boolean isReadOnly() {
 		return readOnly;
 	}
@@ -240,6 +241,7 @@ public class FmField {
 		return (columnName != null ? columnName.hashCode() : 0);
 	}
 
+	/** Returns the name of the field after stripping off any square bracket */
 	public String getColumnNameNoRep() {
 		String result = columnName;
 		int mark = result.indexOf( '[' );
