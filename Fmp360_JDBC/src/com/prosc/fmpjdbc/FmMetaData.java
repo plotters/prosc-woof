@@ -557,78 +557,141 @@ public class FmMetaData implements DatabaseMetaData {
 		Set<String> writeable = writeableFields.get( lookup );
 		Set<String> readable = readableFields.get( lookup );
 		if( writeable == null ) {
+			String recid = null;
 			writeable = new HashSet<String>();
 			readable = new HashSet<String>();
 
-			//List<FmField> candidateField = new ArrayList( lastRawFields.size() );
-			//for( FmField field : lastRawFields.getFields() ) {
-			//	if( ! fieldDefinition.isReadOnly() ) {
-			//		candidateField.add( field );
-			//	}
-			//}
-			Statement stmt = getConnection().createStatement();
-			boolean insertWorked = true;
+			//First we try writing all fields that appear to be writeable. Summary fields and calculation fields are skipped here.
 			try {
-				insertEmptyRecord( stmt, tableName );
-				//stmt.executeUpdate( "INSERT INTO '" + tableName + "'(b), VALUES(3)", Statement.RETURN_GENERATED_KEYS );
-				ResultSet rs = stmt.getGeneratedKeys();
-				try {
-					if( rs.next() ) {
-						String recid = rs.getString( "recid" ); //which field is the primary key? How will we delete this row when we're done?
-						try {
-							for( FmField field : lastRawFields.getFields() ) {
-								if( field.isReadOnly() ) {
-									continue; //Don't need to test calc fields / summary fields. Testing is really pretty slow. The only problem with skipping this is that we won't know whether they are readable.
-								}
-								if( field.getColumnName().contains( "::" ) ) {
-									continue; //Don't test related fields for whether they're writeable
-								}
-								try {
-									String value = randomValueForType( field.getType().getSqlDataType() );
-									if( value == null ) { //This indicates a container field or some other field type that cannot be written to
-										continue;
-									}
+				getColumns( dbName, null, tableName, null );
 
-									String sql = "UPDATE \"" + tableName + "\" SET \"" + field.getColumnName() + "\"= \"" + value + "\" WHERE recid=" + recid;
-									stmt.executeUpdate( sql );
-									writeable.add( field.getColumnName() );
-									readable.add( field.getColumnName() );
-								} catch( FileMakerException e ) {
-									final int errorCode = e.getErrorCode();
-									if( errorCode >= 500 && errorCode < 600 ) { //This is a validation error. Don't assume that the field is not writeable, it just means that we don't know what the valid values are.
-										writeable.add( field.getColumnName() );
-										readable.add( field.getColumnName() );
-									} else if( errorCode == 201 || (errorCode >=500 && errorCode < 600) ) {
-										//Field is not writeable; skip
-										readable.add( field.getColumnName() );
-									} else if( errorCode == 102 ) { //This happens when a field is completely unreadable.
-										//Field is not readable; skip
-									} else {
-										throw e;
-									}
-								}
+				boolean includeAutoEnter = true;
+				while( true ) {
+					List<FmField> potentialWriteable = new ArrayList<FmField>( lastRawFields.getFields().size() );
+					StringBuilder sql = new StringBuilder();
+					sql.append( "INSERT INTO " + quotedIdentifier( tableName ) + "" );
+					String delim="(";
+					for( FmField field : lastRawFields.getFields() ) {
+						if( ! field.isReadOnly() && field.getType() != FmFieldType.CONTAINER && ! field.getColumnName().contains("::") ) { // I don't know if there is any way to check container fields.
+							if( field.isAutoEnter() && ! includeAutoEnter ) {
+								continue; //Even though auto enter fields are 'writeable', they are much more likely to have write access prohibited, so we'll try once with them and if necessary we try again without them.
 							}
-						} finally {
-							String sql = "DELETE FROM \"" + tableName + "\" WHERE recid=" + recid;
-							stmt.executeUpdate( sql );
+							potentialWriteable.add( field );
+							sql.append( delim ).append( quotedIdentifier( field.getColumnName() ) );
+							delim=",";
 						}
-					} else {
-						insertWorked = false;
 					}
-				} finally {
-					rs.close();
+					if( ",".equals( delim ) ) {
+						sql.append( ")" );
+					}
+					delim = " VALUES(";
+					for( FmField field : potentialWriteable ) {
+						sql.append( delim ).append( "?" );
+						delim = ",";
+					}
+					if( ",".equals( delim ) ) {
+						sql.append( ")" );
+					}
+					PreparedStatement stmt = connection.prepareStatement( sql.toString(), PreparedStatement.RETURN_GENERATED_KEYS );
+					int n=1;
+					for( FmField field : potentialWriteable ) {
+						stmt.setObject( n++, randomValueForType( field.getType().getSqlDataType() ) );
+					}
+					try {
+						stmt.executeUpdate();
+					} catch( SQLException e ) {
+						if( includeAutoEnter ) {
+							includeAutoEnter = false;
+							continue; //Don't throw the exception; try again with this set to false
+						} else {
+							throw e;
+						}
+					}
+					ResultSet keys = stmt.getGeneratedKeys();
+					if( keys.next() ) {
+						recid = keys.getString( "recid" );
+						//connection.createStatement().executeUpdate( "DELETE FROM " + quotedIdentifier( tableName ) + " WHERE recid=" + recid );
+					}
+					keys.close();
+					for( FmField field : potentialWriteable ) {
+						writeable.add( field.getColumnName() );
+						readable.add( field.getColumnName() );
+					}
+					break; //Break out of the loop if INSERT succeeded
 				}
 			} catch( SQLException e ) {
-				if( e.getErrorCode() == 509 ) { //Validation failure, this is normal
-					log.log( Level.INFO, "FileMaker's validation prevented a new record from being created in table " + tableName );
-				} else {
-					log.log( Level.WARNING, "Error while creating new row in table " + tableName + " to test which fields are writeable", e );
+				log.log( Level.INFO, "One or more fields could not be written; will need to check each field individually: " + e.toString() );
+			}
+
+
+			//If we get a validation failure, or if there are fields that we did not test above, then our only option is to write to each field separately to see which ones work and which ones don't
+			Statement stmt = getConnection().createStatement();
+			//boolean insertWorked = true;
+			try {
+				try {
+					if( recid == null ) { //We may have a recid from our previous test
+						insertEmptyRecord( stmt, dbName, tableName );
+						ResultSet rs = stmt.getGeneratedKeys();
+						if( rs.next() ) {
+							recid = rs.getString( "recid" ); //which field is the primary key? How will we delete this row when we're done?
+						}
+						rs.close();
+					}
+				} catch( SQLException e ) {
+					if( e.getErrorCode() == 509 ) { //Validation failure, this is normal
+						log.log( Level.INFO, "FileMaker's validation prevented a new record from being created in table " + tableName );
+					} else {
+						log.log( Level.WARNING, "Error while creating new row in table " + tableName + " to test which fields are writeable", e );
+					}
+					recid = null;
 				}
-				insertWorked = false;
+
+				if( recid != null ) {
+					try {
+						for( FmField field : lastRawFields.getFields() ) {
+							if( writeable.contains( field.getColumnName() ) ) {
+								continue; //We've already tested it previously	
+							}
+							if( field.isReadOnly() ) {
+								continue; //Don't need to test calc fields / summary fields. Testing is really pretty slow. The only problem with skipping this is that we won't know whether they are readable.
+							}
+							if( field.getColumnName().contains( "::" ) ) {
+								continue; //Don't test related fields for whether they're writeable
+							}
+							try {
+								String value = randomValueForType( field.getType().getSqlDataType() );
+								if( value == null ) { //This indicates a container field or some other field type that cannot be written to
+									continue;
+								}
+	
+								String sql = "UPDATE \"" + tableName + "\" SET \"" + field.getColumnName() + "\"= \"" + value + "\" WHERE recid=" + recid;
+								stmt.executeUpdate( sql );
+								writeable.add( field.getColumnName() );
+								readable.add( field.getColumnName() );
+							} catch( FileMakerException e ) {
+								final int errorCode = e.getErrorCode();
+								if( errorCode >= 500 && errorCode < 600 ) { //This is a validation error. Don't assume that the field is not writeable, it just means that we don't know what the valid values are.
+									writeable.add( field.getColumnName() );
+									readable.add( field.getColumnName() );
+								} else if( errorCode == 201 || (errorCode >=500 && errorCode < 600) ) {
+									//Field is not writeable; skip
+									readable.add( field.getColumnName() );
+								} else if( errorCode == 102 ) { //This happens when a field is completely unreadable.
+									//Field is not readable; skip
+								} else {
+									throw e;
+								}
+							}
+						}
+					} finally {
+						String sql = "DELETE FROM \"" + tableName + "\" WHERE recid=" + recid;
+						stmt.executeUpdate( sql );
+					}
+				}
 			} finally {
 				stmt.close();
 			}
-			if( ! insertWorked ) {
+			if( recid == null ) {
 				log.warning( "Could not create a test row in the database for checking field permissions; will assume that all rows are writeable" );
 				for( FmField field : lastRawFields.getFields() ) {
 					writeable.add( field.getColumnName() );
@@ -652,7 +715,7 @@ public class FmMetaData implements DatabaseMetaData {
 		return result;
 	}
 
-	public void insertEmptyRecord( Statement stmt, String tableName ) throws SQLException {
+	public void insertEmptyRecord( Statement stmt, String catalog, String tableName ) throws SQLException {
 		List<String> requiredColumns = new LinkedList<String>();
 		List<String> requiredValues = new LinkedList<String>();
 		/*final ResultSet columns = getColumns( null, null, tableName, null );
@@ -662,7 +725,7 @@ public class FmMetaData implements DatabaseMetaData {
 				requiredValues.add( randomValueForType( columns.getInt( 5 ) ) );
 			}
 		}*/
-		getColumns( null, null, tableName, null );
+		getColumns( catalog, null, tableName, null );
 		for( FmField field : lastRawFields.getFields() ) {
 			if( ! field.isNullable() && ! field.isAutoEnter() ) {
 				requiredColumns.add( field.getColumnName() );
@@ -671,14 +734,14 @@ public class FmMetaData implements DatabaseMetaData {
 		}
 
 		StringBuilder sql = new StringBuilder( 256 );
-		sql.append("INSERT INTO '" + tableName + "'");
+		sql.append("INSERT INTO '" + tableName + "'"); //FIX!! Do we need to quote this? Try with spaces and see what happens
 		String plainSql = sql.toString();
 		if( requiredColumns.size() > 0 ) {
 			sql.append( '(' ) ;
 
 			String delim="";
 			for( String column : requiredColumns ) {
-				sql.append( delim + getIdentifierQuoteString() + column + getIdentifierQuoteString() );
+				sql.append( delim + quotedIdentifier( column ) );
 				delim = ",";
 			}
 			sql.append( ") VALUES(" );
@@ -700,6 +763,10 @@ public class FmMetaData implements DatabaseMetaData {
 				throw e; //FIX!! 504 indicates that there is already a record with this value. Since these are supposed to be meaningless values, either 1) the user has a record with that same primary key (unlikely) or there is a test record left over from previously calling this function (much more likely). --jsb
 			} else throw e;
 		}
+	}
+
+	private String quotedIdentifier( String column ) throws SQLException {
+		return getIdentifierQuoteString() + column + getIdentifierQuoteString();
 	}
 
 	public String randomValueForType( int dataType ) {
