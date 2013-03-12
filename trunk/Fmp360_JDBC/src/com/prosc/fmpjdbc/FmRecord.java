@@ -163,6 +163,7 @@ public class FmRecord {
 	 * @param whichRep This is a 1-indexed value representing the repetition that is being set
 	 * */
 	protected void addRawValue( String newValue, int[] columnIndices, int maxRepetitions, int whichRep ) {
+		newValue = newValue.replace("\u2028", "\r");
 		final int firstColumn = columnIndices[0]; //We will actually store a reference to the same value or array in all the target indices, so we only need to worry about the first one
 		int lastColumn = columnIndices[ columnIndices.length - 1 ];
 		ensureCapacity( firstColumn, maxRepetitions );
