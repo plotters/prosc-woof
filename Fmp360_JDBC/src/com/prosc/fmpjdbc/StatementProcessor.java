@@ -130,27 +130,11 @@ public class StatementProcessor {
 			/** Contains keys used in the where segment, used to identify duplicates, which is handy for doing ranged searches. */
 			Map whereSegmentKeys = new HashMap( command.getSearchTerms().size() );
 
+			List<String> recordIds = new LinkedList<String>();
 			Iterator<?> recordIdIterator = null; //This could either be an iterator of Strings or FMRecord objects.
 			boolean findAny = true;
+			//boolean isRecIdSpecified = false;
 			for( SearchTerm eachTerm : command.getSearchTerms() ) {
-				if( "recid".equals( eachTerm.getField().getColumnName().toLowerCase() ) ) { //Throw away all other params, just use recid
-					Object value = eachTerm.getValue();
-					if( eachTerm.isPlaceholder() ) {
-						value = params.elementAt( currentParam++ );
-					}
-					whereClause = new StringBuffer( "&-recid=" + value );
-					List<String> recordIds = new LinkedList<String>();
-					recordIds.add( String.valueOf( value ) );
-					recordIdIterator = recordIds.iterator();
-					findAny = false;
-					break;
-				} else if( findAny && !eachTerm.isSpecialTerm() ) { //We need to know if there are any search terms that do not start with a hyphen, to know whether to do a -find or -findany. --jsb
-					findAny = false;
-				}
-				String fieldName = eachTerm.getField().getColumnName(); //FIX!! use fully qualified table names for related fields
-				if( fmVersion >= 12 ) { //FileMaker 12 expects repetitions to be indicated with parentheses, not square brackets.
-					fieldName = fieldName.replace( '[', '(' ).replace( ']', ')' );
-				}
 				/**
 				 * 0: the operator
 				 * 1: the ampersand, field name, and equals sign
@@ -158,6 +142,30 @@ public class StatementProcessor {
 				 * 3: operator code, one of the SearchTerm constants
 				 */
 				Object[] eachTermSegments = new Object[4]; // FIX! document this thing -ssb 2006-09-28
+				if( "recid".equals( eachTerm.getField().getColumnName().toLowerCase() ) ) {
+					Object value = eachTerm.getValue();
+					if( eachTerm.isPlaceholder() ) {
+						value = params.elementAt( currentParam++ );
+					}
+					eachTermSegments[0] = "";
+					eachTermSegments[1] = "&-recid=";
+					eachTermSegments[2] = value;
+					eachTermSegments[3] = SearchTerm.EQUALS;
+					whereSegmentKeys.put( "-recid", eachTermSegments );
+					//whereClause = new StringBuffer( "&-recid=" + value );
+					recordIds.add( String.valueOf( value ) );
+					findAny = false;
+					continue;
+				} else if( findAny && !eachTerm.isSpecialTerm() ) { //We need to know if there are any search terms that do not start with a hyphen, to know whether to do a -find or -findany. --jsb
+					findAny = false;
+				}
+				if( recordIds.size() > 0 && ! eachTerm.isSpecialTerm() ) {
+					continue; //Ignore regular search terms if there is a recid specified
+				}
+				String fieldName = eachTerm.getField().getColumnName(); //FIX!! use fully qualified table names for related fields
+				if( fmVersion >= 12 ) { //FileMaker 12 expects repetitions to be indicated with parentheses, not square brackets.
+					fieldName = fieldName.replace( '[', '(' ).replace( ']', ')' );
+				}
 				String wildcardsToEscape;
 				eachTermSegments[0] = "";
 				final int operator = eachTerm.getOperator();
@@ -237,6 +245,9 @@ public class StatementProcessor {
 
 			boolean recordIdIsPreset;
 			int rowCount = 0;
+			if( recordIds.size() > 0 ) { //This indicates that we already have our record ID's, and we don't need to do an extra HTTP request to get the record ID of each item that we're going to update
+				recordIdIterator = recordIds.iterator();
+			}
 			switch( command.getOperation() ) {
 				case SqlCommand.SELECT:
 					StringBuffer postArgs = new StringBuffer( 200 );
