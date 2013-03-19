@@ -167,6 +167,9 @@ public class FmResultSet implements ResultSet {
 			if( fmRecords.hasNext() ) {
 				try {
 					currentRecord = fmRecords.next();
+					if( currentRecord == null ) {
+						throw new IllegalStateException( "fmRecords.hasNext() returns true, but fmRecords.next() returns null" );
+					}
 				} catch( RuntimeException e ) {
 					//log.log( Level.SEVERE, "Got an exception while trying to fetch next row from database.", e );
 					SQLException e1 = new SQLException( e.toString() );
@@ -216,6 +219,7 @@ public class FmResultSet implements ResultSet {
 		//fmRecords = null;
 		//metaData = null;
 		currentRecord = null;
+		rowNum = -1;
 		//fieldDefinitions = null;
 		isOpen = false;
 		connection.notifyClosedResultSet( this );
@@ -613,6 +617,10 @@ public class FmResultSet implements ResultSet {
 		return statement;
 	}
 
+	public boolean isClosed() throws SQLException {
+		return ! isOpen;
+	}
+
 	//---These methods do not have to be implemented, but technically could be
 
 
@@ -973,10 +981,6 @@ public class FmResultSet implements ResultSet {
 	}
 
 	public int getHoldability() throws SQLException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
-	}
-
-	public boolean isClosed() throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
