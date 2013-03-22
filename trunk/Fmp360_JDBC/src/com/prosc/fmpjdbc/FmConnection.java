@@ -301,8 +301,20 @@ public class FmConnection implements Connection {
 		return isClosed;
 	}
 
+	public PreparedStatement prepareStatement( String s, int i ) throws SQLException {
+		return new FmPreparedStatement( this, s, i );
+	}
+
 	public PreparedStatement prepareStatement( String s ) throws SQLException {
 		return prepareStatement( s, Statement.NO_GENERATED_KEYS );
+	}
+
+	public PreparedStatement prepareStatement( String s, int[] ints ) throws SQLException {
+		return prepareStatement( s, Statement.RETURN_GENERATED_KEYS ); //FIX! This is not strictly correct - we should only return the specified columns, but we are going to return all columns this way. --jsb
+	}
+
+	public PreparedStatement prepareStatement( String s, String[] strings ) throws SQLException {
+		return prepareStatement( s, Statement.RETURN_GENERATED_KEYS ); //FIX! This is not strictly correct - we should only return the specified columns, but we are going to return all columns this way. --jsb
 	}
 
 	/** @deprecated It's usually better to use prepareStatement instead, like this: SELECT * FROM SomeTable WHERE -script=foo AND -script.param=bar */
@@ -411,18 +423,6 @@ public class FmConnection implements Connection {
 
 	public CallableStatement prepareCall( String s, int i, int i1, int i2 ) throws SQLException {
 		throw new AbstractMethodError( "prepareCall is not implemented yet." ); //FIX! Broken placeholder
-	}
-
-	public PreparedStatement prepareStatement( String s, int i ) throws SQLException {
-		return new FmPreparedStatement( this, s, i );
-	}
-
-	public PreparedStatement prepareStatement( String s, int[] ints ) throws SQLException {
-		throw new AbstractMethodError( "prepareStatement is not implemented yet." ); //FIX! Broken placeholder
-	}
-
-	public PreparedStatement prepareStatement( String s, String[] strings ) throws SQLException {
-		throw new AbstractMethodError( "prepareStatement is not implemented yet." ); //FIX! Broken placeholder
 	}
 
 	//---These methods were added to the interface in Java 1.5.... ? How bizarre that they would add methods to an existing interface???
