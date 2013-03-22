@@ -218,7 +218,7 @@ public class AdvancedDriverTests extends TestCase {
 		String tableName = jdbc12.fmVersion >= 7 ? "Portrait" : "Portrait.portrait"; //Need to include the db & layout name if using 6, right?
 		statement12.executeUpdate( "DELETE FROM " + tableName + " WHERE \"Alternate Mime Type\"='JDBC testing' "); // cleanup
 		//
-		PreparedStatement insertStatement = connection12.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\", \"Date created\") values(?,?,'JDBC testing',?,?,?,?)");
+		PreparedStatement insertStatement = connection12.prepareStatement( "INSERT INTO " + tableName + " (contactID, mimeType, \"Alternate Mime Type\", \"Date Created\", \"Time inserted\", \"Picture taken\", \"Date created\") values(?,?,'JDBC testing',?,?,?,?)", PreparedStatement.RETURN_GENERATED_KEYS );
 		java.util.Date now = new java.util.Date();
 		insertStatement.setString( 1, "100");
 		insertStatement.setString( 2, "video/mpeg" );
