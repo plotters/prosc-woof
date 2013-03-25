@@ -200,6 +200,18 @@ public class AdvancedDriverTests extends TestCase {
 		rs.close();
 		assertEquals( 0, foundCount ); //Tampa, Saraosta, Atlanta, Alpharetta
 	}
+	
+	public void testScriptCall() throws SQLException {
+		final Statement stmt = connection12.createStatement();
+		stmt.executeUpdate( "INSERT INTO Contacts(firstName,lastName,-script) VALUES('Chew', 'Bacca','Set email to UUID')", Statement.RETURN_GENERATED_KEYS );
+		final ResultSet keys = stmt.getGeneratedKeys();
+		keys.next();
+		final String pk = keys.getString( "ID" );
+		final String emailAddress = keys.getString( "emailAddress" );
+		System.out.println("Email address is " + emailAddress );
+		assertTrue( emailAddress.length() > 0 );
+		stmt.executeUpdate( "DELETE FROM Contacts WHERE ID=" + pk );
+	}
 
 	//Need to add test cases for executeQuery() with several parameters and executeUpdate() with prepared statements.
 

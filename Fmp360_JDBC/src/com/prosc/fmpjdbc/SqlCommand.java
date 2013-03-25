@@ -536,7 +536,12 @@ public class SqlCommand {
 					assignedFieldNames.add(string);
 				}
 			} else if (queryPart == ASSIGNED_VALUES) {
-				String fieldName = assignedFieldNamesIterator.next();
+				String fieldName;
+				try {
+					fieldName = assignedFieldNamesIterator.next();
+				} catch( NoSuchElementException e ) {
+					throw e;
+				}
 				FmField field = new FmField(table, fieldName, null, FmFieldType.TEXT, true);
 				AssignmentTerm term = new AssignmentTerm(field, string, false);
 				assignmentTerms.add(term);

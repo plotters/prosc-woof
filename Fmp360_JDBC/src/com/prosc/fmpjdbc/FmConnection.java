@@ -4,6 +4,7 @@ import com.prosc.shared.MBeanUtils;
 import com.prosc.sql.ErrorCodes;
 
 import java.sql.*;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -317,6 +318,12 @@ public class FmConnection implements Connection {
 		return prepareStatement( s, Statement.RETURN_GENERATED_KEYS ); //FIX! This is not strictly correct - we should only return the specified columns, but we are going to return all columns this way. --jsb
 	}
 
+	public PreparedStatement prepareStatement( String s, int resultSetType, int resultSetConcurrency ) throws SQLException {
+		if( resultSetType != ResultSet.TYPE_FORWARD_ONLY ) throw new UnsupportedOperationException("Forward-only is the only type of supported ResultSet" );
+		if( resultSetConcurrency != ResultSet.CONCUR_READ_ONLY ) throw new UnsupportedOperationException("Read-only is the only type of concurrency supported" );
+		return prepareStatement( s );
+	}
+
 	/** @deprecated It's usually better to use prepareStatement instead, like this: SELECT * FROM SomeTable WHERE -script=foo AND -script.param=bar */
 	public CallableStatement prepareCall( String s ) throws SQLException {
 		FmCallableStatement fmcs = new FmCallableStatement(this);
@@ -337,10 +344,8 @@ public class FmConnection implements Connection {
 		return ".";
 	}
 
-	//---These methods can be ignored
-
-	public String nativeSQL( String s ) throws SQLException {
-		throw new AbstractMethodError( "nativeSQL is not implemented yet." ); //FIX! Broken placeholder
+	public int getHoldability() throws SQLException {
+		return ResultSet.HOLD_CURSORS_OVER_COMMIT;
 	}
 
 	public void setAutoCommit( boolean b ) throws SQLException {
@@ -357,6 +362,20 @@ public class FmConnection implements Connection {
 		return true;
 	}
 
+	public boolean isReadOnly() throws SQLException {
+		return false;
+	}
+	
+	
+	
+	
+
+	//---These methods can be ignored
+
+	public String nativeSQL( String s ) throws SQLException {
+		throw new AbstractMethodError( "nativeSQL is not implemented yet." ); //FIX! Broken placeholder
+	}
+
 	/** This method does nothing. */
 	public void commit() throws SQLException {}
 
@@ -367,10 +386,6 @@ public class FmConnection implements Connection {
 		throw new AbstractMethodError( "setReadOnly is not implemented yet." ); //FIX! Broken placeholder
 	}
 
-	public boolean isReadOnly() throws SQLException {
-		throw new AbstractMethodError( "isReadOnly is not implemented yet." ); //FIX! Broken placeholder
-	}
-
 	public SQLWarning getWarnings() throws SQLException {
 		return null; //FIX! Should I be doing something here?
 	}
@@ -379,26 +394,16 @@ public class FmConnection implements Connection {
 		//FIX! Should I be doing something here?
 	}
 
-	public PreparedStatement prepareStatement( String s, int resultSetType, int resultSetConcurrency ) throws SQLException {
-		if( resultSetType != ResultSet.TYPE_FORWARD_ONLY ) throw new UnsupportedOperationException("Forward-only is the only type of supported ResultSet" );
-		if( resultSetConcurrency != ResultSet.CONCUR_READ_ONLY ) throw new UnsupportedOperationException("Read-only is the only type of concurrency supported" );
-		return prepareStatement( s );
-	}
-
 	public CallableStatement prepareCall( String s, int i, int i1 ) throws SQLException {
 		throw new AbstractMethodError( "prepareCall is not implemented yet." ); //FIX! Broken placeholder
 	}
 
-	public Map getTypeMap() throws SQLException {
-		throw new AbstractMethodError( "getTypeMap is not implemented yet." ); //FIX! Broken placeholder
+	public Map<String, Class<?>> getTypeMap() throws SQLException {
+		return Collections.emptyMap();
 	}
 
 	public void setHoldability( int i ) throws SQLException {
 		throw new AbstractMethodError( "setHoldability is not implemented yet." ); //FIX! Broken placeholder
-	}
-
-	public int getHoldability() throws SQLException {
-		throw new AbstractMethodError( "getHoldability is not implemented yet." ); //FIX! Broken placeholder
 	}
 
 	public Savepoint setSavepoint() throws SQLException {
