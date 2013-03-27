@@ -13,7 +13,7 @@ dt.markTime("Teardown & cleanup");
 //Teardown and cleanup
 dt.stop();
 </pre>
-After stop() is called, it will dump a stopwatch log of each step to System.out. Because it does not generate any output until stop() is called, it has no significant effect on the execution speed of the code is is timing.
+After stop() is called, it will dump a stopwatch log of each step to System.out. Because it does not generate any output until stop() is called, it has no significant effect on the execution speed of the code it is timing.
 */
 public class DebugTimer {
 	private static final Logger log = Logger.getLogger( DebugTimer.class.getName() );
