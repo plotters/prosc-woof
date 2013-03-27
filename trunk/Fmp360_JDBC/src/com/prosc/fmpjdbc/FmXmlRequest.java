@@ -168,6 +168,7 @@ public class FmXmlRequest extends FmRequest {
 					//throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
 				}
 				else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username, fullUrl );
+				else if( httpStatusCode == 405 ) throw new IOException( "Server returned a 405 (Method not supported) error. This usually means that the FileMaker Web Publishing is not installed on this server. The URL that generated the error is " + fullUrl );
 				else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. The URL that generated the error is " + fullUrl );
 				else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
 				else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
