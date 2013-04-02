@@ -441,7 +441,9 @@ public class FmRecord {
 		try {
 			DateFormat format = new SimpleDateFormat("HH:mm:ss");
 			format.setTimeZone(timeZone);
-			return new Time( format.parse(rawValue).getTime() ); //This is where it fails
+            java.util.Date date = format.parse(rawValue);
+            long time = date.getTime();
+            return new Time(timeZone.inDaylightTime(Calendar.getInstance().getTime()) ? time - timeZone.getDSTSavings() : time); //This is where it fails
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);
