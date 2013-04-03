@@ -443,7 +443,8 @@ public class FmRecord {
 			format.setTimeZone(timeZone);
             java.util.Date date = format.parse(rawValue);
             long time = date.getTime();
-            return new Time(timeZone.inDaylightTime(Calendar.getInstance().getTime()) ? time - timeZone.getDSTSavings() : time); //This is where it fails
+            //return new Time(timeZone.inDaylightTime(new java.util.Date()) ? time - timeZone.getDSTSavings() : time); //This is where it fails
+            return new Time(time); //This is where it fails
 		} catch( ParseException e ) {
 			IllegalArgumentException e1 = new IllegalArgumentException(e.toString());
 			e1.initCause(e);

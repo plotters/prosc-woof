@@ -52,7 +52,7 @@ public class FmField {
 	 * @param name The column name, including any repetition index.
 	 * @param alias The alias, or null if no alias is used.
 	 */
-	public FmField(FmTable table, String name, String alias) {
+	public FmField(FmTable table, String name, @Nullable String alias) {
 		this(table, name, alias, null, true);
 	}
 

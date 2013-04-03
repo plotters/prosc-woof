@@ -1,6 +1,7 @@
 package com.prosc.fmpjdbc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,6 +34,10 @@ public class FmFieldList {
 
 	FmFieldList() {
 		this.fields = new ArrayList<FmField>();
+	}
+
+	FmFieldList(FmField... fields) {
+		this.fields = new ArrayList<FmField>(Arrays.asList(fields));
 	}
 
 	public void add(FmField field) {

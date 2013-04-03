@@ -2,12 +2,13 @@ package com.prosc.fmpjdbc;
 
 import junit.framework.TestCase;
 
-import java.sql.Array;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
+import java.sql.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,5 +70,17 @@ public class FmRecordTest extends TestCase {
 				System.out.println(String.format("%" + maxKeyLength + "s = %s", columnName, String.valueOf(object).replaceAll("\n", "\\n")));
 			}
 		}
+	}
+
+	public void testGetTime() throws Exception {
+		final FmFieldList fieldList = new FmFieldList(new FmField(new FmTable("foo"), "time", null));
+		final FmRecord fmRecord = new FmRecord(fieldList, "1", 1L);
+		fmRecord.addRawValue("01:23:45", 0);
+		final TimeZone timeZone = TimeZone.getTimeZone("America/Los_Angeles");
+		final Time time = fmRecord.getTime(0, 1, timeZone);
+		DateFormat format = new SimpleDateFormat("HH:mm:ss", Locale.US);
+		format.setTimeZone(timeZone);
+		assertEquals("01:23:45", format.format(time));
+
 	}
 }
