@@ -356,7 +356,7 @@ public class FmConnection implements Connection {
 			//Ignore; we're always in auto-commit mode
 		} else {
 			//throw new UnsupportedOperationException( "FileMaker does not support transactions; you cannot set auto commit to false." );
-			log.warning( "FileMaker does not support transactions; setting auto commit to false has no effect." );
+			log.fine( "FileMaker does not support transactions; setting auto commit to false has no effect." );
 		}
 	}
 
