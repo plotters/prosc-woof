@@ -111,6 +111,14 @@ public class FmStatement implements Statement {
 		processor.execute();
 		return processor.getUpdateRowCount();
 	}
+	
+	public void setFetchSize( int i ) throws SQLException {
+		//Ignore this hint
+	}
+
+	public int getFetchSize() throws SQLException {
+		return 1;
+	}
 	//---These can be left abstract for now---
 
 	public int[] executeBatch() throws SQLException {
@@ -183,14 +191,6 @@ public class FmStatement implements Statement {
 
 	public int getFetchDirection() throws SQLException {
 		throw new AbstractMethodError( "getFetchDirection is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public void setFetchSize( int i ) throws SQLException {
-		throw new AbstractMethodError( "setFetchSize is not implemented yet." ); //FIX!!! Broken placeholder
-	}
-
-	public int getFetchSize() throws SQLException {
-		throw new AbstractMethodError( "getFetchSize is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public int getResultSetConcurrency() throws SQLException {
