@@ -4,8 +4,7 @@ package com.prosc.fmpjdbc;
  * @author sbarnum
  */
 
-import junit.framework.*;
-import com.prosc.fmpjdbc.FmResultSetMetaData;
+import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.sql.*;

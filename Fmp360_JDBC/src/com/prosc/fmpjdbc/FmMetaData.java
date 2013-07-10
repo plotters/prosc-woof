@@ -1251,7 +1251,7 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public String getExtraNameCharacters() throws SQLException {
-		throw new AbstractMethodError( "getExtraNameCharacters is not implemented yet." ); //FIX!!! Broken placeholder
+		return "";
 	}
 
 	public boolean supportsColumnAliasing() throws SQLException {
