@@ -232,6 +232,11 @@ public class FmResultSet implements ResultSet {
 		checkResultSet();
 		return currentRecord.getModCount();
 	}
+	
+	public String getRecordId() {
+		checkResultSet();
+		return currentRecord.getRecordId();
+	}
 
 
 	public String getString( String s ) throws SQLException { return getString( fieldDefinitions.indexOfFieldWithAlias( s ), s ); }
