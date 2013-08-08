@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,6 +59,8 @@ public class FmConnection implements Connection {
 	private String catalog;
 	private boolean isClosed;
 
+	private static ConcurrentHashMap<String, Long> cachedCredentials = new ConcurrentHashMap<String, Long>();
+
 
 	/** Creates a connection to the ddtekDriver and keeps a private variable so that we can forward
 	 * unsupported calls to the other driver.
@@ -105,6 +108,18 @@ public class FmConnection implements Connection {
 		if( getCatalog() == null ) { //Don't check for username and password if no database is specified, because there is no way to do this with WPE
 			return;
 		}
+
+		//First check the cache
+		String lookupKey = getProtocol() + "~" + getHost() + "~" + getPort() + "~" + getUsername() + "~" + getPassword();
+		Long credentialsValidUntil = cachedCredentials.get( lookupKey );
+		if( credentialsValidUntil != null ) {
+			if( credentialsValidUntil >= System.currentTimeMillis() ) {
+				return; //We've already authenticated with this same information within the expiration window
+			} else {
+				cachedCredentials.remove( lookupKey ); //There are matching credentials in the cache, but they're expired and should be removed	
+			}
+		}
+
 		FmXmlRequest request = new FmXmlRequest(getProtocol(), getHost(), getFMVersionUrl(),
 				getPort(), getUsername(), getPassword(), getFmVersion() );
 		try {
@@ -118,6 +133,7 @@ public class FmConnection implements Connection {
 			String postArgs = "-db=" + encodedDBName + "&-lay=ProscNoSuchTable&-view"; //Optimize Why not do -layoutnames instead? That way we don't have to throw and catch an exception. --jsb
 			try {
 				request.doRequest( postArgs );
+				assert(false); //We should never get to this point - the previous request should ALWAYS throw an exception
 			} catch( FmXmlRequest.HttpAuthenticationException e ) {
 				//Username and password are invalid
 				e.setConnection( this );
@@ -147,6 +163,9 @@ public class FmConnection implements Connection {
 				if( request.getErrorCode() == 105 ) {
 					//Success, our username/password is valid and there is no such layout
 					fmVersion = request.getFmVersion();
+
+					credentialsValidUntil = System.currentTimeMillis() + ( 120 * 1000 ); //Two minutes
+					cachedCredentials.put( lookupKey, credentialsValidUntil );
 				} else {
 					e.setConnection( this );
 					throw e;
@@ -235,7 +254,7 @@ public class FmConnection implements Connection {
 	public String getUsername() {
 		String result = properties.getProperty( "user" );
 		if( "[Guest]".equals( result ) ) { //Calling Get( UserName ) in FileMaker when logged in as a guest returns [Guest]
-			result = "";	
+			result = "";
 		}
 		return result;
 	}
@@ -368,10 +387,10 @@ public class FmConnection implements Connection {
 	public boolean isReadOnly() throws SQLException {
 		return false;
 	}
-	
-	
-	
-	
+
+
+
+
 
 	//---These methods can be ignored
 
