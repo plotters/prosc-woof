@@ -74,6 +74,7 @@ public class FmXmlRequest extends FmRequest {
 	private Thread parsingThread;
 	private SQLException metadataError;
 	private Integer fmVersion;
+	private String concatUrl;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion) {
 		try {
@@ -143,6 +144,7 @@ public class FmXmlRequest extends FmRequest {
 				theConnection.addRequestProperty("Authorization", "Basic " + authString);
 			}
 			try {
+				String fullUrl;
 				if (postArgs != null) {
 					//postArgs = postPrefix + postArgs;
 					fullUrl = theUrl + "?" + postPrefix + postArgs;
@@ -154,7 +156,8 @@ public class FmXmlRequest extends FmRequest {
 				} else {
 					fullUrl = theUrl.toExternalForm();
 				}
-				log.log(Level.CONFIG, "Starting request: " + fullUrl );
+				concatUrl = fullUrl.length() < 256 ? fullUrl : fullUrl.substring( 0, 256 ) + "...<etc>";
+				log.log(Level.CONFIG, "Starting request: " + concatUrl );
 
 
 				int httpStatusCode = theConnection.getResponseCode();
@@ -167,9 +170,9 @@ public class FmXmlRequest extends FmRequest {
 					continue;
 					//throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
 				}
-				else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username, fullUrl );
-				else if( httpStatusCode == 405 ) throw new IOException( "Server returned a 405 (Method not supported) error. This usually means that the FileMaker Web Publishing is not installed on this server. The URL that generated the error is " + fullUrl );
-				else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. The URL that generated the error is " + fullUrl );
+				else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username, concatUrl );
+				else if( httpStatusCode == 405 ) throw new IOException( "Server returned a 405 (Method not supported) error. This usually means that the FileMaker Web Publishing is not installed on this server. The URL that generated the error is " + concatUrl );
+				else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. The URL that generated the error is " + concatUrl );
 				else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
 				else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
 				else {
@@ -255,7 +258,7 @@ public class FmXmlRequest extends FmRequest {
 			} finally {
 				if( isStreamOpen ) {
 					if( log.isLoggable( Level.CONFIG ) ) {
-						log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + fullUrl + " )" );
+						log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + concatUrl + " )" );
 					}
 					isStreamOpen = false;
 				}
@@ -348,7 +351,7 @@ public class FmXmlRequest extends FmRequest {
 		synchronized( FmXmlRequest.this ) {
 			if(hasError()) {
 				closeRequest();
-				throw FileMakerException.exceptionForErrorCode( errorCode, fullUrl, fmLayout );
+				throw FileMakerException.exceptionForErrorCode( errorCode, concatUrl, fmLayout );
 			}
 			if( getFieldDefinitions() == null ) {
 				throw metadataError;
@@ -373,7 +376,7 @@ public class FmXmlRequest extends FmRequest {
 		if( t instanceof InterruptedException ) {
 			//This is normal, it just means the clent closed the ResultSet before reading the whole thing
 		} else {
-			log.warning( "Exception " + t.toString() + " occurred while processing request: " + fullUrl );
+			log.warning( "Exception " + t.toString() + " occurred while processing request: " + concatUrl );
 		}
 		notifyAll();
 	}
@@ -507,7 +510,7 @@ public class FmXmlRequest extends FmRequest {
 			Thread.currentThread().interrupt();
 		}
 		if( getErrorCode() == 0 && missingFields != null && missingFields.size() > 0 ) {
-			throw new MissingFieldException("The requested fields are not on the layout: " + missingFields, 102, fullUrl, fmLayout, missingFields );
+			throw new MissingFieldException("The requested fields are not on the layout: " + missingFields, 102, concatUrl, fmLayout, missingFields );
 		}
 		return fieldDefinitions;
 	}
@@ -645,17 +648,17 @@ public class FmXmlRequest extends FmRequest {
 
 		public void fatalError(SAXParseException e) throws SAXException {
 			//We don't need to log, because we're throwing the exception to the ResultQueue : log.log(Level.SEVERE, e.toString(), e );
-			log.log( Level.SEVERE, "fatalError for request: " + fullUrl + "; " + e.toString() );
+			log.log( Level.SEVERE, "fatalError for request: " + concatUrl + "; " + e.toString() );
 			super.fatalError(e);
 		}
 
 		public void warning( SAXParseException e ) throws SAXException {
-			log.log( Level.WARNING, "warning for request: " + fullUrl + "; " + e.toString() );
+			log.log( Level.WARNING, "warning for request: " + concatUrl + "; " + e.toString() );
 			super.warning( e );	//To change body of overridden methods use File | Settings | File Templates.
 		}
 
 		public void error( SAXParseException e ) throws SAXException {
-			log.log( Level.SEVERE, "error for request: " + fullUrl + "; " + e.toString() );
+			log.log( Level.SEVERE, "error for request: " + concatUrl + "; " + e.toString() );
 			super.error( e );	//To change body of overridden methods use File | Settings | File Templates.
 		}
 
