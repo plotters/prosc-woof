@@ -11,7 +11,7 @@ import java.sql.SQLException;
  * To change this template use File | Settings | File Templates.
  */
 public abstract class FmRequest {
-	protected String fullUrl;
+	protected String concatUrl;
 
 	public abstract FmFieldList getFieldDefinitions() throws IOException, SQLException;
 
@@ -20,6 +20,6 @@ public abstract class FmRequest {
 	public abstract void doRequest(String postArgs) throws IOException, SQLException;
 
 	String getFullUrl() {
-		return fullUrl;
+		return concatUrl;
 	}
 }
