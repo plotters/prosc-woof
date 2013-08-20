@@ -156,7 +156,7 @@ public class FmXmlRequest extends FmRequest {
 				} else {
 					fullUrl = theUrl.toExternalForm();
 				}
-				concatUrl = fullUrl.length() < 256 ? fullUrl : fullUrl.substring( 0, 256 ) + "...<etc>";
+				concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>";
 				log.log(Level.CONFIG, "Starting request: " + concatUrl );
 
 
