@@ -296,10 +296,15 @@ public class FmXmlRequest extends FmRequest {
 					synchronized( FmXmlRequest.this ) {
 						streamToParse = serverStream;
 					}
-					InputSource input = new InputSource(streamToParse);
-					
+					InputSource input = null;
+					try {
+						input = new InputSource(new InputStreamReader(streamToParse, "UTF-8")); // we use a character stream, otherwise the parser will try to open the SystemId on the InputSource
+					} catch (UnsupportedEncodingException e) {
+						throw new RuntimeException(e); // should never happen
+					}
+
 					//Set it to supply a real system ID. This fixes Zulu-270 Publishing with multiple calendars
-					input.setSystemId("http://" + theUrl.getHost() + (theUrl.getPort()==-1 ? "" : ":" + theUrl.getPort()) + "/fmi/xml/" + UUID.randomUUID());
+					input.setSystemId("http://" + theUrl.getHost() + (theUrl.getPort()==-1 ? "" : ":" + theUrl.getPort()) + "/fmi/xml/");
 					//input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() );
 					//input.setSystemId("http://");
 					
