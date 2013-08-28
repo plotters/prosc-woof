@@ -351,10 +351,14 @@ public class FmXmlRequest extends FmRequest {
 		synchronized( FmXmlRequest.this ) {
 			if(hasError()) {
 				closeRequest();
-				throw FileMakerException.exceptionForErrorCode( errorCode, concatUrl, fmLayout );
+				FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode(errorCode, concatUrl, fmLayout);
+				if (metadataError != null) {
+					fileMakerException.initCause(metadataError);
+				}
+				throw fileMakerException;
 			}
 			if( getFieldDefinitions() == null ) {
-				throw metadataError;
+				throw new SQLException(metadataError); // wrap the metadataError so we have the complete stack of the current calling code
 			}
 		}
 
