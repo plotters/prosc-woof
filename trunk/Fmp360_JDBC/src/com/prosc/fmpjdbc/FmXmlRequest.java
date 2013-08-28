@@ -1,5 +1,6 @@
 package com.prosc.fmpjdbc;
 
+import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -219,7 +220,7 @@ public class FmXmlRequest extends FmRequest {
 				else throw e;
 			}
 			try {
-				readResult();
+				readResult(serverStream);
 			} catch( FileMakerException e ) {
 				if( e.getErrorCode() == 16 && n < retryCount ) { //Error code 16 means retry
 					log.warning( "Received an error 16 retry message from FileMaker Server on attempt " + n + ", will try again" );
@@ -288,15 +289,11 @@ public class FmXmlRequest extends FmRequest {
 		super.finalize();
 	}
 	
-	private void readResult() throws SQLException {
+	private void readResult(@NotNull final InputStream streamToParse) throws SQLException {
 		synchronized( FmXmlRequest.this ) {
 			parsingThread = new Thread("FileMaker JDBC Parsing Thread" ) {
 				public void run() {
-					final InputStream streamToParse;
-					synchronized( FmXmlRequest.this ) {
-						streamToParse = serverStream;
-					}
-					InputSource input = null;
+					InputSource input;
 					try {
 						input = new InputSource(new InputStreamReader(streamToParse, "UTF-8")); // we use a character stream, otherwise the parser will try to open the SystemId on the InputSource
 					} catch (UnsupportedEncodingException e) {
