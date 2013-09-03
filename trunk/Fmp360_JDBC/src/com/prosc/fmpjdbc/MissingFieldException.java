@@ -10,8 +10,8 @@ public class MissingFieldException extends FileMakerException {
 	private Collection<String> missingFields;
 	private String whichLayout;
 
-	public MissingFieldException( String reason, int vendorCode, String requestUrl, String whichLayout, Collection<String> missingFields ) {
-		super( vendorCode, reason, requestUrl );
+	public MissingFieldException( String reason, int vendorCode, String requestUrl, String whichLayout, Collection<String> missingFields, String username ) {
+		super( vendorCode, reason, requestUrl, username );
 		this.whichLayout = whichLayout;
 		this.missingFields = missingFields;
 	}

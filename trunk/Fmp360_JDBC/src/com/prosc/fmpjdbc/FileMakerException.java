@@ -4,12 +4,9 @@ import com.prosc.sql.ErrorCodes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.Properties;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -45,11 +42,13 @@ public class FileMakerException extends SQLException {
 	private Object params;
 	private boolean ssl;
 	private String requestUrl;
+	private String username;
 
 
-	protected FileMakerException(Integer errorCode, String errorMessage, String requestUrl ) {
+	protected FileMakerException(Integer errorCode, String errorMessage, String requestUrl, String username ) {
 		super( errorMessage, null, errorCode );
 		this.requestUrl = requestUrl;
+		this.username = username;
 		if( errorCode == 105 && requestUrl.contains( "ProscNoSuchTable" ) ) {
 			//Special case, this error is thrown when establishing a connection. Don't log anything.
 		} else {
@@ -57,15 +56,15 @@ public class FileMakerException extends SQLException {
 		}
 	}
 
-	public static FileMakerException exceptionForErrorCode(Integer errorCode, String requestUrl ) {
-		return exceptionForErrorCode(errorCode, requestUrl, null );
+	public static FileMakerException exceptionForErrorCode( Integer errorCode, String requestUrl, String username ) {
+		return exceptionForErrorCode(errorCode, requestUrl, null, username );
 	}
 
-	public static FileMakerException exceptionForErrorCode( Integer errorCode, @NotNull String requestUrl, @Nullable String whichLayout ) {
+	public static FileMakerException exceptionForErrorCode( Integer errorCode, @NotNull String requestUrl, @Nullable String whichLayout, @Nullable String username ) {
 		if( errorCode == 102 ) {
-			return new MissingFieldException( "Error " + errorCode + ": " + ErrorCodes.getMessage(errorCode), 102, requestUrl, whichLayout, null );
+			return new MissingFieldException( "Error " + errorCode + ": " + ErrorCodes.getMessage(errorCode), 102, requestUrl, whichLayout, null, username );
 		} else {
-			return new FileMakerException(errorCode, "Error " + errorCode + ": " + ErrorCodes.getMessage(errorCode), requestUrl );
+			return new FileMakerException(errorCode, "Error " + errorCode + ": " + ErrorCodes.getMessage(errorCode), requestUrl, username );
 		}
 	}
 
@@ -91,6 +90,9 @@ public class FileMakerException extends SQLException {
 		}*/
 		if( extraParams ) {
 			msg.append( ")" );
+		}
+		if( username != null ) {
+			msg.append( " username: " + username );	
 		}
 		return msg.toString();
 	}
@@ -119,15 +121,9 @@ public class FileMakerException extends SQLException {
 		this.dbName = dbName;
 	}*/
 
-	public String getJdbcUrl() {
+	/*public String getJdbcUrl() {
 		return jdbcUrl;
-		/*if( statementProcessor == null ) return null;
-		try {
-			return ((FmConnection)statementProcessor.getStatement().getConnection7()).getUrl();
-		} catch( SQLException e ) {
-			return null;
-		}*/
-	}
+	}*/
 
 	/*private String getSQL() {
 		if( statementProcessor == null ) return null;

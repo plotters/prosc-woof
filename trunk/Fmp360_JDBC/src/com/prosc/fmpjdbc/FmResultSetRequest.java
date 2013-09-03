@@ -406,7 +406,7 @@ public class FmResultSetRequest extends FmRequest {
 					if( "401".equals( errorCode) ) {
 						//Ignore, this means no results
 					} else {
-						FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( Integer.valueOf(errorCode), fullUrl );
+						FileMakerException fileMakerException = FileMakerException.exceptionForErrorCode( Integer.valueOf(errorCode), fullUrl, username );
 						log.log(Level.WARNING, fileMakerException.toString());
 						throw new RuntimeException( fileMakerException );
 					}
