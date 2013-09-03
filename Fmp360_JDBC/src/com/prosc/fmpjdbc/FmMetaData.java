@@ -352,7 +352,7 @@ public class FmMetaData implements DatabaseMetaData {
 				result = request.getTableOccurrence();
 				tableOccurrenceNames.put( lookupKey, result );
 			} catch( IOException e ) {
-				FileMakerException sqle = new FileMakerException( -1, e.getMessage(), request.getFullUrl() );
+				FileMakerException sqle = new FileMakerException( -1, e.getMessage(), request.getFullUrl(), connection.getUsername() );
 				sqle.initCause( e );
 				throw sqle;
 			}

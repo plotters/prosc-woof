@@ -516,7 +516,7 @@ public class FmXmlRequest extends FmRequest {
 			Thread.currentThread().interrupt();
 		}
 		if( getErrorCode() == 0 && missingFields != null && missingFields.size() > 0 ) {
-			throw new MissingFieldException("The requested fields are not on the layout: " + missingFields, 102, concatUrl, fmLayout, missingFields );
+			throw new MissingFieldException("The requested fields are not on the layout: " + missingFields, 102, concatUrl, fmLayout, missingFields, username );
 		}
 		return fieldDefinitions;
 	}
@@ -911,7 +911,7 @@ public class FmXmlRequest extends FmRequest {
 
 	public static class HttpAuthenticationException extends FileMakerException {
 		public HttpAuthenticationException(String message, String username, String requestUrl) {
-			super(212, "Invalid FileMaker user account and/or password. Make sure that the FMXML extended privilege is enabled for this account. Please try again - username '" + username + "'", requestUrl );
+			super(212, "Invalid FileMaker user account and/or password. Make sure that the FMXML extended privilege is enabled for this account. Please try again - username '" + username + "'", requestUrl, username );
 		}
 	}
 
