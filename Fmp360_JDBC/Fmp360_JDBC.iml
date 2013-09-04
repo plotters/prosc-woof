@@ -15,7 +15,7 @@
     <orderEntry type="module-library" scope="TEST">
       <library>
         <CLASSES>
-          <root url="jar://$VersionControl$/woof/jars_development/junit.jar!/" />
+          <root url="jar://$MODULE_DIR$/../jars_development/junit.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
