@@ -77,7 +77,7 @@ public class StatementProcessor {
 	 */
 	public void execute() throws SQLException {
 		if (logger.isLoggable(Level.CONFIG)) {
-			logger.log(Level.CONFIG, toString() );
+			logger.log(Level.CONFIG, toString().replace( '\r', '\n' ) ); //Carriage returns mess up logging to console in IntelliJ. Need to use newlines instead.
 		}
 
 		if (command.getTable() == null) {

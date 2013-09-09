@@ -267,7 +267,7 @@ public class FmXmlRequest extends FmRequest {
 			//} catch (IOException e) {
 			//	throw new RuntimeException(e);
 			//}
-			
+
 			if( xParser != null ) {
 				xParser.reset();
 			}
@@ -288,7 +288,7 @@ public class FmXmlRequest extends FmRequest {
 		//if (serverStream != null) serverStream.close();
 		super.finalize();
 	}
-	
+
 	private void readResult(@NotNull final InputStream streamToParse) throws SQLException {
 		synchronized( FmXmlRequest.this ) {
 			parsingThread = new Thread("FileMaker JDBC Parsing Thread" ) {
@@ -304,7 +304,7 @@ public class FmXmlRequest extends FmRequest {
 					input.setSystemId("http://" + theUrl.getHost() + (theUrl.getPort()==-1 ? "" : ":" + theUrl.getPort()) + "/fmi/xml/");
 					//input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() );
 					//input.setSystemId("http://");
-					
+
 					FmXmlHandler xmlHandler = new FmXmlHandler();
 					xmlHandler.setDocumentLocator( null );
 					try {
@@ -522,10 +522,16 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	private synchronized void setErrorCode(int code) {
-		// 0 is ok
-		// 401 is no results
 		errorCode = code;
 		errorCodeIsSet = true;
+		if( code == 0 || code == 401 || code == 105 ) {
+			// 0 is ok
+			// 401 is no results
+			// 105 might be interesting, but it also occurs every time we test connection, so just ignore
+		} else {
+			//Interesting error
+			log.finest( "Error code " + code + " occurred" );
+		}
 		notifyAll();
 
 	}
@@ -851,7 +857,7 @@ public class FmXmlRequest extends FmRequest {
 				for( FmField field : fieldDefinitions.getFields() ) {
 					handleParsedMetaDataField( field.getColumnName(), field.getMaxReps(), field.getType(), field.isNullable() );
 				}*/
-				
+
 				synchronized (FmXmlRequest.this) { // this is different from the other attributes in the xml, since this one is being built on the fly and the variable is not just being "set" once we're finished reading it
 					fieldDefinitionsListIsSet = true;
 					if( fieldDefinitions == null ) {
@@ -859,7 +865,7 @@ public class FmXmlRequest extends FmRequest {
 					}
 					FmXmlRequest.this.notifyAll();
 				}
-				
+
 			}
 		}
 
