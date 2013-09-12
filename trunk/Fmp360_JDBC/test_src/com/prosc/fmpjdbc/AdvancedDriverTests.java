@@ -998,4 +998,12 @@ public class AdvancedDriverTests extends TestCase {
 			rs.close();
 		}
 	}
+	
+	public void test802ErrorRetry() throws Exception {
+		final Connection connection = DriverManager.getConnection( "jdbc:fmp360://fms12.360works.com/NO_SUCH_DATABASE", "username", "password" );
+		//final Connection connection = jdbc12.getConnection( "NO_SUCH_DATABASE", jdbc12.dbUsername, jdbc12.dbPassword );
+		final Statement stmt = connection.createStatement();
+		stmt.executeQuery( "SELECT x,y,z FROM NoSuchTable" );
+		stmt.close();
+	}
 }

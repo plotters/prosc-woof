@@ -76,6 +76,8 @@ public class FmXmlRequest extends FmRequest {
 	private SQLException metadataError;
 	private Integer fmVersion;
 	private String concatUrl;
+	private boolean retry802 = true;
+	private boolean redirected;
 
 	public FmXmlRequest(String protocol, String host, String url, int portNumber, String username, String password, float fmVersion) {
 		try {
@@ -94,6 +96,14 @@ public class FmXmlRequest extends FmRequest {
 			this.setPostPrefix("-format=-fmp_xml&");
 		}
 		xParser = buildParser();
+	}
+
+	/** 802 errors are sometimes generated intermittently by FileMaker Server, especially with connections to ESS servers. For this reason, all 802
+	 * errors will be retried 3 times. If this behavior is not desired, set this to false.
+	 * @param retry802
+	 */
+	public void setRetry802( boolean retry802 ) {
+		this.retry802 = retry802;
 	}
 
 	private SAXParser buildParser() {
@@ -125,110 +135,122 @@ public class FmXmlRequest extends FmRequest {
 
 
 	public void doRequest(String input) throws IOException, SQLException {
+		requestStartTime = System.currentTimeMillis();
+		postArgs = input;
+		redirected = false;
+		doRequest( 0 );
+	}
+
+	private void doRequest( int retryCount ) throws IOException, SQLException {
 		synchronized( FmXmlRequest.this ) {
 			if (serverStream != null) {
 				throw new IllegalStateException("You must call closeRequest() before sending another request.");
 			}
 		}
-		requestStartTime = System.currentTimeMillis();
-		postArgs = input;
 
-		boolean redirected = false;
-		int retryCount = 3; //This is how many times to retry the attempt, in case FileMaker returns an error code 16 / retry. This will hopefully fix Zulu-195 Contact Syncing
-		for( int n=1; n<=retryCount; n++ ) {
-			HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
-			theConnection.setInstanceFollowRedirects( true ); //Set this to true because OS X Lion Server always redirects all requests to https://
-			theConnection.setUseCaches(false);
-			theConnection.setConnectTimeout( CONNECT_TIMEOUT ); //FIX!! Make this a configurable connection property
-			//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
-			if (authString != null) {
-				theConnection.addRequestProperty("Authorization", "Basic " + authString);
+		//int retryCount = 3; //This is how many times to retry the attempt, in case FileMaker returns an error code 16 / retry. This will hopefully fix Zulu-195 Contact Syncing
+
+		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
+		theConnection.setInstanceFollowRedirects( true ); //Set this to true because OS X Lion Server always redirects all requests to https://
+		theConnection.setUseCaches(false);
+		theConnection.setConnectTimeout( CONNECT_TIMEOUT ); //FIX!! Make this a configurable connection property
+		//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
+		if (authString != null) {
+			theConnection.addRequestProperty("Authorization", "Basic " + authString);
+		}
+		try {
+			String fullUrl;
+			if (postArgs != null) {
+				//postArgs = postPrefix + postArgs;
+				fullUrl = theUrl + "?" + postPrefix + postArgs;
+				theConnection.setDoOutput(true);
+				PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
+				out.print(postPrefix);
+				out.println(postArgs);
+				out.close();
+			} else {
+				fullUrl = theUrl.toExternalForm();
 			}
-			try {
-				String fullUrl;
-				if (postArgs != null) {
-					//postArgs = postPrefix + postArgs;
-					fullUrl = theUrl + "?" + postPrefix + postArgs;
-					theConnection.setDoOutput(true);
-					PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
-					out.print(postPrefix);
-					out.println(postArgs);
-					out.close();
-				} else {
-					fullUrl = theUrl.toExternalForm();
-				}
-				concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>";
-				log.log(Level.CONFIG, "Starting request: " + concatUrl );
+			concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>";
+			log.log( Level.CONFIG, "Starting request: " + concatUrl );
 
 
-				int httpStatusCode = theConnection.getResponseCode();
-				if( httpStatusCode >= 200 && httpStatusCode < 300 ) {} //Fine, no problem
-				else if( httpStatusCode >= 300 && httpStatusCode < 400 ) { //Follow the redirect, because OS X Lion automatically redirects http to https
-					redirected = true;
-					String redirect = theConnection.getHeaderField( "location" );
-					theUrl = new URL( theUrl, redirect );
-					n--; //Don't count this as a retry
-					continue;
-					//throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
-				}
-				else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username, concatUrl );
-				else if( httpStatusCode == 405 ) throw new IOException( "Server returned a 405 (Method not supported) error. This usually means that the FileMaker Web Publishing is not installed on this server. The URL that generated the error is " + concatUrl );
-				else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. The URL that generated the error is " + concatUrl );
-				else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
-				else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
-				else {
-					InputStream err = theConnection.getErrorStream();
-					ByteArrayOutputStream baos = new ByteArrayOutputStream( err.available() );
-					try {
-						byte[] buffer = new byte[1024];
-						int bytesRead;
-						while( (bytesRead=err.read(buffer)) != -1 ) {
-							baos.write( buffer, 0, bytesRead );
-						}
-						String message = new String( baos.toByteArray(), "utf-8" );
-						throw new IOException("Server returned unexpected status code: " + httpStatusCode + "; message: " + message );
-					} finally {
-						err.close();
+			int httpStatusCode = theConnection.getResponseCode();
+			if( httpStatusCode >= 200 && httpStatusCode < 300 ) {} //Fine, no problem
+			else if( httpStatusCode >= 300 && httpStatusCode < 400 ) { //Follow the redirect, because OS X Lion automatically redirects http to https
+				redirected = true;
+				String redirect = theConnection.getHeaderField( "location" );
+				theUrl = new URL( theUrl, redirect );
+				doRequest( retryCount );
+				return;
+				//throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
+			}
+			else if( httpStatusCode == 401 ) throw new HttpAuthenticationException( theConnection.getResponseMessage(), username, concatUrl );
+			else if( httpStatusCode == 405 ) throw new IOException( "Server returned a 405 (Method not supported) error. This usually means that the FileMaker Web Publishing is not installed on this server. The URL that generated the error is " + concatUrl );
+			else if( httpStatusCode == 500 ) throw new IOException("Server returned a 500 (Internal server) error. The URL that generated the error is " + concatUrl );
+			else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
+			else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
+			else {
+				InputStream err = theConnection.getErrorStream();
+				ByteArrayOutputStream baos = new ByteArrayOutputStream( err.available() );
+				try {
+					byte[] buffer = new byte[1024];
+					int bytesRead;
+					while( (bytesRead=err.read(buffer)) != -1 ) {
+						baos.write( buffer, 0, bytesRead );
 					}
+					String message = new String( baos.toByteArray(), "utf-8" );
+					throw new IOException("Server returned unexpected status code: " + httpStatusCode + "; message: " + message );
+				} finally {
+					err.close();
 				}
-				synchronized( FmXmlRequest.this ) {
-					serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
-					isStreamOpen = true;
-				}
-				if( log.isLoggable( Level.CONFIG ) ) {
-					creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
-				}
-			} catch( SSLHandshakeException e ) {
-				IOException ioe;
-				if( redirected ) {
-					ioe = new IOException( "This request was automatically redirected to " + theUrl.toString() +", which is not running a trusted certificate. " +
-							"Self-signed certificates are not supported, unless you have set them up with your Java Key store. If you are running OS X Lion Server, " +
-							"you can fix this by disabling SSL for the default web site." );
-				} else {
-					ioe = new IOException( "The server at " + theUrl.toString() + " is not running a trusted certificate. Self-signed certificates are not supported, " +
-							"unless you have set them up with your Java Key store." );
-				}
-				ioe.initCause( e );
-				throw ioe;
-			} catch( IOException e ) {
-				if( e.getCause() instanceof FileNotFoundException ) {
-					String message = "Remote URL " + e.getCause().getMessage() + " could not be located.";
-					String missingFileName = e.getCause().getMessage();
-					if( missingFileName.endsWith("FMPXMLRESULT.xml") ) message += " If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.";
-					throw new IOException(message);
-				}
-				else throw e;
 			}
-			try {
-				readResult(serverStream);
-			} catch( FileMakerException e ) {
-				if( e.getErrorCode() == 16 && n < retryCount ) { //Error code 16 means retry
-					log.warning( "Received an error 16 retry message from FileMaker Server on attempt " + n + ", will try again" );
-					continue;
+			synchronized( FmXmlRequest.this ) {
+				serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
+				isStreamOpen = true;
+			}
+			if( log.isLoggable( Level.CONFIG ) ) {
+				creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
+			}
+		} catch( SSLHandshakeException e ) {
+			IOException ioe;
+			if( redirected ) {
+				ioe = new IOException( "This request was automatically redirected to " + theUrl.toString() +", which is not running a trusted certificate. " +
+						"Self-signed certificates are not supported, unless you have set them up with your Java Key store. If you are running OS X Lion Server, " +
+						"you can fix this by disabling SSL for the default web site." );
+			} else {
+				ioe = new IOException( "The server at " + theUrl.toString() + " is not running a trusted certificate. Self-signed certificates are not supported, " +
+						"unless you have set them up with your Java Key store." );
+			}
+			ioe.initCause( e );
+			throw ioe;
+		} catch( IOException e ) {
+			if( e.getCause() instanceof FileNotFoundException ) {
+				String message = "Remote URL " + e.getCause().getMessage() + " could not be located.";
+				String missingFileName = e.getCause().getMessage();
+				if( missingFileName.endsWith("FMPXMLRESULT.xml") ) message += " If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.";
+				throw new IOException(message);
+			}
+			else throw e;
+		}
+		try {
+			readResult(serverStream);
+		} catch( FileMakerException e ) {
+			boolean retry = false;
+			if( ++retryCount < 3 ) {
+				if( e.getErrorCode() == 16 ) {
+					retry = true;
+					log.warning( "Received an error 16 retry message from FileMaker Server on attempt " + retryCount + ", will try again" );
+				} else if( e.getErrorCode() == 802 && retry802 ) {
+					retry = true;
+					log.warning( "Received an error 802 (no database available) from FileMaker Server on attempt " + retryCount + ", will try again" );
 				}
+			}
+			if( retry ) { //Error code 16 means retry
+				doRequest( retryCount );
+			} else {
 				throw e;
 			}
-			break;
 		}
 	}
 
