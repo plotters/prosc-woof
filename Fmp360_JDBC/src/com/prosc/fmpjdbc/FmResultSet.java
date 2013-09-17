@@ -160,7 +160,7 @@ public class FmResultSet implements ResultSet {
 
 	//---These methods must be implemented---
 	public boolean next() throws SQLException {
-		if( ! isOpen ) throw new IllegalStateException("The ResultSet has been closed; you cannot read any more records from it." );
+		if( ! isOpen ) throw new SQLException("The ResultSet has been closed; you cannot read any more records from it." );
 
 		if( singleRecord == null ) { //This is a regular result set representing zero or more rows
 
@@ -193,7 +193,7 @@ public class FmResultSet implements ResultSet {
 				// This means that we are after the last record
 				//isLast = false;
 				isAfterLast = true;
-				//currentRecord = null; //Fix!!! should currentRecord be set to false since we are after the last record?
+				currentRecord = null; // Should currentRecord be set to false since we are after the last record? Yes, it should: When a call to the next method returns false, the cursor is positioned after the last row. Any invocation of a ResultSet method which requires a current row will result in a SQLException being thrown. -sam
 				return false;
 			}
 		} else { //This ResultSet represents a repetition within a single row
@@ -631,27 +631,27 @@ public class FmResultSet implements ResultSet {
 
 
 	public int getType() throws SQLException {
-		throw handleMissingMethod( "getType is not implemented yet." ); //FIX!!! Broken placeholder
+		return ResultSet.TYPE_FORWARD_ONLY;
 	}
 
 	public void beforeFirst() throws SQLException {
-		throw handleMissingMethod( "beforeFirst is not implemented yet." ); //FIX!!! Broken placeholder
+		throw new SQLException("Not supported");
 	}
 
 	public void afterLast() throws SQLException {
-		throw handleMissingMethod( "afterLast is not implemented yet." ); //FIX!!! Broken placeholder
+		throw new SQLException("Not supported");
 	}
 
 	public boolean first() throws SQLException { //FIX! This could be implemented by resending the query to FileMaker
-		throw handleMissingMethod( "first is not implemented yet." ); //FIX!!! Broken placeholder
+		throw new SQLException("Not supported");
 	}
 
 	public boolean last() throws SQLException { //FIX! This could be implemented either repeatedly calling next(), or by resending the query to FileMaker. Could see the result set size so figure out which one is faster.
-		throw handleMissingMethod( "last is not implemented yet." ); //FIX!!! Broken placeholder
+		throw new SQLException("Not supported");
 	}
 
 	public int getRow() throws SQLException {
-		throw handleMissingMethod( "getRow is not implemented yet." ); //FIX!!! Broken placeholder
+		return 0;
 	}
 
 	public void setFetchSize( int i ) throws SQLException {
