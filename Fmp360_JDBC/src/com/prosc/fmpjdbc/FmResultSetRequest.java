@@ -257,7 +257,7 @@ public class FmResultSetRequest extends FmRequest {
 		}
 
 		/** This is necessary to work around a bug in the Crimson XML parser, which is used in the 1.4 JDK. Crimson
-		 * cannot handle relative HTTP URL's, which is what FileMaker uses for it's DTDs: "/fmi/xml/FMPXMLRESULT.dtd"
+		 * cannot handle relative HTTP URL's, which is what FileMaker uses for its DTDs: "/fmi/xml/FMPXMLRESULT.dtd"
 		 * By returning an empty value here, we short-circuit the DTD lookup process.
 		 */
 		public InputSource resolveEntity( String publicId, String systemId ) {
