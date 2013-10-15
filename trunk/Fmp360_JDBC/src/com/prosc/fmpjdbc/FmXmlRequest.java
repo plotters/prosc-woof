@@ -323,9 +323,11 @@ public class FmXmlRequest extends FmRequest {
 					}
 
 					//Set it to supply a real system ID. This fixes Zulu-270 Publishing with multiple calendars
-					input.setSystemId("http://" + theUrl.getHost() + (theUrl.getPort()==-1 ? "" : ":" + theUrl.getPort()) + "/fmi/xml/");
+					//input.setSystemId("http://" + theUrl.getHost() + (theUrl.getPort()==-1 ? "" : ":" + theUrl.getPort()) + "/fmi/xml/");
 					//input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() );
 					//input.setSystemId("http://");
+					input.setEncoding("UTF-8");
+					input.setSystemId(null);
 
 					FmXmlHandler xmlHandler = new FmXmlHandler();
 					xmlHandler.setDocumentLocator( null );
