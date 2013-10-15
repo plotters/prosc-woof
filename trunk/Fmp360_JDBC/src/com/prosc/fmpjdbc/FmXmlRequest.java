@@ -315,23 +315,12 @@ public class FmXmlRequest extends FmRequest {
 		synchronized( FmXmlRequest.this ) {
 			parsingThread = new Thread("FileMaker JDBC Parsing Thread" ) {
 				public void run() {
-					InputSource input;
-					try {
-						input = new InputSource(new InputStreamReader(streamToParse, "UTF-8")); // we use a character stream, otherwise the parser will try to open the SystemId on the InputSource
-					} catch (UnsupportedEncodingException e) {
-						throw new RuntimeException(e); // should never happen
-					}
-
-					//Set it to supply a real system ID. This fixes Zulu-270 Publishing with multiple calendars
-					//input.setSystemId("http://" + theUrl.getHost() + (theUrl.getPort()==-1 ? "" : ":" + theUrl.getPort()) + "/fmi/xml/");
-					//input.setSystemId("http://" + theUrl.getHost() + ":" + theUrl.getPort() );
-					//input.setSystemId("http://");
-					input.setEncoding("UTF-8");
-					input.setSystemId(null);
-
 					FmXmlHandler xmlHandler = new FmXmlHandler();
 					xmlHandler.setDocumentLocator( null );
+					
+					InputSource input;
 					try {
+						input = new InputSource(new UnicodeReader(streamToParse, "UTF-8")); // we use a character stream, otherwise the parser will try to open the SystemId on the InputSource
 						if( runningParser != null ) { //You can't call parse() while it's still parsing XML from the last call (remember that parsing happens on a separate thread, which may not have finished), so create a new parser if the current one is still in use.
 							xParser = buildParser();
 						}
