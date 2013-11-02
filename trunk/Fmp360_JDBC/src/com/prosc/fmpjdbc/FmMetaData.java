@@ -1044,8 +1044,14 @@ public class FmMetaData implements DatabaseMetaData {
 				processRecord.addRawValue( databaseName, 0 );
 				databases.add(processRecord);
 			}
-		}
-		catch (IOException e) {
+		} catch( SQLException e ) {
+			if( e.getErrorCode() == 9 ) {
+				throw new SQLException( "The username and password are invalid.", null, e.getErrorCode(), e );
+			} else if( e.getErrorCode() == 18 ) {
+				throw new SQLException( "FileMaker Server is configured to require a valid username and password to retrieve a list of databases.", null, e.getErrorCode(), e );
+			}
+			throw e;
+		} catch (IOException e) {
 			SQLException sqlException = new SQLException( "Could not get list of databases: " + e.toString() );
 			sqlException.initCause(e);
 			throw sqlException;
