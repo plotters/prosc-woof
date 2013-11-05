@@ -715,7 +715,7 @@ public class FmMetaData implements DatabaseMetaData {
 		return result;
 	}
 
-	public void insertEmptyRecord( Statement stmt, String catalog, String tableName ) throws SQLException {
+	public void insertEmptyRecord( Statement stmt, @Nullable String catalog, String tableName ) throws SQLException {
 		List<String> requiredColumns = new LinkedList<String>();
 		List<String> requiredValues = new LinkedList<String>();
 		/*final ResultSet columns = getColumns( null, null, tableName, null );
@@ -780,7 +780,7 @@ public class FmMetaData implements DatabaseMetaData {
 		} else if( dataType == Types.BLOB ) { //Can't write to container fields
 			result = null;
 		} else {
-			result = "4289134";
+			result = "4289134876123876123";
 		}
 		return result;
 	}
