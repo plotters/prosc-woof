@@ -717,6 +717,10 @@ public class StatementProcessor {
 
 	@Override
 	public String toString() {
-		return this.getSQL() + " with parameters " + this.getParams() + " and user name '" + ((FmConnection)statement.getConnection()).getUsername() + "'";
+		String paramString = String.valueOf( getParams() );
+		if( paramString.length() > 1000 ) {
+			paramString = paramString.substring( 0, 1000 ) + "<truncated...>";
+		}
+		return this.getSQL() + " with parameters " + paramString + " and user name '" + ((FmConnection)statement.getConnection()).getUsername() + "'";
 	}
 }
