@@ -1,5 +1,6 @@
 package com.prosc.fmpjdbc;
 
+import com.prosc.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -15,6 +16,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.sql.Time;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -158,6 +160,7 @@ public class FmXmlRequest extends FmRequest {
 		if (authString != null) {
 			theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		}
+		File xmlFile = null;
 		try {
 			String fullUrl;
 			if (postArgs != null) {
@@ -172,7 +175,8 @@ public class FmXmlRequest extends FmRequest {
 				fullUrl = theUrl.toExternalForm();
 			}
 			concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>";
-			log.log( Level.CONFIG, "Starting request: " + concatUrl );
+			log.log( Level.INFO, "Starting request: " + concatUrl );
+			log.log( Level.INFO, "Full URL: " + fullUrl);
 
 
 			int httpStatusCode = theConnection.getResponseCode();
@@ -206,7 +210,32 @@ public class FmXmlRequest extends FmRequest {
 				}
 			}
 			synchronized( FmXmlRequest.this ) {
-				serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
+				if(System.getProperty("com.prosc.fmxml.debug","false").equals("true")) { //careful!!! This will run a machine out of disk space if you leave it set.
+					//File xmlFile;
+					Random random = new Random(System.currentTimeMillis());
+					if(System.getProperty("os.name").toLowerCase().contains("windows")) {
+						xmlFile = new File("C:\\WINDOWS\\Temp\\FmXml." + Thread.currentThread().getName()
+								+ "." + random.nextLong() + ".xml");
+					}else {
+						xmlFile = new File("/tmp/FmXml." + Thread.currentThread().getName()
+								+ "." + random.nextLong() + ".xml");
+					}
+					if(xmlFile.createNewFile()) {
+						InputStream resultStream = theConnection.getInputStream();
+						FileOutputStream fileOut = new FileOutputStream(xmlFile);
+						IOUtils.writeInputToOutput(resultStream, fileOut, 8192);
+						resultStream.close();
+						fileOut.close();
+						FileInputStream xmlInputStream = new FileInputStream(xmlFile);
+						serverStream = xmlInputStream;
+						log.log(Level.INFO, "Debug mode is enabled. This request was stored in " + xmlFile.getName() + ". It will be deleted once the response is successfully parsed");
+					}else{
+						log.log(Level.WARNING, "unable to create output file for fmxml debug");
+						serverStream = theConnection.getInputStream();
+					}
+				}else{
+					serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
+				}
 				isStreamOpen = true;
 			}
 			if( log.isLoggable( Level.CONFIG ) ) {
@@ -397,6 +426,9 @@ public class FmXmlRequest extends FmRequest {
 			//This is normal, it just means the clent closed the ResultSet before reading the whole thing
 		} else {
 			log.warning( "Exception " + t.toString() + " occurred while processing request: " + concatUrl );
+			if( t instanceof NullPointerException ) {
+				log.log(Level.WARNING, "Stack Trace: ", t);
+			}
 		}
 		notifyAll();
 	}
