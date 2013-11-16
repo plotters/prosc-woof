@@ -22,6 +22,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" scope="PROVIDED" name="IntellijAnnotations" level="application" />
+    <orderEntry type="module" module-name="ProscCore" />
   </component>
 </module>
 
