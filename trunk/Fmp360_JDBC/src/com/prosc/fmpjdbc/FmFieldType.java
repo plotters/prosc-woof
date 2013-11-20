@@ -44,7 +44,7 @@ public class FmFieldType implements Cloneable {
 	static final Map<String, FmFieldType> typesByName = new HashMap<String, FmFieldType>(6);
 	static final Collection<FmFieldType> publishedTypes = new LinkedList<FmFieldType>();
 	static final FmFieldList resultSetFormat = new FmFieldList();
-	static final FmFieldType TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP, CONTAINER;
+	static final FmFieldType TEXT, NUMBER, RECID, DATE, TIME, TIMESTAMP, CONTAINER, COUNT;
 
 	static {
 		TEXT = new FmFieldType("TEXT", "LONGTEXT", Types.LONGVARCHAR, 0, String.class); //Used to be LONGVARCHAR, but then EOModeler models that as a 'C' CharacterStream instead of 'S' String
@@ -61,6 +61,12 @@ public class FmFieldType implements Cloneable {
 		RECID.setLiteralSuffix( null );
 		RECID.setFixedPrecisionScale( false ); //FIX!! I don't really know what goes here; just guessing
 		RECID.setAutoIncrement( true ); //FIX!! I don't really know what goes here; just copied from previous
+
+		COUNT = new FmFieldType( "COUNT", "BIGINT", Types.INTEGER, 0, Integer.class ); //FIX!! Don't know what to put for precision for integers
+		COUNT.setLiteralPrefix( null );
+		COUNT.setLiteralSuffix( null );
+		COUNT.setFixedPrecisionScale( false ); //FIX!! I don't really know what goes here; just guessing
+		COUNT.setAutoIncrement( false ); //FIX!! I don't really know what goes here; just copied from previous
 
 		DATE = new FmFieldType("DATE", "DATE", Types.DATE, 0, java.sql.Date.class );
 

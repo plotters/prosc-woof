@@ -649,6 +649,8 @@ public class FmXmlRequest extends FmRequest {
 	 * If the former, the next fieldPositionPointer is gotten, and data is set.  If the latter, any data is ignored.
 	 */
 	private class FmXmlHandler extends org.xml.sax.helpers.DefaultHandler {
+		private Column countColumn;
+
 		class Column {
 			String name;
 			int[] targetIndices;
@@ -793,6 +795,13 @@ public class FmXmlRequest extends FmRequest {
 				handleParsedMetaDataField(fieldName, maxRepeat, theType, allowsNulls); //FIX!! By calling it at this time, the target indeces will not be correct if the same field occurs more than once on the layout - we'll only get the column index of the first field, until we get to the duplicate field, at which point we'll get both column indeces. I don't think this actually causes a problem though --jsb
 			} else if( "METADATA".equals( qName ) ) { //Create a virtual 'recid' column
 				handleParsedMetaDataField( "recid", 1, FmFieldType.RECID, false );
+				final List<FmField> fields = fieldDefinitions.getFields();
+				for (int i = 0, fieldsSize = fields.size(); i < fieldsSize; i++) {
+					final FmField eachField = fields.get(i);
+					if (eachField.getType() == FmFieldType.COUNT) {
+						xmlColumns.add(countColumn = new Column(eachField.getColumnName(), new int[] {i}, 1));
+					}
+				}
 			} else if ("RESULTSET".equals(qName)) {
 				setFoundCount( Integer.valueOf( attributes.getValue( "FOUND" ) ) ); //foundCount = Integer.valueOf(attributes.getValue("FOUND")).intValue();
 				log.log(Level.FINE, "Resultset size: " + foundCount);
@@ -866,13 +875,17 @@ public class FmXmlRequest extends FmRequest {
 				currentColumn.setDataInRow( currentData, currentRow, currentRep+1 );
 				currentRep++;
 
-				// OPTIMIZE! Not sure which is faster, calling setLength(0), delete() or creating new object --jsb
+				// OPTIMIZE! Not sure which is faster, calling setLength(0), delete() or creating new object --jsb : probably setLength(0), as the char buffer is re-used -ssb
 				//currentData.setLength(0);
 				//currentData.delete( 0, currentData.length() );
 				currentData = new StringBuilder( 255 );
 
 			}
 			if ("ROW".equals(qName)) {
+				if (countColumn != null) {
+					countColumn.setDataInRow(new StringBuilder(String.valueOf(foundCount)), currentRow, 0);
+					foundDataForRow = true;
+				}
 				if( foundDataForRow ) { //If this is false, then record-level privileges prevented us from seeing this record; don't add it to the list of records.
 					try {
 						recordIterator.add(currentRow, (long) sizeEstimate);
@@ -882,6 +895,9 @@ public class FmXmlRequest extends FmRequest {
 					}
 				} else {
 					log.config( "Skipped an empty row, record ID " + currentRow.getRecordId() );
+				}
+				if (countColumn != null) {
+					closeRequest();
 				}
 				sizeEstimate = 0; // set it to 0 and start estimating again
 			}
@@ -955,6 +971,8 @@ public class FmXmlRequest extends FmRequest {
 				eachField.setNullable( false );
 				eachField.setReadOnly( true );
 				eachField.setType( FmFieldType.RECID );
+			} else if (eachField.getType() == FmFieldType.COUNT) {
+				// don't require this field name
 			} else {
 				missingFields.add( eachField.getColumnNameNoRep().toLowerCase() );
 			}

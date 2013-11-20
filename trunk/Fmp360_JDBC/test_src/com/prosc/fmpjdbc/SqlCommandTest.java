@@ -179,14 +179,22 @@ public class SqlCommandTest extends TestCase {
 		command = new SqlCommand("SELECT t0.city,t0.emailAddress, t0.firstName, t0.ID, t0.lastName FROM Contacts t0 where t0.city=? AND city=?");
 		firstField = command.getFields().get(0);
 		assertEquals("Contacts", command.getTable().getName());
-		assertEquals("city", firstField.getColumnName());
+		assertEquals("t0.city", firstField.getColumnName());
 		SearchTerm searchTerm = (SearchTerm) command.getSearchTerms().get(0);
 		assertEquals("Contacts", searchTerm.getField().getTable().getName());
-		assertEquals("city", searchTerm.getField().getColumnName());
+		assertEquals("t0.city", searchTerm.getField().getColumnName());
 		//
 		searchTerm = (SearchTerm) command.getSearchTerms().get(1);
 		assertEquals("Contacts", searchTerm.getField().getTable().getName());
 		assertEquals("city", searchTerm.getField().getColumnName());
+	}
+
+	public void testSelectCount() throws Exception {
+		final SqlCommand command = new SqlCommand("select count(*) from foo where x=1 and y=2");
+		final FmField fmField = command.getFields().get(0);
+		assertEquals("count", fmField.getColumnName());
+		assertEquals(FmFieldType.COUNT, fmField.getType());
+
 	}
 
 	/** Test the specification of a database in a table name. This differs from {@link #testDatabaseSpecification()} in that
