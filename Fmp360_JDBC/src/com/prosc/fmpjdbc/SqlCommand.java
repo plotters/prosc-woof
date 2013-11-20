@@ -1,8 +1,10 @@
 package com.prosc.fmpjdbc;
 
 import org.jetbrains.annotations.Nullable;
+import sun.org.mozilla.javascript.internal.Function;
 
 import java.util.*;
+import java.util.logging.Level;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -209,7 +211,7 @@ public class SqlCommand {
 		String currentSearchTermFieldName = null;
 		int currentSearchTermOperator = -1;
 		FmField currentAssignmentField;
-		private int nestedParentheses;
+		protected int nestedParentheses;
 
 		void doParse() throws SqlParseException {
 			StringBuffer buffer = new StringBuffer();
@@ -604,8 +606,11 @@ public class SqlCommand {
 						//This was causing a problem when searchign for any field that started with a single letter and a dot, like 'F.O.B.', which became just 'O.B.'. Need to check for column name quoting if we're going to do this. --jsb
 						//int index = string.indexOf('.');
 						//if (index > 0) string = string.substring(index+1); // FIX! ignoring leading table names for now, until we want to support JOIN queries
-						
+
 						currentSelectFieldPlaceholder = new FmField(table, string, null);
+						if ( nestedParentheses > 0 && string.equalsIgnoreCase("count")) {
+							currentSelectFieldPlaceholder.setType(FmFieldType.COUNT);
+						}
 						fields.add(currentSelectFieldPlaceholder);
 					} else {
 						// string is a field alias
