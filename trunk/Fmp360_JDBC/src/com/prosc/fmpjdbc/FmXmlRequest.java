@@ -160,7 +160,7 @@ public class FmXmlRequest extends FmRequest {
 		if (authString != null) {
 			theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		}
-		File xmlFile = null;
+		File xmlFile;
 		try {
 			String fullUrl;
 			if (postArgs != null) {
@@ -176,7 +176,6 @@ public class FmXmlRequest extends FmRequest {
 			}
 			concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>";
 			log.log( Level.INFO, "Starting request: " + concatUrl );
-			log.log( Level.INFO, "Full URL: " + fullUrl);
 
 
 			int httpStatusCode = theConnection.getResponseCode();
@@ -425,10 +424,7 @@ public class FmXmlRequest extends FmRequest {
 		if( t instanceof InterruptedException ) {
 			//This is normal, it just means the clent closed the ResultSet before reading the whole thing
 		} else {
-			log.warning( "Exception " + t.toString() + " occurred while processing request: " + concatUrl );
-			if( t instanceof NullPointerException ) {
-				log.log(Level.WARNING, "Stack Trace: ", t);
-			}
+			log.log( Level.WARNING, "Exception " + t.toString() + " occurred while processing request: " + concatUrl, t );
 		}
 		notifyAll();
 	}
