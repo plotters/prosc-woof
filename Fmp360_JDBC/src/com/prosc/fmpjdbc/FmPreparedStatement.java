@@ -67,10 +67,12 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 		try {
 			getProcessor().execute();
 		} catch (RuntimeException e) {
-			this.close();
+			//We should not close this PreparedStatement when an error occurs, because the statement can be re-used with other parameters
+			//this.close();
 			throw e;
 		} catch( SQLException e ) {
-			this.close();
+			//We should not close this PreparedStatement when an error occurs, because the statement can be re-used with other parameters
+			//this.close();
 			throw e;
 		}
 		return getProcessor().hasResultSet();
@@ -86,10 +88,10 @@ public class FmPreparedStatement extends FmStatement implements PreparedStatemen
 		try {
 			execute();
 		} catch( RuntimeException e ) {
-			this.close();
+			//this.close();
 			throw e;
 		} catch( SQLException e ) {
-			this.close();
+			//this.close();
 			throw e;		}
 		return getProcessor().getResultSet();
 	}
