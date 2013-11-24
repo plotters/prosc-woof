@@ -110,7 +110,7 @@ public class FmConnection implements Connection {
 		}
 
 		//First check the cache
-		String lookupKey = getProtocol() + "~" + getHost() + "~" + getPort() + "~" + getUsername() + "~" + getPassword();
+		String lookupKey = getProtocol() + "~" + getHost() + "~" + getPort() + "~" + getUsername() + "~" + getPassword() + "~" + getCatalog();
 		Long credentialsValidUntil = cachedCredentials.get( lookupKey );
 		if( credentialsValidUntil != null ) {
 			if( credentialsValidUntil >= System.currentTimeMillis() ) {
