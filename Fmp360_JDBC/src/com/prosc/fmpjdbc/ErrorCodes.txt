@@ -7,6 +7,7 @@
 104 "Script is missing" - You have a -script parameter in your SQL which references a non-existent script.
 105 "Layout is missing" - Make sure that the table name you have requested in the SQL query is the name of a layout in the current database.
 108 "Value list is missing"
+178 "No write access" - Check file system permissions
 200 "Record access is denied" - Account privilege does not allow this operation
 201 "Field cannot be modified" - You cannot change the value of calculation fields or other fields where modification is prohibited.
 300 "File is locked or in use"
@@ -29,6 +30,7 @@
 512 "Record was already modified by another user"
 513 "Record must have a value in some field to be created"
 802	"Unable to open file" - Check to make sure that the database file is hosted on FileMaker Server, and that the 'fmxml' extended privilege is enabled for your privilege set.
+809 "Disk/volume is full"
 # 954-958 are all web-specific error codes
 954 "Unsupported XML Grammar"
 955 "No database name"
