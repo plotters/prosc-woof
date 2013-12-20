@@ -1,10 +1,11 @@
 package com.prosc.fmpjdbc;
 
 import org.jetbrains.annotations.Nullable;
-import sun.org.mozilla.javascript.internal.Function;
 
-import java.util.*;
-import java.util.logging.Level;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -383,13 +384,13 @@ public class SqlCommand {
 				logicalOperator = OR;
 			} else if ("is".equals(lowercase)) {
 				if (currentSearchTermFieldName != null) {
-					currentSearchTermOperator = SearchTerm.EQUALS;
+					currentSearchTermOperator = SearchTerm.IS_NULL;
 				} else {
 					throw new SqlParseException("Unexpected token 'is' in query: " + sql);
 				}
 			} else if ("not".equals(lowercase)) {
-				if (currentSearchTermOperator == SearchTerm.EQUALS) {
-					currentSearchTermOperator = SearchTerm.NOT_EQUALS;
+				if (currentSearchTermOperator == SearchTerm.IS_NULL) {
+					currentSearchTermOperator = SearchTerm.IS_NOT_NULL;
 				} else {
 					throw new SqlParseException("Unexpected token 'not' in query: " + sql);
 				}
