@@ -34,6 +34,8 @@ public class SearchTerm {
 	public static final int ENDS_WITH = 7;
 	public static final int CONTAINS = 8;
 	protected static final int LIKE = 9;
+	public static final int IS_NULL = 10;
+	public static final int IS_NOT_NULL = 11;
 
 	private final int operator;
 	private final FmField field;

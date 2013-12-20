@@ -2,15 +2,16 @@ package com.prosc.fmpjdbc;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -175,8 +176,8 @@ public class StatementProcessor {
 				} else if( operator == SearchTerm.EQUALS ) {
 					wildcardsToEscape = WILDCARDS_EQUALS;
 				} else {
-					wildcardsToEscape = WILDCARDS_EQUALS;
 					String operatorString;
+					wildcardsToEscape = WILDCARDS_EQUALS;
 					if( operator == SearchTerm.BEGINS_WITH ) operatorString = "bw";
 					else if( operator == SearchTerm.CONTAINS ) operatorString = "cn";
 					else if( operator == SearchTerm.ENDS_WITH ) operatorString = "ew";
@@ -185,6 +186,8 @@ public class StatementProcessor {
 					else if( operator == SearchTerm.LESS_THAN ) operatorString = "lt";
 					else if( operator == SearchTerm.LESS_THAN_OR_EQUALS ) operatorString = "lte";
 					else if( operator == SearchTerm.NOT_EQUALS ) operatorString = "neq";
+					else if( operator == SearchTerm.IS_NULL ) operatorString = "neq";
+					else if( operator == SearchTerm.IS_NOT_NULL ) operatorString = "eq";
 					else throw new IllegalArgumentException( "Unknown search term operator " + operator );
 					eachTermSegments[0] = "&" + URLEncoder.encode( fieldName + ".op", "UTF-8" ) + "=" + operatorString;
 				}
@@ -197,7 +200,15 @@ public class StatementProcessor {
 					value = eachTerm.getValue();
 				}
 				eachTermSegments[1] = "&" + URLEncoder.encode( fieldName, "UTF-8" ) + "=";
-				eachTermSegments[2] = urlEncodedValue( value, applyFormatter, wildcardsToEscape, operator == SearchTerm.EQUALS );
+				if (operator == SearchTerm.IS_NOT_NULL || operator == SearchTerm.IS_NULL) {
+					if(value != null) {
+						throw new SqlParseException("Invalid query. Valid operators are 'IS NOT NULL' and 'IS NULL'");
+					} else {
+						eachTermSegments[2] = "*";
+					}
+				} else {
+					eachTermSegments[2] = urlEncodedValue( value, applyFormatter, wildcardsToEscape, operator == SearchTerm.EQUALS );
+				}
 				if( "%3D".equals( eachTermSegments[2] ) && ( eachTerm.getOperator() == SearchTerm.EQUALS ) ) {
 					//FIX!! I don't think this is correct - Sam, my test shows that one equals works fine (and I'm assuming it's faster...?) --jsb
 					//eachTermSegments[2] = "%3D%3D"; // need two == signs for an exact empty match
