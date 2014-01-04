@@ -36,7 +36,9 @@ import java.util.logging.Logger;
 /**
  * <p>Supported properties:</p>
  * <ul>
- *     <li>testCredentials: By default, when a connection is established, an HTTP request is made to the Web Publishing Engine to validate that the username and password work. This extra HTTP request can be skipped by setting this property to false.</li>
+ *     <li>user: User name</li>
+ *     <li>password: User password</li>
+ *     <li>testCredentials: By default, when a connection is established, an HTTP request is made to the Web Publishing Engine to validate that the username and password work. This extra HTTP request can be skipped by setting this property to 'false'. If 'true', then credentials are validated once and then not re-checked for 2 minutes. If 'always', then credentials are validated on every new connection.</li>
  *     <li>ssl: True for ssl encryption (be sure to pass the correct SSL port in the jdbc URL). The default is false.</li>
  *     <li>fmversion: A decimal number indicating the version of FileMaker. Versions 5 and higher are supported. The default is 7.</li>
  *     <li>catalogseparator: A string that is used for combining the databasename and table name. For example, if this is set to "|", then "Contacts|detail" 
@@ -92,8 +94,8 @@ public class FmConnection implements Connection {
 		} else throw new IllegalArgumentException(fmVersion + " is not a valid version number. Currently, only FileMaker versions 5 and higher are supported.");
 
 		// lastly, check the username/pwd are valid by trying to access the db
-		if (catalog != null && Boolean.valueOf( properties.getProperty( "testcredentials", "true" ) ) ) {
-			testUsernamePassword();
+		if (catalog != null ) {
+			testUsernamePassword( properties );
 			//((FmMetaData) getMetaData()).testUsernamePassword(); // this will throw a new SQLException(FmXmlRequest.HttpAuthenticationException)
 			//FIX!! Right now, this is very inefficient and runs every time a connection is open. We shoudl 1) make it more efficient, 2) make it configurable whether to do this, and 3) perhaps skip it if the same credentials are applied multiple times --jsb
 		}
@@ -104,19 +106,28 @@ public class FmConnection implements Connection {
 		return "FmConnection [" + url + "]";
 	}
 
-	private void testUsernamePassword() throws SQLException {
+	private void testUsernamePassword( Properties properties ) throws SQLException {
 		if( getCatalog() == null ) { //Don't check for username and password if no database is specified, because there is no way to do this with WPE
+			return;
+		}
+
+		final String testString = properties.getProperty( "testCredentials" );
+		if( "false".equalsIgnoreCase( testString ) ) { //User specifically asked to skip testing
 			return;
 		}
 
 		//First check the cache
 		String lookupKey = getProtocol() + "~" + getHost() + "~" + getPort() + "~" + getUsername() + "~" + getPassword() + "~" + getCatalog();
-		Long credentialsValidUntil = cachedCredentials.get( lookupKey );
-		if( credentialsValidUntil != null ) {
-			if( credentialsValidUntil >= System.currentTimeMillis() ) {
-				return; //We've already authenticated with this same information within the expiration window
-			} else {
-				cachedCredentials.remove( lookupKey ); //There are matching credentials in the cache, but they're expired and should be removed	
+		if( "always".equalsIgnoreCase( testString ) ) {
+			//Ignore the cache and check no matter what
+		} else {
+			Long credentialsValidUntil = cachedCredentials.get( lookupKey );
+			if( credentialsValidUntil != null ) {
+				if( credentialsValidUntil >= System.currentTimeMillis() ) {
+					return; //We've already authenticated with this same information within the expiration window
+				} else {
+					cachedCredentials.remove( lookupKey ); //There are matching credentials in the cache, but they're expired and should be removed	
+				}
 			}
 		}
 
@@ -165,7 +176,7 @@ public class FmConnection implements Connection {
 					//Success, our username/password is valid and there is no such layout
 					fmVersion = request.getFmVersion();
 
-					credentialsValidUntil = System.currentTimeMillis() + ( 120 * 1000 ); //Two minutes
+					Long credentialsValidUntil = System.currentTimeMillis() + ( 120 * 1000 ); //Two minutes
 					cachedCredentials.put( lookupKey, credentialsValidUntil );
 				} else {
 					e.setConnection( this );

@@ -1,15 +1,15 @@
-4 "Command is unknown" - This usually indicates a non web-safe script step, or an invalid XML URL.
-6 "File is read-only" - Check the file permissions on the server, as well as the access level restrictions for the username and password you are using.
+4 "Command is unknown" - This usually indicates a non web-safe script step, or an invalid XML URL
+6 "File is read-only" - Check the file permissions on the server, as well as the access level restrictions for the username and password you are using
 16 "Operation failed, request retry (for example, a user query)"
-100 "File is missing" - Either the database name was incorrectly entered, or it is not open on the FileMaker server, or XML publishing is not enabled.
+100 "File is missing" - Either the database name was incorrectly entered, or it is not open on the FileMaker server, or XML publishing is not enabled
 101 "Record is missing"
-102 "Field is missing" - Make sure that the fields you are specifing in your WHERE or UPDATE clauses actually exist in the specified table/layout, and that all fields with special characters or spaces have quotes around them.
-104 "Script is missing" - You have a -script parameter in your SQL which references a non-existent script.
-105 "Layout is missing" - Make sure that the table name you have requested in the SQL query is the name of a layout in the current database.
+102 "Field is missing" - Make sure that the fields you are specifing in your WHERE or UPDATE clauses actually exist in the specified table/layout, and that all fields with special characters or spaces have quotes around them
+104 "Script is missing" - You have a -script parameter in your SQL which references a non-existent script
+105 "Layout is missing" - Make sure that the table name you have requested in the SQL query is the name of a layout in the current database
 108 "Value list is missing"
 178 "No write access" - Check file system permissions
 200 "Record access is denied" - Account privilege does not allow this operation
-201 "Field cannot be modified" - You cannot change the value of calculation fields or other fields where modification is prohibited.
+201 "Field cannot be modified" - You cannot change the value of calculation fields or other fields where modification is prohibited
 300 "File is locked or in use"
 301 "Record is in use by another user"
 302 "Table is in use by another user"
@@ -24,12 +24,12 @@
 506 "Value in field is not listed on the value list specified in validation entry option"
 507 "Value in field failed calculation test of validation entry option"
 508 "Invalid value entered in Find mode"
-509 "Field requires a valid value" - Often happens when a new record is inserted, but not all required values are supplied in the INSERT statement.
+509 "Field requires a valid value" - Often happens when a new record is inserted, but not all required values are supplied in the INSERT statement
 510 "Related value is empty or unavailable"
 511 "Value in field exceeds maximum field size"
 512 "Record was already modified by another user"
 513 "Record must have a value in some field to be created"
-802	"Unable to open file" - Check to make sure that the database file is hosted on FileMaker Server, and that the 'fmxml' extended privilege is enabled for your privilege set.
+802	"Unable to open file" - Check to make sure that the database file is hosted on FileMaker Server, and that the 'fmxml' extended privilege is enabled for your privilege set
 809 "Disk/volume is full"
 # 954-958 are all web-specific error codes
 954 "Unsupported XML Grammar"
@@ -37,7 +37,7 @@
 956 "Maximum number of database sessions exceeded"
 957 "Conflicting commands"
 958 "Parameter missing in query"
-959 "XML Web Publishing is not enabled" - Run the FileMaker Server deployment assistant and make sure that the XML web publishing checkbox is selected.
+959 "XML Web Publishing is not enabled" - Run the FileMaker Server deployment assistant and make sure that the XML web publishing checkbox is selected
 
 #This is not in FM documentation
 8003 "Record is in use by another user"
