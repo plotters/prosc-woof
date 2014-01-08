@@ -489,6 +489,10 @@ public class FmMetaData implements DatabaseMetaData {
 					comments.append( delim + "summary" );
 					delim = " ";
 				}
+				if( eachField.isAutoEnter() ) {
+					comments.append( delim + "autoEnter" );
+					delim = " ";
+				}
 				fieldRecord.addRawValue( comments.toString(), 11 );
 				fieldRecord.addRawValue( "" + eachField.getType().getPrecision(), 15 ); //FIX! What's the difference between this and COLUMN_SIZE?
 				fieldRecord.addRawValue( "" + n + 1, 16 );
