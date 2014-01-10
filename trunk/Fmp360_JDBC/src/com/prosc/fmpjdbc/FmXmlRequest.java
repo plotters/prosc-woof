@@ -1,6 +1,7 @@
 package com.prosc.fmpjdbc;
 
 import com.prosc.io.IOUtils;
+import com.prosc.sql.ErrorCodes;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -977,7 +978,7 @@ public class FmXmlRequest extends FmRequest {
 
 	public static class HttpAuthenticationException extends FileMakerException {
 		public HttpAuthenticationException(String message, String username, String requestUrl) {
-			super(212, "Invalid FileMaker user account and/or password. Make sure that the FMXML extended privilege is enabled for this account. Please try again - username '" + username + "'", requestUrl, username );
+			super(212, "Invalid FileMaker user account and/or password. Make sure that the FMXML extended privilege is enabled for this account. Please try again.", requestUrl, username, ErrorCodes.AUTH_INVALID );
 		}
 	}
 

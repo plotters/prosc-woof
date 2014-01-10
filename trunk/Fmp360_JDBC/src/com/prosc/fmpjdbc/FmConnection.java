@@ -151,10 +151,13 @@ public class FmConnection implements Connection {
 				e.setConnection( this );
 				String pwTemp = getPassword();
 				if( pwTemp == null ) pwTemp = "";
-				log.config( "Authorization with username '" + getUsername() + "' and password length " + pwTemp.length() + " failed for URL " + request.getFullUrl() );
-				SQLException sqle = new SQLException( e.getMessage(), ErrorCodes.AUTH_INVALID, e.getErrorCode() );
-				sqle.initCause( e );
-				throw sqle;
+				String authFailedMessage = "Authorization with username '" + getUsername() + "' and password length " + pwTemp.length() + " failed";
+				log.config( authFailedMessage + " for URL "+ request.getFullUrl() );
+				
+				throw e;
+				//SQLException sqle = new SQLException( e.getMessage(), ErrorCodes.AUTH_INVALID, e.getErrorCode() );
+				//sqle.initCause( e );
+				//throw sqle;
 			} catch( UnknownHostException e ) {
 				SQLException sqlE = new SQLException( "Could not determine the IP address for " + getHost() );
 				sqlE.initCause( e );

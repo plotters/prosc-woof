@@ -46,7 +46,11 @@ public class FileMakerException extends SQLException {
 
 
 	protected FileMakerException(Integer errorCode, String errorMessage, String requestUrl, String username ) {
-		super( errorMessage, null, errorCode );
+		this( errorCode, errorMessage, requestUrl, username, null );
+	}
+	
+	protected FileMakerException(Integer errorCode, String errorMessage, String requestUrl, String username, @Nullable String sqlState ) {
+		super( errorMessage, sqlState, errorCode );
 		this.requestUrl = requestUrl;
 		this.username = username;
 		if( errorCode == 105 && requestUrl.contains( "ProscNoSuchTable" ) ) {
