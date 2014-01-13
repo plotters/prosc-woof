@@ -1,6 +1,4 @@
-package com.prosc.sql;
-
-import com.prosc.fmpjdbc.FileMakerException;
+package com.prosc.fmpjdbc;
 
 import java.io.IOException;
 import java.io.InputStream;

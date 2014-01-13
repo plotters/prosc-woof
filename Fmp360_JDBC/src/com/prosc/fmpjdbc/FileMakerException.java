@@ -1,6 +1,5 @@
 package com.prosc.fmpjdbc;
 
-import com.prosc.sql.ErrorCodes;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

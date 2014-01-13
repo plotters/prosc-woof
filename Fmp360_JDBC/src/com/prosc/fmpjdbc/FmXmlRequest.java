@@ -1,7 +1,6 @@
 package com.prosc.fmpjdbc;
 
 import com.prosc.io.IOUtils;
-import com.prosc.sql.ErrorCodes;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -17,7 +16,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
-import java.sql.Time;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;

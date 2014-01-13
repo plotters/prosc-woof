@@ -1,7 +1,5 @@
 package com.prosc.fmpjdbc;
 
-import com.prosc.sql.ErrorCodes;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
