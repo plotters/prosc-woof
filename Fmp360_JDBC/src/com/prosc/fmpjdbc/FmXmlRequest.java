@@ -2,10 +2,7 @@ package com.prosc.fmpjdbc;
 
 import com.prosc.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
+import org.xml.sax.*;
 import sun.misc.BASE64Encoder;
 
 import javax.net.ssl.SSLHandshakeException;
@@ -112,6 +109,7 @@ public class FmXmlRequest extends FmRequest {
 			SAXParser result = javax.xml.parsers.SAXParserFactory.newInstance().newSAXParser();
 			setFeature( result, "http://xml.org/sax/features/validation", false );
 			setFeature( result, "http://xml.org/sax/features/namespaces", false );
+			setFeature( result, "http://apache.org/xml/features/continue-after-fatal-error", true ); //This is true to handle and skip illegal characters in XML, such as 0x13
 			//setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
 			log.finest( "Created an XML parser; class is: " + result.getClass() );
 			return result;
@@ -339,7 +337,7 @@ public class FmXmlRequest extends FmRequest {
 		super.finalize();
 	}
 
-	private void readResult(@NotNull final InputStream streamToParse) throws SQLException {
+	void readResult(@NotNull final InputStream streamToParse) throws SQLException {
 		synchronized( FmXmlRequest.this ) {
 			parsingThread = new Thread("FileMaker JDBC Parsing Thread" ) {
 				public void run() {
@@ -703,17 +701,22 @@ public class FmXmlRequest extends FmRequest {
 
 		public void fatalError(SAXParseException e) throws SAXException {
 			//We don't need to log, because we're throwing the exception to the ResultQueue : log.log(Level.SEVERE, e.toString(), e );
-			log.log( Level.SEVERE, "fatalError for request: " + concatUrl + "; " + e.toString() );
-			super.fatalError(e);
+			if( e.getMessage().contains( "invalid XML character" ) ) {
+				log.log( Level.WARNING, "Skipping invalid XML character for request " + concatUrl, e );
+				//Ignore this
+			} else {
+				log.log( Level.SEVERE, "fatalError for request: " + concatUrl, e );
+				super.fatalError(e);
+			}
 		}
 
 		public void warning( SAXParseException e ) throws SAXException {
-			log.log( Level.WARNING, "warning for request: " + concatUrl + "; " + e.toString() );
+			log.log( Level.WARNING, "warning for request: " + concatUrl, e );
 			super.warning( e );	//To change body of overridden methods use File | Settings | File Templates.
 		}
 
 		public void error( SAXParseException e ) throws SAXException {
-			log.log( Level.SEVERE, "error for request: " + concatUrl + "; " + e.toString() );
+			log.log( Level.SEVERE, "error for request: " + concatUrl, e );
 			super.error( e );	//To change body of overridden methods use File | Settings | File Templates.
 		}
 
