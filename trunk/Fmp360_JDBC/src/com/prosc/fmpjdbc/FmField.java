@@ -132,7 +132,7 @@ public class FmField {
 	/** A field is a primary key candidate if it has an auto-enter value and is validated. 
 	 * It would be more conclusive if we also checked for a unique value validation, but FileMaker's XML web publishing doesn't tell us that. */ 
 	public boolean isPrimaryKeyCandidate() {
-		return autoEnter && !isNullable;
+		return autoEnter && !isNullable && ( type == FmFieldType.NUMBER || type == FmFieldType.TEXT );
 	}
 
 	/** A field is a modification timestamp candidate if it has an auto-enter value and is a timestamp. This could definitely be wrong (for example, it could be a creation timestamp), but it's the best
