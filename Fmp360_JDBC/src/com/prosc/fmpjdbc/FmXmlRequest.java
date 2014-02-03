@@ -73,7 +73,6 @@ public class FmXmlRequest extends FmRequest {
 	private Thread parsingThread;
 	private SQLException metadataError;
 	private Integer fmVersion;
-	private String concatUrl;
 	private boolean retry802 = true;
 	private boolean redirected;
 
