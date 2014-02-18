@@ -252,7 +252,7 @@ public class FmResultSetRequest extends FmRequest {
 		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
 
 		public void fatalError(SAXParseException e) throws SAXException {
-			log.log(Level.SEVERE, String.valueOf(e));
+			log.log(Level.SEVERE, String.valueOf(e), e);
 			super.fatalError(e);
 		}
 
@@ -260,8 +260,8 @@ public class FmResultSetRequest extends FmRequest {
 		 * cannot handle relative HTTP URL's, which is what FileMaker uses for its DTDs: "/fmi/xml/FMPXMLRESULT.dtd"
 		 * By returning an empty value here, we short-circuit the DTD lookup process.
 		 */
-		public InputSource resolveEntity( String publicId, String systemId ) {
-			return emptyInput;
+		public InputSource resolveEntity( String publicId, String systemId ) throws IOException {
+			return FmXmlRequest.resolveEntityFromCache( publicId, systemId );
 		}
 
 		public void warning( SAXParseException e ) throws SAXException {
