@@ -1,6 +1,7 @@
 package com.prosc.fmpjdbc;
 
 import com.prosc.io.IOUtils;
+import com.prosc.shared.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.xml.sax.*;
 import sun.misc.BASE64Encoder;
@@ -44,7 +45,10 @@ import java.util.logging.Logger;
  */
 public class FmXmlRequest extends FmRequest {
 	//private static final int READ_TIMEOUT = 15 * 1000;
+	private static final Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 	private static final int CONNECT_TIMEOUT = 60 * 1000;
+	private static final int BUFFER_SIZE = 8192;
+	private static final Map<String,byte[]> entityLookups = new HashMap<String, byte[]>();
 
 	/**
 	 * The URL (not including post data) where the response is retrieved from
@@ -62,7 +66,6 @@ public class FmXmlRequest extends FmRequest {
 	private String authString;
 	private String postPrefix = "";
 	private String postArgs;
-	private Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 	private volatile boolean isStreamOpen = false;
 	private long requestStartTime;
 
@@ -136,10 +139,10 @@ public class FmXmlRequest extends FmRequest {
 		requestStartTime = System.currentTimeMillis();
 		postArgs = input;
 		redirected = false;
-		doRequest( 0 );
+		doRequest( 3 );
 	}
 
-	private void doRequest( int retryCount ) throws IOException, SQLException {
+	private void doRequest( final int maxAttempts ) throws IOException, SQLException {
 		synchronized( FmXmlRequest.this ) {
 			if (serverStream != null) {
 				throw new IllegalStateException("You must call closeRequest() before sending another request.");
@@ -180,7 +183,7 @@ public class FmXmlRequest extends FmRequest {
 				redirected = true;
 				String redirect = theConnection.getHeaderField( "location" );
 				theUrl = new URL( theUrl, redirect );
-				doRequest( retryCount );
+				doRequest( maxAttempts );
 				return;
 				//throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
 			}
@@ -206,7 +209,6 @@ public class FmXmlRequest extends FmRequest {
 			}
 			synchronized( FmXmlRequest.this ) {
 				if(System.getProperty("com.prosc.fmxml.debug","false").equals("true")) { //careful!!! This will run a machine out of disk space if you leave it set.
-					//File xmlFile;
 					Random random = new Random(System.currentTimeMillis());
 					if(System.getProperty("os.name").toLowerCase().contains("windows")) {
 						xmlFile = new File("C:\\WINDOWS\\Temp\\FmXml." + Thread.currentThread().getName()
@@ -220,16 +222,21 @@ public class FmXmlRequest extends FmRequest {
 						FileOutputStream fileOut = new FileOutputStream(xmlFile);
 						IOUtils.writeInputToOutput(resultStream, fileOut, 8192);
 						resultStream.close();
+						fileOut.flush();
+						OutputStreamWriter writer = new OutputStreamWriter( fileOut, "utf-8" );
+						writer.write( "\n\n<!-- Request URL: " + getFullUrl() + " / username: " + username + " -->" );
+						writer.close();
 						fileOut.close();
 						FileInputStream xmlInputStream = new FileInputStream(xmlFile);
 						serverStream = xmlInputStream;
 						log.log(Level.INFO, "Debug mode is enabled. This request was stored in " + xmlFile.getName() + ". It will be deleted once the response is successfully parsed");
 					}else{
 						log.log(Level.WARNING, "unable to create output file for fmxml debug");
-						serverStream = theConnection.getInputStream();
+						serverStream = new BufferedInputStream( theConnection.getInputStream(), 8192 );
 					}
-				}else{
-					serverStream = theConnection.getInputStream(); // new BufferedInputStream(theConnection.getInputStream(), SERVER_STREAM_BUFFERSIZE);
+				} else {
+					//serverStream = theConnection.getInputStream();
+					serverStream = new BufferedInputStream(theConnection.getInputStream(), 8192 );
 				}
 				isStreamOpen = true;
 			}
@@ -258,20 +265,74 @@ public class FmXmlRequest extends FmRequest {
 			else throw e;
 		}
 		try {
-			readResult(serverStream);
+			byte[] headerBytes = new byte[BUFFER_SIZE];
+			if( ! serverStream.markSupported() ) {
+				serverStream = new BufferedInputStream( serverStream, BUFFER_SIZE );
+			}
+			serverStream.mark( headerBytes.length );
+			int headerBytesRead = serverStream.read( headerBytes );
+			serverStream.reset();
+			if( headerBytesRead < 261 ) { //This is about to the end of the </ERRORCODE> element. Even accounting for small variations in namespaces, versions, etc., we should have more bytes than this in any valid response.
+				String message = "Only received " + headerBytesRead + " bytes in XML response.";
+				boolean willRetry = maxAttempts > 1;
+				if( willRetry ) {
+					message += " maxAttempts is " + maxAttempts + "; will retry";
+				} else {
+					message += " maxAttempts is " + maxAttempts + "; will not retry.";
+				}
+				if( headerBytesRead == -1 ) {
+					message +=" No header bytes were received because the InputStream is at the end of file.";
+				} else {
+					String header = new String( headerBytes, 0, headerBytesRead, "utf-8" );
+					message += " Header bytes received:\n" + header;
+				}
+				log.log( Level.WARNING, message );
+				if( willRetry ) {
+					try {
+						Thread.sleep( 5000 );
+					} catch( InterruptedException e ) {
+						Thread.interrupted(); //Not our problem
+					}
+					closeRequest();
+					doRequest( maxAttempts - 1 );
+				} else {
+					log.log( Level.SEVERE, "maxAttempts is " + maxAttempts + "; no retries remaining. Full URL: " + getFullUrl() );
+					//Just continue to readResult, below. Maybe it can work with the result that we think is bad.
+				}
+			} else {
+				String header = new String( headerBytes, 0, headerBytesRead, "utf-8" );
+				String errorCodeString = StringUtils.textBetween( header, "<ERRORCODE>", "</ERRORCODE>" );
+				if( "0".equals( errorCodeString ) || "401".equals( errorCodeString ) ) {
+					//0 or 401 are normal and should be processed in separate thread.
+					//Don't know how this could be null, other than maybe ERROROCODE appearing below the first 8192 bytes, but it's not something we can handle at this point in the process
+				} else if( errorCodeString == null ) {
+					log.log( Level.SEVERE, "Instead of receiving FileMaker XML data, received this: " + header );
+					//Process in separate thread
+				} else {
+					String productVersion = StringUtils.textBetween( header, "VERSION=\"", "\"" );
+					setProductVersion( productVersion );
+					Integer i = Integer.valueOf( errorCodeString );
+					setErrorCode( i );
+					String layoutName = StringUtils.textBetween( header, "LAYOUT=\"", "\"" );
+					throw FileMakerException.exceptionForErrorCode( i, getFullUrl(), layoutName, username );
+				}
+			}
+
+			readResult( serverStream );
 		} catch( FileMakerException e ) {
 			boolean retry = false;
-			if( ++retryCount < 3 ) {
+			if( maxAttempts > 1 ) {
 				if( e.getErrorCode() == 16 ) {
 					retry = true;
-					log.warning( "Received an error 16 retry message from FileMaker Server on attempt " + retryCount + ", will try again" );
+					log.warning( "Received an error 16 retry message from FileMaker Server on attempt " + maxAttempts + ", will try again" );
 				} else if( e.getErrorCode() == 802 && retry802 ) {
 					retry = true;
-					log.warning( "Received an error 802 (no database available) from FileMaker Server on attempt " + retryCount + ", will try again" );
+					log.warning( "Received an error 802 (no database available) from FileMaker Server on attempt " + maxAttempts + ", will try again" );
 				}
 			}
 			if( retry ) { //Error code 16 means retry
-				doRequest( retryCount );
+				closeRequest(); //Probably not necessary, but also can't hurt
+				doRequest( maxAttempts - 1 );
 			} else {
 				throw e;
 			}
@@ -598,6 +659,28 @@ public class FmXmlRequest extends FmRequest {
 		return !( error == 0 || error == 401 );
 	}
 
+	static InputSource resolveEntityFromCache( String publicId, String systemId ) throws IOException {
+		String lookupKey = publicId + " " + systemId;
+		byte[] resultBytes = entityLookups.get( lookupKey );
+		if( resultBytes == null ) {
+			log.info( "resolveEntity requested for publicId '" + publicId + "' and systemId '" + systemId + "'; will resolve and cache" );
+			InputStream in = new URL( systemId ).openStream();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			try {
+				IOUtils.writeInputToOutput( in, baos, 8192 );
+				resultBytes = baos.toByteArray();
+			} finally {
+				in.close();
+				baos.close();
+			}
+			entityLookups.put( lookupKey, resultBytes );
+		} else {
+			//log.info( "resolveEntity requested for publicId '" + publicId + "' and systemId '" + systemId + "'; returning cached result" );
+		}
+		return new InputSource( new ByteArrayInputStream( resultBytes ) );
+		//return emptyInput;
+	}
+
 
 	/**
 	 * In this class we have a reference to FmFieldList called fieldDefinitions (see below). In all the uses of this class,
@@ -723,8 +806,8 @@ public class FmXmlRequest extends FmRequest {
 		 * cannot handle relative HTTP URL's, which is what FileMaker uses for it's DTDs: "/fmi/xml/FMPXMLRESULT.dtd"
 		 * By returning an empty value here, we short-circuit the DTD lookup process.
 		 */
-		public InputSource resolveEntity( String publicId, String systemId ) {
-			return emptyInput;
+		public InputSource resolveEntity( String publicId, String systemId ) throws IOException, SAXException {
+			return resolveEntityFromCache( publicId, systemId );
 		}
 
 		public String getCurrentColumnName() {

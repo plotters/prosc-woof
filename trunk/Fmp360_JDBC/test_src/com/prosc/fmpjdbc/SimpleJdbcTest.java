@@ -105,7 +105,7 @@ public class SimpleJdbcTest extends TestCase {
 			String rawUrl;
 
 			//Try version 7
-			rawUrl = "http://" + passwordString + jdbc7.xmlServer + ":" + jdbc7.port + "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts&-lay=Contacts&-findall";
+			rawUrl = "http://" + passwordString + jdbc7.xmlServer + ":" + jdbc7.port + "/fmi/xml/FMPXMLRESULT.xml?-db=Contacts13_dont_trash&-lay=Contacts&-findall";
 			rawConnection( rawUrl, authString );
 
 			//Try version 6
@@ -372,10 +372,10 @@ public class SimpleJdbcTest extends TestCase {
 		System.out.println(rs.getString(3) );
 		System.out.println(rs.getString(4) );
 		System.out.println(rs.getString(5) );
-		System.out.println("City: " + rs.getString(14) );
+		System.out.println("City: " + rs.getString(17) );
 		System.out.println("State: " + rs.getString(15) );
 		System.out.println("ZIP: " + rs.getString(16) );
-		System.out.println("Timestamp: " + rs.getTimestamp(6) );
+		System.out.println("Timestamp: " + rs.getTimestamp(7) );
 	}
 
 
