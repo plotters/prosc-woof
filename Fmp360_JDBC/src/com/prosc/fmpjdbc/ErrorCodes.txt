@@ -56,6 +56,13 @@
 958 "Parameter missing in query"
 959 "XML Web Publishing is not enabled" - Run the FileMaker Server deployment assistant and make sure that the XML web publishing checkbox is selected
 
+1626 "The protocol is not supported"
+1627 "The authentication Failed"
+1628 "There was an error with SSL"
+1629 "The connection timed out"
+1630 "The url format is incorrect"
+1631 "The connection failed"
+
 #This is not in FM documentation
 8003 "Record is in use by another user"
 
