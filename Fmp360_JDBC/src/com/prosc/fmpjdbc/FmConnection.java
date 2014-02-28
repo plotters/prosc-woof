@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -492,6 +493,26 @@ public class FmConnection implements Connection {
 	}
 
 	public Struct createStruct( String s, Object[] objects ) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public void abort(final Executor executor) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public int getNetworkTimeout() throws SQLException {
+		return 0; // no limit
+	}
+
+	public void setSchema(final String schema) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public String getSchema() throws SQLException {
+		return null;
+	}
+
+	public void setNetworkTimeout(final Executor executor, final int milliseconds) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 

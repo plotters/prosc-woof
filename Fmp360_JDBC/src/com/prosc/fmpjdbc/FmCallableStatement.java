@@ -507,6 +507,14 @@ public class FmCallableStatement extends FmPreparedStatement implements Callable
 		throw new AbstractMethodError( "This feature has not been implemented yet." ); //FIX!!! Broken placeholder
 	}
 
+	public <T> T getObject(final int parameterIndex, final Class<T> type) throws SQLException {
+		return (T) getObject(parameterIndex);
+	}
+
+	public <T> T getObject(final String parameterName, final Class<T> type) throws SQLException {
+		return (T) getObject(parameterName);
+	}
+
 	// === Comment these out to compile in Java 1.5 ===
 
 

@@ -3,6 +3,7 @@ package com.prosc.fmpjdbc;
 import java.sql.*;
 import java.util.Properties;
 import java.net.MalformedURLException;
+import java.util.logging.Logger;
 
 /*
     Fmp360_JDBC is a FileMaker JDBC driver that uses the XML publishing features of FileMaker Server Advanced.
@@ -27,6 +28,8 @@ import java.net.MalformedURLException;
  * Created by IntelliJ IDEA. User: jesse Date: Apr 16, 2005 Time: 5:44:02 PM
  */
 public class Driver implements java.sql.Driver {
+	private static final Logger log = Logger.getLogger(Driver.class.getName());
+	
 	static {
 		try {
 			DriverManager.registerDriver( new Driver() );
@@ -75,5 +78,9 @@ public class Driver implements java.sql.Driver {
 	/** Returns false, since there are many aspects of standard ANSI SQL that we will not be supporting. */
 	public boolean jdbcCompliant() {
 		return false;
+	}
+
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		return log;
 	}
 }
