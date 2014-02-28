@@ -1613,6 +1613,14 @@ public class FmMetaData implements DatabaseMetaData {
 		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
+	public ResultSet getPseudoColumns(final String catalog, final String schemaPattern, final String tableNamePattern, final String columnNamePattern) throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public boolean generatedKeyAlwaysReturned() throws SQLException {
+		return true; // FIX! is this right? -ssb
+	}
+
 	public <T> T unwrap( Class<T> aClass ) throws SQLException {
 		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
 	}

@@ -1125,6 +1125,14 @@ public class FmResultSet implements ResultSet {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
 
+	public <T> T getObject(final int columnIndex, final Class<T> type) throws SQLException {
+		return (T) getObject(columnIndex);
+	}
+
+	public <T> T getObject(final String columnLabel, final Class<T> type) throws SQLException {
+		return (T) getObject(columnLabel);
+	}
+
 	public <T> T unwrap( Class<T> aClass ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}

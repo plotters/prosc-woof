@@ -231,6 +231,14 @@ public class FmStatement implements Statement {
 		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
+	public void closeOnCompletion() throws SQLException {
+		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+	}
+
+	public boolean isCloseOnCompletion() throws SQLException {
+		return false;
+	}
+
 	public <T> T unwrap( Class<T> aClass ) throws SQLException {
 		throw new AbstractMethodError( "getResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
 	}
