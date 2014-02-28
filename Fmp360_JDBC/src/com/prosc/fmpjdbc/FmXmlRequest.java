@@ -659,12 +659,15 @@ public class FmXmlRequest extends FmRequest {
 		return !( error == 0 || error == 401 );
 	}
 
-	static InputSource resolveEntityFromCache( String publicId, String systemId ) throws IOException {
+	static InputSource resolveEntityFromCache(String publicId, String systemId, final URL connectionUrl) throws IOException {
 		String lookupKey = publicId + " " + systemId;
 		byte[] resultBytes = entityLookups.get( lookupKey );
 		if( resultBytes == null ) {
-			log.info( "resolveEntity requested for publicId '" + publicId + "' and systemId '" + systemId + "'; will resolve and cache" );
-			InputStream in = new URL( systemId ).openStream();
+			// FileMaker returns a DTD which points to `localhost` for some inscrutable reason. Let's get the DTD from the actual server instead of being nimrods
+			URL responseUrl = new URL(systemId);
+			final URL hybridUrl = new URL(connectionUrl.getProtocol(), connectionUrl.getHost(), connectionUrl.getPort(), responseUrl.getFile());
+			log.info( "resolveEntity requested for publicId '" + publicId + "' and systemId '" + systemId + "'; will resolve from " + hybridUrl + " and cache" );
+			InputStream in = hybridUrl.openStream();
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
 				IOUtils.writeInputToOutput( in, baos, 8192 );
@@ -807,7 +810,7 @@ public class FmXmlRequest extends FmRequest {
 		 * By returning an empty value here, we short-circuit the DTD lookup process.
 		 */
 		public InputSource resolveEntity( String publicId, String systemId ) throws IOException, SAXException {
-			return resolveEntityFromCache( publicId, systemId );
+			return resolveEntityFromCache( publicId, systemId, theUrl );
 		}
 
 		public String getCurrentColumnName() {

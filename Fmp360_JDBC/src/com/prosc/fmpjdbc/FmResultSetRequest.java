@@ -261,7 +261,7 @@ public class FmResultSetRequest extends FmRequest {
 		 * By returning an empty value here, we short-circuit the DTD lookup process.
 		 */
 		public InputSource resolveEntity( String publicId, String systemId ) throws IOException {
-			return FmXmlRequest.resolveEntityFromCache( publicId, systemId );
+			return FmXmlRequest.resolveEntityFromCache( publicId, systemId, theUrl);
 		}
 
 		public void warning( SAXParseException e ) throws SAXException {
