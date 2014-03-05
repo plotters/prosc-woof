@@ -142,6 +142,7 @@ public class FmConnection implements Connection {
 			}
 			String postArgs = "-db=" + encodedDBName + "&-lay=ProscNoSuchTable&-view"; //Optimize Why not do -layoutnames instead? That way we don't have to throw and catch an exception. --jsb
 			try {
+				request.setConnectTimeout( 10000 ); //Wait a max of 10 seconds to test the connection
 				request.setRetry802( false ); //We want to retry 802 during actual database operations, but not when we're just checking the connection. That is the main time we get a legitimate 802 error.
 				request.doRequest( postArgs );
 				assert(false); //We should never get to this point - the previous request should ALWAYS throw an exception

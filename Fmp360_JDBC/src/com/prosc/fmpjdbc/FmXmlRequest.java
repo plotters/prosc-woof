@@ -46,7 +46,6 @@ import java.util.logging.Logger;
 public class FmXmlRequest extends FmRequest {
 	//private static final int READ_TIMEOUT = 15 * 1000;
 	private static final Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
-	private static final int CONNECT_TIMEOUT = 60 * 1000;
 	private static final int BUFFER_SIZE = 8192;
 	private static final Map<String,byte[]> entityLookups = new HashMap<String, byte[]>();
 
@@ -68,6 +67,7 @@ public class FmXmlRequest extends FmRequest {
 	private String postArgs;
 	private volatile boolean isStreamOpen = false;
 	private long requestStartTime;
+	private int connectTimeout = 60 * 1000;
 
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set<String> missingFields;
@@ -104,6 +104,10 @@ public class FmXmlRequest extends FmRequest {
 	 */
 	public void setRetry802( boolean retry802 ) {
 		this.retry802 = retry802;
+	}
+
+	public void setConnectTimeout( int connectTimeout ) {
+		this.connectTimeout = connectTimeout;
 	}
 
 	private SAXParser buildParser() {
@@ -154,7 +158,7 @@ public class FmXmlRequest extends FmRequest {
 		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
 		theConnection.setInstanceFollowRedirects( true ); //Set this to true because OS X Lion Server always redirects all requests to https://
 		theConnection.setUseCaches(false);
-		theConnection.setConnectTimeout( CONNECT_TIMEOUT ); //FIX!! Make this a configurable connection property
+		theConnection.setConnectTimeout( connectTimeout ); //FIX!! Make this a configurable connection property
 		//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
 		if (authString != null) {
 			theConnection.addRequestProperty("Authorization", "Basic " + authString);
