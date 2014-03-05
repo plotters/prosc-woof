@@ -103,6 +103,8 @@ public class FmBlob implements Blob {
 
 	public byte[] getBytes(long pos, final int length) throws SQLException {
 		if( pos == 0 ) {
+			throw new IllegalArgumentException( "JDBC spec requires position parameter to start from 1, not 0" );
+		} else if( pos == 1 ) {
 			byte[] result = new byte[length];
 			try {
 				InputStream stream = getStream();
@@ -120,7 +122,7 @@ public class FmBlob implements Blob {
 				throw new RuntimeException(e);
 			}
 		} else {
-			throw new AbstractMethodError("Currently, can only read from position 0."); //FIX!!! Broken placeholder
+			throw new AbstractMethodError("Currently, can only read from position 1."); //FIX!!! Broken placeholder
 		}
 	}
 
