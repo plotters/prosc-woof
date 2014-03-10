@@ -169,6 +169,7 @@ public class FmXmlRequest extends FmRequest {
 			if (postArgs != null) {
 				//postArgs = postPrefix + postArgs;
 				fullUrl = theUrl + "?" + postPrefix + postArgs;
+				concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>"; //Duplicate this code instead of place after the else/if because it's important for contactUrl to be set if the next 2 lines fail
 				theConnection.setDoOutput(true);
 				PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 				out.print(postPrefix);
@@ -176,8 +177,8 @@ public class FmXmlRequest extends FmRequest {
 				out.close();
 			} else {
 				fullUrl = theUrl.toExternalForm();
+				concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>";
 			}
-			concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>";
 			log.log( Level.INFO, "Starting request: " + concatUrl );
 
 
