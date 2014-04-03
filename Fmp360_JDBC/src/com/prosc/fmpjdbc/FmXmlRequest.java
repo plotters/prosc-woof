@@ -207,7 +207,7 @@ public class FmXmlRequest extends FmRequest {
 						baos.write( buffer, 0, bytesRead );
 					}
 					String message = new String( baos.toByteArray(), "utf-8" );
-					throw new IOException("Server returned unexpected status code: " + httpStatusCode + "; message: " + message );
+					throw new IOException("Server returned unexpected status code: " + httpStatusCode + " for URL \"" + fullUrl + "\"; message: " + message );
 				} finally {
 					err.close();
 				}

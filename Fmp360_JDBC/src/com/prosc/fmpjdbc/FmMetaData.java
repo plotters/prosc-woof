@@ -1056,7 +1056,7 @@ public class FmMetaData implements DatabaseMetaData {
 			}
 			throw e;
 		} catch (IOException e) {
-			SQLException sqlException = new SQLException( "Could not get list of databases: " + e.toString() );
+			SQLException sqlException = new SQLException( "Could not get list of databases: " + e.getMessage() );
 			sqlException.initCause(e);
 			throw sqlException;
 		}
