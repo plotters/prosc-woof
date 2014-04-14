@@ -106,6 +106,7 @@ public class FmXmlRequest extends FmRequest {
 		this.retry802 = retry802;
 	}
 
+	/** Sets the connection timeout in milliseconds */
 	public void setConnectTimeout( int connectTimeout ) {
 		this.connectTimeout = connectTimeout;
 	}
