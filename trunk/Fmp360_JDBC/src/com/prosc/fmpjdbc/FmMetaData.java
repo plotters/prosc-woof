@@ -1028,6 +1028,8 @@ public class FmMetaData implements DatabaseMetaData {
 
 		FmXmlRequest request = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());
+		
+		request.setConnectTimeout( 15000 );
 		String postArgs;
 		List databases = new LinkedList();
 		postArgs = "-dbnames";
