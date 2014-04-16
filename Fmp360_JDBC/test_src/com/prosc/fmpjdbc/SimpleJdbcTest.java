@@ -88,7 +88,7 @@ public class SimpleJdbcTest extends TestCase {
 			connection.getMetaData().getCatalogs(); //This will actually connect to FM to get catalog names, and should fail
 			fail( "This is the wrong host; should have failed." );
 		} catch( SQLException e ) {
-			assertTrue( e.getMessage().indexOf( "java.io.IOException: Server returned unexpected status code: 404" ) >= 0 );
+			assertTrue( e.getMessage().indexOf( "Server returned unexpected status code: 404" ) >= 0 );
 			//assertTrue( e.getMessage().indexOf( "IOException: Server has moved to new location" ) >= 0 );
 		}
 	}

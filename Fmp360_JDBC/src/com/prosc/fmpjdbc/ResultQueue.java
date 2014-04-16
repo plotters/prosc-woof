@@ -103,7 +103,7 @@ public class ResultQueue implements Iterator<FmRecord> {
 	public synchronized boolean hasNext() {
 		// might not be finished, but nothing ready now so wait...
 		boolean resetInterrupt = false;
-		while (objects.size() <= 0 && !finished) {
+		while ( !finished && objects.size() <= 0 ) {
 			if( storedError != null ) return true; //This will be thrown in the next() method
 			try {
 				wait();
