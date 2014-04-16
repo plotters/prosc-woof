@@ -282,7 +282,7 @@ public class FmXmlRequest extends FmRequest {
 				String message = "Only received " + headerBytesRead + " bytes in XML response.";
 				boolean willRetry = maxAttempts > 1;
 				if( willRetry ) {
-					message += " maxAttempts is " + maxAttempts + "; will retry";
+					message += " maxAttempts is " + maxAttempts + "; will retry.";
 				} else {
 					message += " maxAttempts is " + maxAttempts + "; will not retry.";
 				}
@@ -308,12 +308,11 @@ public class FmXmlRequest extends FmRequest {
 			} else {
 				String header = new String( headerBytes, 0, headerBytesRead, "utf-8" );
 				String errorCodeString = StringUtils.textBetween( header, "<ERRORCODE>", "</ERRORCODE>" );
-				if( "0".equals( errorCodeString ) || "401".equals( errorCodeString ) ) {
-					//0 or 401 are normal and should be processed in separate thread.
+				if( errorCodeString == null || ! header.substring( 0, 5 ).equalsIgnoreCase( "<?xml" ) ) {
 					//Don't know how this could be null, other than maybe ERROROCODE appearing below the first 8192 bytes, but it's not something we can handle at this point in the process
-				} else if( errorCodeString == null ) {
-					log.log( Level.SEVERE, "Instead of receiving FileMaker XML data, received this: " + header );
-					//Process in separate thread
+					throw new IOException( "Instead of receiving FileMaker XML data, received this: " + header );
+				} else if( "0".equals( errorCodeString ) || "401".equals( errorCodeString ) ) {
+					//0 or 401 are normal and should be processed in separate thread.
 				} else {
 					String productVersion = StringUtils.textBetween( header, "VERSION=\"", "\"" );
 					setProductVersion( productVersion );
@@ -405,6 +404,8 @@ public class FmXmlRequest extends FmRequest {
 
 	void readResult(@NotNull final InputStream streamToParse) throws SQLException {
 		synchronized( FmXmlRequest.this ) {
+			recordIterator = new ResultQueue(256*1024, 64*1024);  // FIX! is this a good size? -britt
+			
 			parsingThread = new Thread("FileMaker JDBC Parsing Thread" ) {
 				public void run() {
 					FmXmlHandler xmlHandler = new FmXmlHandler();
@@ -476,7 +477,7 @@ public class FmXmlRequest extends FmRequest {
 		productVersionIsSet = true;
 		databaseNameIsSet = true;
 		foundCountIsSet = true;
-		recordIteratorIsSet = true;
+		//recordIteratorIsSet = true;
 		//recordIterator.setFinished();
 		//recordIterator = null;
 		fieldDefinitionsListIsSet = true;
@@ -585,7 +586,7 @@ public class FmXmlRequest extends FmRequest {
 
 
 	public synchronized Iterator<FmRecord> getRecordIterator() throws SQLException {
-		boolean resetInterrupt = false;
+		/*boolean resetInterrupt = false;
 		while (!recordIteratorIsSet) {
 			try {
 				wait();
@@ -596,16 +597,20 @@ public class FmXmlRequest extends FmRequest {
 		}
 		if( resetInterrupt ) {
 			Thread.currentThread().interrupt();
+		}*/
+		if( recordIterator == null ) {
+			throw new IllegalStateException( "You must call doRequest() before calling getRecordIterator()" );
+		} else {
+			return recordIterator;
 		}
-		return recordIterator;
 	}
 
-	private synchronized void setRecordIterator(ResultQueue i) {
+	/*private synchronized void setRecordIterator(ResultQueue i) {
 		// some thread stuff
 		recordIterator = i;
 		recordIteratorIsSet = true;
 		notifyAll();
-	}
+	}*/
 
 	public synchronized FmFieldList getFieldDefinitions() throws SQLException {
 		boolean resetInterrupt = false;
@@ -710,7 +715,7 @@ public class FmXmlRequest extends FmRequest {
 	/**
 	 * Contains resultSet FmRecords
 	 */
-	private volatile ResultQueue recordIterator; // FIX! does this really need to be volatile? -ssb
+	private ResultQueue recordIterator;
 
 	private volatile int errorCode;
 
@@ -718,7 +723,7 @@ public class FmXmlRequest extends FmRequest {
 	private boolean productVersionIsSet = false;
 	private boolean databaseNameIsSet = false;
 	private boolean foundCountIsSet = false;
-	private boolean recordIteratorIsSet = false;
+	//private boolean recordIteratorIsSet = false;
 	private boolean errorCodeIsSet = false;
 
 	/**
@@ -826,7 +831,7 @@ public class FmXmlRequest extends FmRequest {
 		public void startDocument() {
 			//if( debugMode ) requestContent.append( "Starting document\n" );
 			log.log(Level.FINEST, "Start parsing response");
-			setRecordIterator(new ResultQueue(256*1024, 64*1024));  // FIX! is this a good size? -britt
+			//setRecordIterator(new ResultQueue(256*1024, 64*1024));  // FIX! is this a good size? -britt
 			nodeType = 0;
 		}
 
