@@ -3,6 +3,7 @@ package com.prosc.fmpjdbc;
 import com.prosc.io.IOUtils;
 import com.prosc.shared.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.xml.sax.*;
 import sun.misc.BASE64Encoder;
 
@@ -199,19 +200,24 @@ public class FmXmlRequest extends FmRequest {
 			else if( httpStatusCode == 501 ) throw new IOException("Server returned a 501 (Not Implemented) error. If you are using FileMaker 6, be sure to add ?&fmversion=6 to the end of your JDBC URL.");
 			else if( httpStatusCode == 503 ) throw new IOException("Server returned a 503 (Service Unavailable) error. Make sure that the Web Publishing Engine is running.");
 			else {
-				InputStream err = theConnection.getErrorStream();
-				ByteArrayOutputStream baos = new ByteArrayOutputStream( err.available() );
-				try {
-					byte[] buffer = new byte[1024];
-					int bytesRead;
-					while( (bytesRead=err.read(buffer)) != -1 ) {
-						baos.write( buffer, 0, bytesRead );
+				@Nullable InputStream err = theConnection.getErrorStream();
+				final String message;
+				if( err == null ) {
+					message = "<No error message>";
+				} else {
+					ByteArrayOutputStream baos = new ByteArrayOutputStream( err.available() );
+					try {
+						byte[] buffer = new byte[1024];
+						int bytesRead;
+						while( (bytesRead=err.read(buffer)) != -1 ) {
+							baos.write( buffer, 0, bytesRead );
+						}
+						message = new String( baos.toByteArray(), "utf-8" );
+					} finally {
+						err.close();
 					}
-					String message = new String( baos.toByteArray(), "utf-8" );
-					throw new IOException("Server returned unexpected status code: " + httpStatusCode + " for URL \"" + fullUrl + "\"; message: " + message );
-				} finally {
-					err.close();
 				}
+				throw new IOException("Server returned unexpected status code: " + httpStatusCode + " for URL \"" + fullUrl + "\"; message: " + message );
 			}
 			synchronized( FmXmlRequest.this ) {
 				if(System.getProperty("com.prosc.fmxml.debug","false").equals("true")) { //careful!!! This will run a machine out of disk space if you leave it set.
@@ -405,7 +411,7 @@ public class FmXmlRequest extends FmRequest {
 	void readResult(@NotNull final InputStream streamToParse) throws SQLException {
 		synchronized( FmXmlRequest.this ) {
 			recordIterator = new ResultQueue(256*1024, 64*1024);  // FIX! is this a good size? -britt
-			
+
 			parsingThread = new Thread("FileMaker JDBC Parsing Thread" ) {
 				public void run() {
 					FmXmlHandler xmlHandler = new FmXmlHandler();
