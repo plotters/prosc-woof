@@ -282,7 +282,14 @@ public class FmXmlRequest extends FmRequest {
 				serverStream = new BufferedInputStream( serverStream, BUFFER_SIZE );
 			}
 			serverStream.mark( headerBytes.length );
-			int headerBytesRead = serverStream.read( headerBytes );
+			int headerBytesRead = 0;
+			while( headerBytesRead < 261 ) {
+				int chunkSize = serverStream.read( headerBytes, headerBytesRead, BUFFER_SIZE - headerBytesRead );
+				if( chunkSize == -1 ) {
+					break;
+				}
+				headerBytesRead += chunkSize;
+			}
 			serverStream.reset();
 			if( headerBytesRead < 261 ) { //This is about to the end of the </ERRORCODE> element. Even accounting for small variations in namespaces, versions, etc., we should have more bytes than this in any valid response.
 				String message = "Only received " + headerBytesRead + " bytes in XML response.";
