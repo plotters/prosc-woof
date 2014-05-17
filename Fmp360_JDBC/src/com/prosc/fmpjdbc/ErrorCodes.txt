@@ -8,7 +8,7 @@
 104 "Script is missing" - You have a -script parameter in your SQL which references a non-existent script
 105 "Layout is missing" - Make sure that the table name you have requested in the SQL query is the name of a layout in the current database
 108 "Value list is missing"
-110 "Related tables are missing"
+110 "Related tables are missing" - This can be caused by a cascading delete rule to a table in another file without the FMXML extended privilege enabled
 178 "No write access" - Check file system permissions
 200 "Record access is denied" - Account privilege does not allow this operation
 201 "Field cannot be modified" - You cannot change the value of calculation fields or other fields where modification is prohibited
