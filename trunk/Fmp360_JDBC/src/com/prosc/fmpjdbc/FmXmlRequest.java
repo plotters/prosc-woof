@@ -69,6 +69,7 @@ public class FmXmlRequest extends FmRequest {
 	private volatile boolean isStreamOpen = false;
 	private long requestStartTime;
 	private int connectTimeout = 60 * 1000;
+	private short passwordLength;
 
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set<String> missingFields;
@@ -92,6 +93,7 @@ public class FmXmlRequest extends FmRequest {
 			String tempString = username + ":" + password;
 			authString = new BASE64Encoder().encode(tempString.getBytes());
 			this.username = username;
+			this.passwordLength = (short)password.length();
 		}
 		if (fmVersion >= 5 && fmVersion < 7) {
 			this.setPostPrefix("-format=-fmp_xml&");
@@ -283,7 +285,7 @@ public class FmXmlRequest extends FmRequest {
 			}
 			serverStream.mark( headerBytes.length );
 			int headerBytesRead = 0;
-			while( headerBytesRead < 261 ) {
+			while( headerBytesRead < 368 ) {
 				int chunkSize = serverStream.read( headerBytes, headerBytesRead, BUFFER_SIZE - headerBytesRead );
 				if( chunkSize == -1 ) {
 					break;
@@ -291,7 +293,7 @@ public class FmXmlRequest extends FmRequest {
 				headerBytesRead += chunkSize;
 			}
 			serverStream.reset();
-			if( headerBytesRead < 261 ) { //This is about to the end of the </ERRORCODE> element. Even accounting for small variations in namespaces, versions, etc., we should have more bytes than this in any valid response.
+			if( headerBytesRead < 368 ) { //This is about to the beginning of the </DATABASE> element. Even accounting for small variations in namespaces, versions, etc., we should have more bytes than this in any valid response.
 				String message = "Only received " + headerBytesRead + " bytes in XML response.";
 				boolean willRetry = maxAttempts > 1;
 				if( willRetry ) {
@@ -385,7 +387,7 @@ public class FmXmlRequest extends FmRequest {
 			} finally {
 				if( isStreamOpen ) {
 					if( log.isLoggable( Level.CONFIG ) ) {
-						log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + concatUrl + " )" );
+						log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + concatUrl + " ); username '" + username + "'; password length " + passwordLength );
 					}
 					isStreamOpen = false;
 				}
@@ -521,6 +523,10 @@ public class FmXmlRequest extends FmRequest {
 	}
 
 	private synchronized void setProductVersion(String pv) {
+		if( pv == null ) {
+			log.warning( "Null product version; assuming 12" );
+			pv = "12";
+		}
 		// some thread stuff
 		productVersion = pv;
 		productVersionIsSet = true;
