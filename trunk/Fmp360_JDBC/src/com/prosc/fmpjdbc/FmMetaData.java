@@ -9,7 +9,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.net.MalformedURLException;
 import java.net.URLEncoder;
 
 /*
@@ -198,7 +197,8 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getProcedureColumns( String s, String s1, String s2, String s3 ) throws SQLException {
-		return new FmResultSet( null, 0, null, connection );
+		return _emptyResultSet();
+		//return new FmResultSet( null, 0, null, connection );
 	}
 
 	public ResultSet getTables( String catalog, String schemaPattern, String tableNamePattern, String[] fieldTypes ) throws SQLException {
@@ -1018,7 +1018,7 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getSchemas() throws SQLException {
-		throw new AbstractMethodError( "getSchemas is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getCatalogs() throws SQLException {
@@ -1231,35 +1231,35 @@ public class FmMetaData implements DatabaseMetaData {
 
 	//--- These methods can be ignored ---
 	public boolean allProceduresAreCallable() throws SQLException {
-		throw new AbstractMethodError( "allProceduresAreCallable is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean allTablesAreSelectable() throws SQLException {
-		throw new AbstractMethodError( "allTablesAreSelectable is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public boolean isReadOnly() throws SQLException {
-		throw new AbstractMethodError( "isReadOnly is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean nullsAreSortedHigh() throws SQLException {
-		throw new AbstractMethodError( "nullsAreSortedHigh is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean nullsAreSortedLow() throws SQLException {
-		throw new AbstractMethodError( "nullsAreSortedLow is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public boolean nullsAreSortedAtStart() throws SQLException {
-		throw new AbstractMethodError( "nullsAreSortedAtStart is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean nullsAreSortedAtEnd() throws SQLException {
-		throw new AbstractMethodError( "nullsAreSortedAtEnd is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public String getSearchStringEscape() throws SQLException {
-		throw new AbstractMethodError( "getSearchStringEscape is not implemented yet." ); //FIX!!! Broken placeholder
+		return null;
 	}
 
 	public String getExtraNameCharacters() throws SQLException {
@@ -1267,123 +1267,128 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public boolean supportsColumnAliasing() throws SQLException {
-		throw new AbstractMethodError( "supportsColumnAliasing is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public boolean nullPlusNonNullIsNull() throws SQLException {
-		throw new AbstractMethodError( "nullPlusNonNullIsNull is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsTableCorrelationNames() throws SQLException {
-		throw new AbstractMethodError( "supportsTableCorrelationNames is not implemented yet." ); //FIX!!! Broken placeholder
+		return false; // FIX! ???
 	}
 
 	public boolean supportsDifferentTableCorrelationNames() throws SQLException {
-		throw new AbstractMethodError( "supportsDifferentTableCorrelationNames is not implemented yet." ); //FIX!!! Broken placeholder
+		return false; // FIX! ???
 	}
 
 	public boolean supportsExpressionsInOrderBy() throws SQLException {
-		throw new AbstractMethodError( "supportsExpressionsInOrderBy is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsOrderByUnrelated() throws SQLException {
-		throw new AbstractMethodError( "supportsOrderByUnrelated is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsLikeEscapeClause() throws SQLException {
-		throw new AbstractMethodError( "supportsLikeEscapeClause is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsMinimumSQLGrammar() throws SQLException {
-		throw new AbstractMethodError( "supportsMinimumSQLGrammar is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsCoreSQLGrammar() throws SQLException {
-		throw new AbstractMethodError( "supportsCoreSQLGrammar is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public boolean supportsExtendedSQLGrammar() throws SQLException {
-		throw new AbstractMethodError( "supportsExtendedSQLGrammar is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsIntegrityEnhancementFacility() throws SQLException {
-		throw new AbstractMethodError( "supportsIntegrityEnhancementFacility is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public String getSchemaTerm() throws SQLException {
-		throw new AbstractMethodError( "getSchemaTerm is not implemented yet." ); //FIX!!! Broken placeholder
+		return "Schema";
 	}
 
+	/**
+	 *
+	 * @return
+	 * @throws SQLException
+	 */
 	public String getCatalogTerm() throws SQLException {
-		throw new AbstractMethodError( "getCatalogTerm is not implemented yet." ); //FIX!!! Broken placeholder
+		return "Catalog";
 	}
 
 	public boolean isCatalogAtStart() throws SQLException {
-		throw new AbstractMethodError( "isCatalogAtStart is not implemented yet." ); //FIX!!! Broken placeholder
+		return false; //FIX!!! Broken placeholder
 	}
 
 	public boolean supportsSchemasInDataManipulation() throws SQLException {
-		throw new AbstractMethodError( "supportsSchemasInDataManipulation is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsSchemasInProcedureCalls() throws SQLException {
-		throw new AbstractMethodError( "supportsSchemasInProcedureCalls is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsSchemasInTableDefinitions() throws SQLException {
-		throw new AbstractMethodError( "supportsSchemasInTableDefinitions is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsSchemasInIndexDefinitions() throws SQLException {
-		throw new AbstractMethodError( "supportsSchemasInIndexDefinitions is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException {
-		throw new AbstractMethodError( "supportsSchemasInPrivilegeDefinitions is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsCatalogsInDataManipulation() throws SQLException {
-		throw new AbstractMethodError( "supportsCatalogsInDataManipulation is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsCatalogsInProcedureCalls() throws SQLException {
-		throw new AbstractMethodError( "supportsCatalogsInProcedureCalls is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsCatalogsInTableDefinitions() throws SQLException {
-		throw new AbstractMethodError( "supportsCatalogsInTableDefinitions is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsCatalogsInIndexDefinitions() throws SQLException {
-		throw new AbstractMethodError( "supportsCatalogsInIndexDefinitions is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException {
-		throw new AbstractMethodError( "supportsCatalogsInPrivilegeDefinitions is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsPositionedDelete() throws SQLException {
-		throw new AbstractMethodError( "supportsPositionedDelete is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsPositionedUpdate() throws SQLException {
-		throw new AbstractMethodError( "supportsPositionedUpdate is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsOpenCursorsAcrossCommit() throws SQLException {
-		throw new AbstractMethodError( "supportsOpenCursorsAcrossCommit is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public boolean supportsOpenCursorsAcrossRollback() throws SQLException {
-		throw new AbstractMethodError( "supportsOpenCursorsAcrossRollback is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public boolean supportsOpenStatementsAcrossCommit() throws SQLException {
-		throw new AbstractMethodError( "supportsOpenStatementsAcrossCommit is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public boolean supportsOpenStatementsAcrossRollback() throws SQLException {
-		throw new AbstractMethodError( "supportsOpenStatementsAcrossRollback is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public int getMaxBinaryLiteralLength() throws SQLException {
@@ -1483,7 +1488,9 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getTableTypes() throws SQLException {
-		throw new AbstractMethodError( "getTableTypes is not implemented yet." ); //FIX!!! Broken placeholder
+		final LinkedHashMap<String,Object> map = new LinkedHashMap<String,Object>();
+		map.put("name", "TABLE");
+		return new IteratorResultSet(Collections.singletonList(map).iterator());
 	}
 	public ResultSet getTablePrivileges( String s, String s1, String s2 ) throws SQLException {
 		throw new AbstractMethodError( "getTablePrivileges is not implemented yet." ); //FIX!!! Broken placeholder
@@ -1506,71 +1513,75 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public boolean supportsResultSetConcurrency( int i, int i1 ) throws SQLException {
-		throw new AbstractMethodError( "supportsResultSetConcurrency is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean ownUpdatesAreVisible( int i ) throws SQLException {
-		throw new AbstractMethodError( "ownUpdatesAreVisible is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean ownDeletesAreVisible( int i ) throws SQLException {
-		throw new AbstractMethodError( "ownDeletesAreVisible is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean ownInsertsAreVisible( int i ) throws SQLException {
-		throw new AbstractMethodError( "ownInsertsAreVisible is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean othersUpdatesAreVisible( int i ) throws SQLException {
-		throw new AbstractMethodError( "othersUpdatesAreVisible is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean othersDeletesAreVisible( int i ) throws SQLException {
-		throw new AbstractMethodError( "othersDeletesAreVisible is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean othersInsertsAreVisible( int i ) throws SQLException {
-		throw new AbstractMethodError( "othersInsertsAreVisible is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean updatesAreDetected( int i ) throws SQLException {
-		throw new AbstractMethodError( "updatesAreDetected is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean deletesAreDetected( int i ) throws SQLException {
-		throw new AbstractMethodError( "deletesAreDetected is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public boolean insertsAreDetected( int i ) throws SQLException {
-		throw new AbstractMethodError( "insertsAreDetected is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public ResultSet getUDTs( String s, String s1, String s2, int[] ints ) throws SQLException {
-		throw new AbstractMethodError( "getUDTs is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
+	}
+
+	private IteratorResultSet _emptyResultSet() {
+		return new IteratorResultSet(new ArrayList().iterator());
 	}
 
 	public boolean supportsSavepoints() throws SQLException {
-		throw new AbstractMethodError( "supportsSavepoints is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public boolean supportsNamedParameters() throws SQLException {
-		throw new AbstractMethodError( "supportsNamedParameters is not implemented yet." ); //FIX!!! Broken placeholder
+		return true;
 	}
 
 	public ResultSet getSuperTypes( String s, String s1, String s2 ) throws SQLException {
-		throw new AbstractMethodError( "getSuperTypes is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getSuperTables( String s, String s1, String s2 ) throws SQLException {
-		throw new AbstractMethodError( "getSuperTables is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getAttributes( String s, String s1, String s2, String s3 ) throws SQLException {
-		throw new AbstractMethodError( "getAttributes is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public boolean supportsResultSetHoldability( int i ) throws SQLException {
-		throw new AbstractMethodError( "supportsResultSetHoldability is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	public int getResultSetHoldability() throws SQLException {
@@ -1586,13 +1597,13 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public boolean supportsStatementPooling() throws SQLException {
-		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+		return false;
 	}
 
 	// === These are new methods added in Java 1.5 ===
 
 	public ResultSet getSchemas( String s, String s1 ) throws SQLException {
-		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+		return getSchemas();
 	}
 
 	public boolean supportsStoredFunctionsUsingCallSyntax() throws SQLException {
@@ -1604,19 +1615,19 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getClientInfoProperties() throws SQLException {
-		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getFunctions( String s, String s1, String s2 ) throws SQLException {
-		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getFunctionColumns( String s, String s1, String s2, String s3 ) throws SQLException {
-		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getPseudoColumns(final String catalog, final String schemaPattern, final String tableNamePattern, final String columnNamePattern) throws SQLException {
-		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public boolean generatedKeyAlwaysReturned() throws SQLException {
@@ -1624,11 +1635,11 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public <T> T unwrap( Class<T> aClass ) throws SQLException {
-		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+		throw new AbstractMethodError( "unwrap is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	public boolean isWrapperFor( Class<?> aClass ) throws SQLException {
-		throw new AbstractMethodError( "supportsStatementPooling is not implemented yet." ); //FIX!!! Broken placeholder
+		throw new AbstractMethodError( "isWrapperFor is not implemented yet." ); //FIX!!! Broken placeholder
 	}
 
 	// === New methods added in Java 1.6. Commment them out to compile in Java 1.5. ===
