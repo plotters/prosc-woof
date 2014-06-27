@@ -20,7 +20,9 @@ public class ErrorCodes {
 	
 	static {
 		InputStream stream = FileMakerException.class.getResourceAsStream("ErrorCodes.txt");
-		if( stream == null ) log.warning( "Couldn't locate ErrorCodes.txt file; no human-readable error messages will be generated.");
+		if( stream == null ) {
+			log.warning( "Couldn't locate ErrorCodes.txt file; no human-readable error messages will be generated.");
+		}
 		else try {
 			errorMessages.load(stream);
 		} catch (IOException e) {
