@@ -1191,4 +1191,8 @@ public class FmResultSet implements ResultSet {
 	public void updateSQLXML( String s, SQLXML sqlxml ) throws SQLException {
 		throw new AbstractMethodError("This feature has not been implemented yet."); //FIX!!! Broken placeholder
 	}
+
+	public FmRecord getCurrentRecord() {
+		return currentRecord;
+	}
 }

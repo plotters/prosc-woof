@@ -1,5 +1,6 @@
 package com.prosc.fmpjdbc;
 
+import com.prosc.shared.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;
@@ -139,8 +140,8 @@ public class FmMetaData implements DatabaseMetaData {
 		FmXmlRequest handler = new FmXmlRequest(connection.getProtocol(), connection.getHost(), connection.getFMVersionUrl(),
 				connection.getPort(), connection.getUsername(), connection.getPassword(), connection.getFmVersion());  // connection.getXmlRequestHandler(); // FIX!!! Just create a new instance
 		String dbName = schemaPattern;
-		if( dbName == null ) dbName = catalog;
-		if( dbName == null ) dbName = connection.getCatalog();
+		if( dbName == null || dbName.isEmpty()) dbName = catalog;
+		if( dbName == null || dbName.isEmpty() ) dbName = connection.getCatalog();
 		try {
 			Iterator<FmRecord> scriptIterator;
 			if( dbName == null ) {
@@ -178,6 +179,14 @@ public class FmMetaData implements DatabaseMetaData {
 				if( procedureNamePattern != null && !procedureNamePattern.equalsIgnoreCase( scriptName ) ) {
 					continue; //Script name doesn't match requested pattern
 				}
+				if (scriptName.charAt(0) == 57345) {
+					// this is a script folder, ignore it
+					continue;
+				}
+				if (scriptName.charAt(0) == 57346) {
+					// this some marker that comes after a script folder, ignore it
+					continue;
+				}
 				scriptObject = new FmRecord( scriptInfo, null, null );
 				scriptObject.addRawValue( scriptRecord.getString( 0, 1 ), 2 );
 				scriptObject.addRawValue( "" + DatabaseMetaData.procedureNoResult, 7 );
@@ -186,6 +195,10 @@ public class FmMetaData implements DatabaseMetaData {
 					logger.log(Level.FINEST, String.valueOf(scriptObject));
 				}
 			}
+			if (logger.isLoggable(Level.FINE)) {
+				logger.log(Level.FINE, "Got procedures: " + scripts );
+			}
+
 			return new FmResultSet( scripts.iterator(), scripts.size(), scriptInfo, connection );
 		} catch (IOException e) {
 			SQLException sqle = new SQLException(e.toString());
@@ -197,6 +210,9 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getProcedureColumns( String s, String s1, String s2, String s3 ) throws SQLException {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "getProcedureColumns(" + s + ", " + s1 + ", " + s2 + ", " + s3 + ")");
+		}
 		return _emptyResultSet();
 		//return new FmResultSet( null, 0, null, connection );
 	}
@@ -227,8 +243,8 @@ public class FmMetaData implements DatabaseMetaData {
 			log.fine( "FmMetaData call tracker: Created -dbnames request " + callCount );
 			try {
 				request.doRequest( postArgs );
-				for( Iterator it = request.getRecordIterator(); it.hasNext(); ) {
-					databaseName = ((FmRecord)it.next()).getString(0, 1 );
+				for( Iterator<FmRecord> it = request.getRecordIterator(); it.hasNext(); ) {
+					databaseName = (it.next()).getString(0, 1 );
 					mark = databaseName.toLowerCase().indexOf(".fp");
 					if( mark != -1 ) databaseName = databaseName.substring(0, mark);
 					databaseNames.add( databaseName );
@@ -278,7 +294,7 @@ public class FmMetaData implements DatabaseMetaData {
 					layoutName = rawRecord.getString( 0, 1 );
 					mark = layoutName.toLowerCase().indexOf(".fp");
 					if( mark != -1 ) layoutName = layoutName.substring(0, mark);
-					if (tableNamePattern != null && !tableNamePattern.equalsIgnoreCase(layoutName) && !tableNamePattern.equalsIgnoreCase(databaseName + "|" + layoutName)) {
+					if (tableNamePattern != null && !tableNamePattern.equalsIgnoreCase(layoutName) && !tableNamePattern.equalsIgnoreCase(databaseName + "|" + layoutName) && !tableNamePattern.equals("%")) {
 						continue;
 					}
 					FmRecord processedRecord = new FmRecord( tableFormat, null, null );
@@ -370,10 +386,6 @@ public class FmMetaData implements DatabaseMetaData {
 	 * @throws SQLException
 	 */
 	public ResultSet getColumns( @Nullable String catalog, @Nullable String schemaPattern, String tableNamePattern, @Nullable String columnNamePattern ) throws SQLException {
-		if (logger.isLoggable(Level.FINE)) {
-			logger.log(Level.FINE, "getColumns(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + columnNamePattern + ")");
-		}
-
 		FmFieldList fields = new FmFieldList();
 		FmTable dummyTable = new FmTable("Field definitions");
 		fields.add( new FmField(dummyTable, "TABLE_CAT", null, FmFieldType.TEXT, true) ); //0
@@ -404,8 +416,12 @@ public class FmMetaData implements DatabaseMetaData {
 			logger.log(Level.FINEST, String.valueOf(fields ));
 		}
 
-		if( lastColumns == null || lastFile == null || !lastFile.equals( catalog ) || lastTable == null || !lastTable.equals( tableNamePattern ) ) {
-//		FmResultSetRequest handler = null;
+		if (lastColumns == null || lastFile == null || !lastFile.equals(catalog) || lastTable == null || !lastTable.equals(tableNamePattern)) {
+			//		FmResultSetRequest handler = null;
+			if (logger.isLoggable(Level.INFO)) {
+				logger.log(Level.INFO, "getColumns(" + catalog + ", " + schemaPattern + ", " + tableNamePattern + ", " + columnNamePattern + ")");
+			}
+
 			FmRequest handler;
 			if( connection.getFmVersion() >= 7 ) {
 				handler = new FmResultSetRequest(connection.getProtocol(), connection.getHost(), "/fmi/xml/fmresultset.xml",
@@ -416,7 +432,7 @@ public class FmMetaData implements DatabaseMetaData {
 			}
 			try {
 				String dbName;
-				if( tableNamePattern != null && getCatalogSeparator() != null && tableNamePattern.contains( getCatalogSeparator() ) ) {
+				if( !StringUtils.isEmpty(tableNamePattern) && getCatalogSeparator() != null && tableNamePattern.contains( getCatalogSeparator() ) ) {
 					int mark = tableNamePattern.indexOf(getCatalogSeparator());
 					dbName = tableNamePattern.substring(0, mark);
 					tableNamePattern = tableNamePattern.substring( mark+1 );
@@ -425,7 +441,21 @@ public class FmMetaData implements DatabaseMetaData {
 					if( dbName == null ) dbName = catalog;
 					if( dbName == null ) dbName = connection.getCatalog();
 				}
-				//FIX!! What do we do if it's still null?
+				//FIX!! What do we do if it's still null? get column names across all tables?
+				if (StringUtils.isEmpty(tableNamePattern) || "%".equals(tableNamePattern)) {
+					log.log(Level.INFO, "Getting columns for ALL tables");
+					ResultSet catalogs = getTables(catalog, schemaPattern, null, false);
+					final List<FmRecord> allRecords = new ArrayList<FmRecord>();
+					while (catalogs.next()) {
+						String eachName = catalogs.getString(1);
+						FmResultSet eachResultSet = (FmResultSet) getColumns(catalog, schemaPattern, eachName, columnNamePattern);
+						while (eachResultSet.next()) {
+							FmRecord rec = eachResultSet.getCurrentRecord();
+							allRecords.add(rec);
+						}
+					}
+					return new FmResultSet(allRecords.iterator(), allRecords.size(), fields, connection);
+				}
 				String encodedDbName = URLEncoder.encode( dbName, "utf-8" );
 				String encodedTableName = URLEncoder.encode( tableNamePattern, "utf-8" );
 				String postArgs = "-db=" + encodedDbName + "&-lay=" + encodedTableName + "&-max=0&-findany";
@@ -454,6 +484,7 @@ public class FmMetaData implements DatabaseMetaData {
 					continue;
 				}
 				fieldRecord = new FmRecord( fields, null, null );
+				fieldRecord.addRawValue( catalog, 0 );
 				fieldRecord.addRawValue( tableNamePattern, 2 ); //FIX! Is this the right param to pass in? --jsb
 				fieldRecord.addRawValue( fieldName, 3 );
 				try {
@@ -541,6 +572,9 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	private List<String> getFieldPrivileges( String dbName, String tableName, String fieldName ) throws SQLException {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "getFieldPrivileges: " + dbName + ", " + tableName + ", " + fieldName + ")" );
+		}
 		FmField fieldDefinition = null;
 
 		for( FmField column : lastRawFields.getFields() ) {
@@ -813,7 +847,7 @@ public class FmMetaData implements DatabaseMetaData {
 		};
 		Collections.sort( versionCandidates, modstampComparator );
 		if( versionCandidates.size() == 0 ) {
-			return new FmResultSet(null, 0, new FmFieldList(), connection );
+			return _emptyResultSet();
 		} else {
 			FmFieldList rsColumns = new FmFieldList();
 			FmTable dummyTable = new FmTable("Field definitions");
@@ -843,6 +877,9 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getPrimaryKeys( String catalog, String schema, String table ) throws SQLException {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "getPrimaryKeys(: " + catalog + ", " + schema + ", " + table + ")" );
+		}
 		getColumns( catalog, schema, table, null );
 		List<FmField> pkCandidates = new ArrayList<FmField>(3);
 		for( FmField field : lastRawFields.getFields() ) {
@@ -897,17 +934,25 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getImportedKeys( String s, String s1, String s2 ) throws SQLException {
+		return _emptyResultSet();
+	}
+
+	private FmResultSet _emptyResultSet() {
 		return new FmResultSet(null, 0, new FmFieldList(), connection );
 	}
 
 	public ResultSet getTypeInfo() throws SQLException {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "getTypeInfo()");
+		}
+
 		List typesList = new LinkedList();
 		if (logger.isLoggable(Level.FINE)) {
 			logger.log(Level.FINE, String.valueOf( FmFieldType.resultSetFormat));
 		}
 		Object eachType;
-		for( Iterator it = FmFieldType.publishedTypes.iterator(); it.hasNext(); ) {
-			eachType = ((FmFieldType)it.next()).getInResultSetFormat();
+		for( Iterator<FmFieldType> it = FmFieldType.publishedTypes.iterator(); it.hasNext(); ) {
+			eachType = (it.next()).getInResultSetFormat();
 			if (logger.isLoggable(Level.FINEST)) {
 				logger.log(Level.FINEST, String.valueOf(eachType ));
 			}
@@ -1018,6 +1063,9 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getSchemas() throws SQLException {
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "getSchemas()");
+		}
 		return _emptyResultSet();
 	}
 
@@ -1031,7 +1079,7 @@ public class FmMetaData implements DatabaseMetaData {
 		
 		request.setConnectTimeout( 15000 );
 		String postArgs;
-		List databases = new LinkedList();
+		List<FmRecord> databases = new LinkedList<FmRecord>();
 		postArgs = "-dbnames";
 
 		FmFieldList format = new FmFieldList();
@@ -1042,8 +1090,8 @@ public class FmMetaData implements DatabaseMetaData {
 		try {
 			request.doRequest(postArgs);
 
-			for (Iterator it = request.getRecordIterator(); it.hasNext();) {
-				FmRecord rawRecord = (FmRecord) it.next();
+			for (Iterator<FmRecord> it = request.getRecordIterator(); it.hasNext();) {
+				FmRecord rawRecord = it.next();
 				//String databaseName = rawRecord.getRawStringValue( 0 );
 				String databaseName = rawRecord.getString( 0, 1 );
 				FmRecord processRecord = new FmRecord(format, null, null);
@@ -1488,32 +1536,40 @@ public class FmMetaData implements DatabaseMetaData {
 	}
 
 	public ResultSet getTableTypes() throws SQLException {
-		final LinkedHashMap<String,Object> map = new LinkedHashMap<String,Object>();
-		map.put("name", "TABLE");
-		return new IteratorResultSet(Collections.singletonList(map).iterator());
+		if (logger.isLoggable(Level.FINE)) {
+			logger.log(Level.FINE, "getTableTypes()");
+		}
+		FmTable dummyTable = new FmTable("fmp_jdbc_table_types");
+		FmField tableTypeField = new FmField(dummyTable, "TABLE_TYPE", null, FmFieldType.TEXT, false);
+		FmFieldList fieldList = new FmFieldList(tableTypeField);
+		FmRecord tableTypeRecord = new FmRecord(fieldList, null, null);
+		tableTypeRecord.addRawValue("TABLE", 0);
+		List<FmRecord> types = Collections.singletonList(tableTypeRecord);
+		return new FmResultSet(types.iterator(), types.size(), fieldList, connection);
 	}
+
 	public ResultSet getTablePrivileges( String s, String s1, String s2 ) throws SQLException {
-		throw new AbstractMethodError( "getTablePrivileges is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getBestRowIdentifier( String s, String s1, String s2, int i, boolean b ) throws SQLException {
-		throw new AbstractMethodError( "getBestRowIdentifier is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getCrossReference( String s, String s1, String s2, String s3, String s4, String s5 ) throws SQLException {
-		throw new AbstractMethodError( "getCrossReference is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public ResultSet getIndexInfo( String s, String s1, String s2, boolean b, boolean b1 ) throws SQLException {
-		throw new AbstractMethodError( "getIndexInfo is not implemented yet." ); //FIX!!! Broken placeholder
+		return _emptyResultSet();
 	}
 
 	public boolean supportsResultSetType( int i ) throws SQLException {
-		throw new AbstractMethodError( "supportsResultSetType is not implemented yet." ); //FIX!!! Broken placeholder
+		return i == ResultSet.TYPE_FORWARD_ONLY;
 	}
 
-	public boolean supportsResultSetConcurrency( int i, int i1 ) throws SQLException {
-		return false;
+	public boolean supportsResultSetConcurrency( int type, int concurrency ) throws SQLException {
+		return type == ResultSet.TYPE_FORWARD_ONLY && concurrency == ResultSet.CONCUR_READ_ONLY;
 	}
 
 	public boolean ownUpdatesAreVisible( int i ) throws SQLException {
@@ -1554,10 +1610,6 @@ public class FmMetaData implements DatabaseMetaData {
 
 	public ResultSet getUDTs( String s, String s1, String s2, int[] ints ) throws SQLException {
 		return _emptyResultSet();
-	}
-
-	private IteratorResultSet _emptyResultSet() {
-		return new IteratorResultSet(new ArrayList().iterator());
 	}
 
 	public boolean supportsSavepoints() throws SQLException {
