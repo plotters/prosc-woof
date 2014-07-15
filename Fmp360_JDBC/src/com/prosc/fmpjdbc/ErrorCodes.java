@@ -38,7 +38,7 @@ public class ErrorCodes {
 
 	public static String getMessage( Integer errorCode ) {
 		String result = errorMessages.getProperty( String.valueOf(errorCode) );
-		if( result == null ) result = "Unknown error";
+		if( result == null ) result = "Unknown error (" + errorCode + ")";
 		return result;
 	}
 }

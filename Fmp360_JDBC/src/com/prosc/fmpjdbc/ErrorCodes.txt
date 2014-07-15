@@ -68,5 +68,8 @@
 #This is not in FM documentation
 8003 "Record is in use by another user"
 
+10006 Could not start Web Publishing Engine because it is already running
+10007 Syntax error in fmsadmin command
+
 #*see FileMaker Server 7 Advanced Custom Web Publishing Guide p.89 for all error codes
 #A comment
