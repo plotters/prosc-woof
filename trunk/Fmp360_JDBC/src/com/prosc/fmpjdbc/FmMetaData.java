@@ -440,6 +440,9 @@ public class FmMetaData implements DatabaseMetaData {
 					dbName = schemaPattern;
 					if( dbName == null ) dbName = catalog;
 					if( dbName == null ) dbName = connection.getCatalog();
+					if( dbName == null ) {
+						throw new IllegalArgumentException( "No catalog was specified in the connection or the call to getColumns" );
+					}
 				}
 				//FIX!! What do we do if it's still null? get column names across all tables?
 				if (StringUtils.isEmpty(tableNamePattern) || "%".equals(tableNamePattern)) {
