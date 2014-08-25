@@ -297,9 +297,9 @@ public class FmXmlRequest extends FmRequest {
 				String message = "Only received " + headerBytesRead + " bytes in XML response.";
 				boolean willRetry = maxAttempts > 1;
 				if( willRetry ) {
-					message += " maxAttempts is " + maxAttempts + "; will retry.";
+					message += maxAttempts + " attempts remaining; will retry.";
 				} else {
-					message += " maxAttempts is " + maxAttempts + "; will not retry.";
+					message += "That was the last attempt; will not retry.";
 				}
 				if( headerBytesRead == -1 ) {
 					message +=" No header bytes were received because the InputStream is at the end of file.";
