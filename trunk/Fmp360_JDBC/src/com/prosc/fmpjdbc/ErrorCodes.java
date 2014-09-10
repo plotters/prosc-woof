@@ -2,7 +2,9 @@ package com.prosc.fmpjdbc;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,30 +16,36 @@ import java.util.logging.Logger;
 public class ErrorCodes {
 	private static final Logger log = Logger.getLogger( ErrorCodes.class.getName() );
 	
-	private static final Properties errorMessages = new Properties();
+	//private static final Properties errorMessages = new Properties();
 	
 	public static final String AUTH_INVALID = "28000";
 	
-	static {
-		InputStream stream = FileMakerException.class.getResourceAsStream("ErrorCodes.txt");
-		if( stream == null ) {
-			log.warning( "Couldn't locate ErrorCodes.txt file; no human-readable error messages will be generated.");
-		}
-		else try {
-			errorMessages.load(stream);
-		} catch (IOException e) {
-			log.log( Level.SEVERE, "Could not load error messages resource ErrorCodes.txt", e );
-		} finally {
-			try {
-				stream.close();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-	}
+	//static {
+	//	InputStream stream = FileMakerException.class.getResourceAsStream("ErrorCodes.txt");
+	//	if( stream == null ) {
+	//		log.warning( "Couldn't locate ErrorCodes.txt file; no human-readable error messages will be generated.");
+	//	}
+	//	else try {
+	//		errorMessages.load(stream);
+	//	} catch (IOException e) {
+	//		log.log( Level.SEVERE, "Could not load error messages resource ErrorCodes.txt", e );
+	//	} finally {
+	//		try {
+	//			stream.close();
+	//		} catch (IOException e) {
+	//			throw new RuntimeException(e);
+	//		}
+	//	}
+	//}
 
 	public static String getMessage( Integer errorCode ) {
-		String result = errorMessages.getProperty( String.valueOf(errorCode) );
+		return getMessage(errorCode, Locale.getDefault());
+	}
+
+	public static String getMessage( Integer errorCode, Locale locale ) {
+		ResourceBundle bundle = ResourceBundle.getBundle("com.prosc.fmpjdbc.errorcodes", locale);
+		String key = String.valueOf(errorCode);
+		String result = bundle.containsKey(key) ? bundle.getString(key) : null;
 		if( result == null ) result = "Unknown error (" + errorCode + ")";
 		return result;
 	}
