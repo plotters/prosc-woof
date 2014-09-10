@@ -10,7 +10,8 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
-/** General purpose utility class for dealing with input streams and urls.*/
+/** @deprecated use com.prosc.IOUtils
+ *  General purpose utility class for dealing with input streams and urls.*/
 public class IOUtils extends Object {
 	//---InputStream utilities---
 	/** The default size to use for buffers when reading from InputStreams - 8192 bytes. */
