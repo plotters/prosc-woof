@@ -3,6 +3,7 @@ package com.prosc.fmpjdbc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
+import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -43,7 +44,12 @@ public class ErrorCodes {
 	}
 
 	public static String getMessage( Integer errorCode, Locale locale ) {
-		ResourceBundle bundle = ResourceBundle.getBundle("com.prosc.fmpjdbc.errorcodes", locale);
+		ResourceBundle bundle;
+		try {
+			bundle = ResourceBundle.getBundle("com.prosc.fmpjdbc.errorcodes", locale);
+		} catch (MissingResourceException e) {
+			bundle = ResourceBundle.getBundle("com.prosc.fmpjdbc.errorcodes", new Locale("en"));
+		}
 		String key = String.valueOf(errorCode);
 		String result = bundle.containsKey(key) ? bundle.getString(key) : null;
 		if( result == null ) result = "Unknown error (" + errorCode + ")";
