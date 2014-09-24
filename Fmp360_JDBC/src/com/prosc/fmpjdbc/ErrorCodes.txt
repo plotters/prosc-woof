@@ -72,5 +72,7 @@
 10006 Could not start Web Publishing Engine because it is already running
 10007 Syntax error in fmsadmin command
 
+20603 "Unknown Error" Restarting the Web Publishing Engine often fixes this. Otherwise, contact 360Works support.
+
 #*see FileMaker Server 7 Advanced Custom Web Publishing Guide p.89 for all error codes
 #A comment
