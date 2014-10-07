@@ -1,6 +1,6 @@
 package com.prosc.fmpjdbc;
 
-import com.prosc.shared.StringUtils;
+import com.prosc.fmpjdbc.util.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.UnsupportedEncodingException;

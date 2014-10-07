@@ -1,6 +1,6 @@
 package com.prosc.fmpjdbc;
 
-import com.prosc.database.JDBCUtils;
+import com.prosc.fmpjdbc.util.StringUtils;
 import junit.framework.TestCase;
 
 import java.sql.Connection;

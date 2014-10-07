@@ -1,6 +1,7 @@
 package com.prosc.fmpjdbc;
 
-import com.prosc.io.IOUtils;
+import com.prosc.fmpjdbc.util.IOUtils;
+import com.prosc.fmpjdbc.util.StringUtils;
 
 import java.io.*;
 import java.net.URL;

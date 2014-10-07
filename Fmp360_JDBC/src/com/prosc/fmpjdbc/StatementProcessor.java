@@ -1,6 +1,6 @@
 package com.prosc.fmpjdbc;
 
-import com.prosc.shared.StringUtils;
+import com.prosc.fmpjdbc.util.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -729,6 +729,6 @@ public class StatementProcessor {
 
 	@Override
 	public String toString() {
-		return this.getSQL() + " with parameters " + StringUtils.valueOfCollection( getParams(), 1000 ) + " and user name '" + ((FmConnection)statement.getConnection()).getUsername() + "'";
+		return this.getSQL() + " with parameters " + StringUtils.valueOfCollection(getParams(), 1000) + " and user name '" + ((FmConnection)statement.getConnection()).getUsername() + "'";
 	}
 }
