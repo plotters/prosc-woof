@@ -1,7 +1,7 @@
 package com.prosc.fmpjdbc;
 
-import com.prosc.io.IOUtils;
-import com.prosc.shared.StringUtils;
+import com.prosc.fmpjdbc.util.IOUtils;
+import com.prosc.fmpjdbc.util.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.xml.sax.*;
@@ -322,18 +322,18 @@ public class FmXmlRequest extends FmRequest {
 				}
 			} else {
 				String header = new String( headerBytes, 0, headerBytesRead, "utf-8" );
-				String errorCodeString = StringUtils.textBetween( header, "<ERRORCODE>", "</ERRORCODE>" );
+				String errorCodeString = StringUtils.textBetween(header, "<ERRORCODE>", "</ERRORCODE>");
 				if( errorCodeString == null || ! header.substring( 0, 5 ).equalsIgnoreCase( "<?xml" ) ) {
 					//Don't know how this could be null, other than maybe ERROROCODE appearing below the first 8192 bytes, but it's not something we can handle at this point in the process
 					throw new IOException( "Instead of receiving FileMaker XML data, received this: " + header );
 				} else if( "0".equals( errorCodeString ) || "401".equals( errorCodeString ) ) {
 					//0 or 401 are normal and should be processed in separate thread.
 				} else {
-					String productVersion = StringUtils.textBetween( header, "VERSION=\"", "\"" );
+					String productVersion = StringUtils.textBetween(header, "VERSION=\"", "\"");
 					setProductVersion( productVersion );
 					Integer i = Integer.valueOf( errorCodeString );
 					setErrorCode( i );
-					String layoutName = StringUtils.textBetween( header, "LAYOUT=\"", "\"" );
+					String layoutName = StringUtils.textBetween(header, "LAYOUT=\"", "\"");
 					throw FileMakerException.exceptionForErrorCode( i, getFullUrl(), layoutName, username );
 				}
 			}
@@ -700,7 +700,7 @@ public class FmXmlRequest extends FmRequest {
 			InputStream in = hybridUrl.openStream();
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			try {
-				IOUtils.writeInputToOutput( in, baos, 8192 );
+				IOUtils.writeInputToOutput(in, baos, 8192);
 				resultBytes = baos.toByteArray();
 			} finally {
 				in.close();

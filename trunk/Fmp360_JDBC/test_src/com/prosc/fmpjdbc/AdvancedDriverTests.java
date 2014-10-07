@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import com.prosc.shared.IOUtils;
+import com.prosc.fmpjdbc.util.IOUtils;
 
 /**
  * Created by IntelliJ IDEA. User: jesse Date: Apr 20, 2005 Time: 10:43:32 PM
