@@ -40,7 +40,7 @@ public class FmMetaDataTest extends TestCase {
 
 	private void _dump(final ResultSet schemas) throws SQLException {
 		System.out.println("Schemas:");
-		JDBCUtils.dumpResultSet(schemas, System.out, false);
+		//JDBCUtils.dumpResultSet(schemas, System.out, false);
 		System.out.println("");
 	}
 }
