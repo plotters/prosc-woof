@@ -147,7 +147,8 @@ public class FmXmlRequest extends FmRequest {
 		requestStartTime = System.currentTimeMillis();
 		postArgs = input;
 		redirected = false;
-		doRequest( 3 );
+		int maxAttempts = 5;
+		doRequest( maxAttempts );
 	}
 
 	private void doRequest( final int maxAttempts ) throws IOException, SQLException {
@@ -170,10 +171,11 @@ public class FmXmlRequest extends FmRequest {
 		File xmlFile;
 		try {
 			String fullUrl;
+			final int maxLogLength = 512;
 			if (postArgs != null) {
 				//postArgs = postPrefix + postArgs;
 				fullUrl = theUrl + "?" + postPrefix + postArgs;
-				concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>"; //Duplicate this code instead of place after the else/if because it's important for contactUrl to be set if the next 2 lines fail
+				concatUrl = fullUrl.length() < maxLogLength ? fullUrl : fullUrl.substring( 0, maxLogLength ) + "...<etc>"; //Duplicate this code instead of place after the else/if because it's important for contactUrl to be set if the next 2 lines fail
 				theConnection.setDoOutput(true);
 				PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
 				out.print(postPrefix);
@@ -181,7 +183,7 @@ public class FmXmlRequest extends FmRequest {
 				out.close();
 			} else {
 				fullUrl = theUrl.toExternalForm();
-				concatUrl = fullUrl.length() < 512 ? fullUrl : fullUrl.substring( 0, 512 ) + "...<etc>";
+				concatUrl = fullUrl.length() < maxLogLength ? fullUrl : fullUrl.substring( 0, maxLogLength ) + "...<etc>";
 			}
 			log.log( Level.INFO, "Starting request: " + concatUrl );
 
@@ -387,6 +389,7 @@ public class FmXmlRequest extends FmRequest {
 			} finally {
 				if( isStreamOpen ) {
 					if( log.isLoggable( Level.CONFIG ) ) {
+						//log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + theUrl + " ); username '" + username + "'; password length " + passwordLength );
 						log.config( "Closed request; request duration " + (System.currentTimeMillis() - requestStartTime) + " ms ( " + concatUrl + " ); username '" + username + "'; password length " + passwordLength );
 					}
 					isStreamOpen = false;
