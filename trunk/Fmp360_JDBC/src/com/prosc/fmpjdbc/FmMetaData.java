@@ -890,7 +890,11 @@ public class FmMetaData implements DatabaseMetaData {
 				pkCandidates.add( field );
 			}
 		}
-		Comparator<? super FmField> pkComparator = new Comparator<FmField>() {
+		//Only return PKs if there is exactly one candidate. This will rarely be the case.
+		//The reason I made this change is for MirrorSync, which assumes that if anything is returned from this method, it really is the primary key(s)
+		//Which is true for SQL databases. This makes our JDBC driver behave more like a standard SQL driver, which doesn't 'guess' at the right PK
+		
+		/*Comparator<? super FmField> pkComparator = new Comparator<FmField>() {
 			public int compare( FmField o1, FmField o2 ) {
 				String name1 = o1.getColumnName().toLowerCase();
 
@@ -907,11 +911,9 @@ public class FmMetaData implements DatabaseMetaData {
 				return 0;
 			}
 		};
-		Collections.sort( pkCandidates, pkComparator );
+		Collections.sort( pkCandidates, pkComparator );*/
 		FmFieldList rsColumns = new FmFieldList();
-		if( pkCandidates.size() == 0 ) {
-			return new FmResultSet(null, 0, rsColumns, connection );
-		} else {
+		if( pkCandidates.size() == 1 ) {
 			FmTable dummyTable = new FmTable("Field definitions");
 			rsColumns.add( new FmField(dummyTable, "TABLE_CAT", null, FmFieldType.TEXT, true) ); //0
 			rsColumns.add( new FmField(dummyTable, "TABLE_SCHEM", null, FmFieldType.TEXT, true) ); //1
@@ -929,6 +931,9 @@ public class FmMetaData implements DatabaseMetaData {
 			result.addRawValue( pkCandidates.get( 0 ).getColumnName(), 5 ); //PK_NAME String => primary key name (may be null)
 			Iterator<FmRecord> it = Collections.singleton( result ).iterator();
 			return new FmResultSet( it, 1, rsColumns, connection );
+		} else {
+			//If there are zero result, or more than one result, we don't know which one is the PK. Return an empty list.
+			return new FmResultSet(null, 0, rsColumns, connection );
 		}
 	}
 
