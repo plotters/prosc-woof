@@ -72,6 +72,8 @@ public class ErrorCodes {
 		} else if( errorCode >= 800 && errorCode <= 800 ) {
 			//All 8xx codes are temporary failures due to system problems, such as hard drive being full
 			return true;
+		} else if( errorCode == 8003 ) {
+			return true; //This is just like a 301; means record is in use
 		} else {
 			//Return true for everything else
 			return true;
