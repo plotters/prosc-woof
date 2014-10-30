@@ -221,7 +221,8 @@ public class FmXmlRequest extends FmRequest {
 						err.close();
 					}
 				}
-				throw new IOException("Server returned unexpected status code: " + httpStatusCode + " for URL \"" + fullUrl + "\"; message: " + message );
+				throw new IOException("Server returned unexpected status code: " + httpStatusCode + " for URL \"" + fullUrl + "\"\nmessage: " + message );
+				//throw new IOException("Server returned unexpected status code: " + httpStatusCode + " for URL \"" + fullUrl + "\"" );
 			}
 			synchronized( FmXmlRequest.this ) {
 				if(System.getProperty("com.prosc.fmxml.debug","false").equals("true")) { //careful!!! This will run a machine out of disk space if you leave it set.
