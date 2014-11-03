@@ -239,7 +239,7 @@ public class FmXmlRequest extends FmRequest {
 					if( xmlFile.createNewFile() ) {
 						InputStream resultStream = theConnection.getInputStream();
 						FileOutputStream fileOut = new FileOutputStream(xmlFile);
-						IOUtils.writeInputToOutput(resultStream, fileOut, 8192);
+						final long bytesWritten = IOUtils.writeInputToOutput( resultStream, fileOut, 8192 );
 						resultStream.close();
 						fileOut.flush();
 						OutputStreamWriter writer = new OutputStreamWriter( fileOut, "utf-8" );
@@ -247,7 +247,7 @@ public class FmXmlRequest extends FmRequest {
 						writer.close();
 						fileOut.close();
 						serverStream = new FileInputStream(xmlFile);
-						log.log(Level.INFO, "Debug mode is enabled. This request was stored in " + xmlFile.getName() + ". It will be deleted once the response is successfully parsed");
+						log.log(Level.INFO, "Debug mode is enabled. This request (length " + bytesWritten + ") was stored in " + xmlFile.getName() + ". It will be deleted once the response is successfully parsed");
 					} else {
 						log.log(Level.WARNING, "unable to create output file for fmxml debug");
 						serverStream = new BufferedInputStream( theConnection.getInputStream(), 8192 );
