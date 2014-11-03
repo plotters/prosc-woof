@@ -148,10 +148,10 @@ public class FmXmlRequest extends FmRequest {
 		postArgs = input;
 		redirected = false;
 		int maxAttempts = 5;
-		doRequest( maxAttempts );
+		doRequest( maxAttempts, maxAttempts );
 	}
 
-	private void doRequest( final int maxAttempts ) throws IOException, SQLException {
+	private void doRequest( final int remainingAttempts, final int totalAttempts ) throws IOException, SQLException {
 		synchronized( FmXmlRequest.this ) {
 			if (serverStream != null) {
 				throw new IllegalStateException("You must call closeRequest() before sending another request.");
@@ -194,7 +194,7 @@ public class FmXmlRequest extends FmRequest {
 				redirected = true;
 				String redirect = theConnection.getHeaderField( "location" );
 				theUrl = new URL( theUrl, redirect );
-				doRequest( maxAttempts );
+				doRequest( remainingAttempts, totalAttempts );
 				return;
 				//throw new IOException("Server has moved to new location: " + theConnection.getHeaderField("Location") );
 			}
@@ -225,16 +225,18 @@ public class FmXmlRequest extends FmRequest {
 				//throw new IOException("Server returned unexpected status code: " + httpStatusCode + " for URL \"" + fullUrl + "\"" );
 			}
 			synchronized( FmXmlRequest.this ) {
-				if(System.getProperty("com.prosc.fmxml.debug","false").equals("true")) { //careful!!! This will run a machine out of disk space if you leave it set.
+				final boolean lastRetry = remainingAttempts == 1 && remainingAttempts < totalAttempts;
+				if( lastRetry || System.getProperty("com.prosc.fmxml.debug","false").equals("true") ) { //careful!!! This will run a machine out of disk space if you leave it set.
+					log.info( "Will attempt to stream XML to disk before reading" );
 					Random random = new Random(System.currentTimeMillis());
 					if(System.getProperty("os.name").toLowerCase().contains("windows")) {
 						xmlFile = new File("C:\\WINDOWS\\Temp\\FmXml." + Thread.currentThread().getName()
 								+ "." + random.nextLong() + ".xml");
-					}else {
+					} else {
 						xmlFile = new File("/tmp/FmXml." + Thread.currentThread().getName()
 								+ "." + random.nextLong() + ".xml");
 					}
-					if(xmlFile.createNewFile()) {
+					if( xmlFile.createNewFile() ) {
 						InputStream resultStream = theConnection.getInputStream();
 						FileOutputStream fileOut = new FileOutputStream(xmlFile);
 						IOUtils.writeInputToOutput(resultStream, fileOut, 8192);
@@ -244,10 +246,9 @@ public class FmXmlRequest extends FmRequest {
 						writer.write( "\n\n<!-- Request URL: " + getFullUrl() + " / username: " + username + " -->" );
 						writer.close();
 						fileOut.close();
-						FileInputStream xmlInputStream = new FileInputStream(xmlFile);
-						serverStream = xmlInputStream;
+						serverStream = new FileInputStream(xmlFile);
 						log.log(Level.INFO, "Debug mode is enabled. This request was stored in " + xmlFile.getName() + ". It will be deleted once the response is successfully parsed");
-					}else{
+					} else {
 						log.log(Level.WARNING, "unable to create output file for fmxml debug");
 						serverStream = new BufferedInputStream( theConnection.getInputStream(), 8192 );
 					}
@@ -298,17 +299,17 @@ public class FmXmlRequest extends FmRequest {
 			serverStream.reset();
 			if( headerBytesRead < 368 ) { //This is about to the beginning of the </DATABASE> element. Even accounting for small variations in namespaces, versions, etc., we should have more bytes than this in any valid response.
 				String message = "Only received " + headerBytesRead + " bytes in XML response.";
-				boolean willRetry = maxAttempts > 1;
-				if( willRetry ) {
-					message += maxAttempts + " attempts remaining; will retry.";
-				} else {
-					message += "That was the last attempt; will not retry.";
-				}
-				if( headerBytesRead == -1 ) {
-					message +=" No header bytes were received because the InputStream is at the end of file.";
+				if( headerBytesRead == 0 ) {
+					message += " No header bytes were received because the Web Publishing Engine returned an empty result. Please stop and start the Web Publishing Engine and then try again. ";
 				} else {
 					String header = new String( headerBytes, 0, headerBytesRead, "utf-8" );
-					message += " Header bytes received:\n" + header;
+					message += " Header bytes received:\n" + header + "\n";
+				}
+				boolean willRetry = remainingAttempts > 1;
+				if( willRetry ) {
+					message += remainingAttempts + " attempts remaining; will retry.";
+				} else {
+					message += "That was the last attempt (out of " + totalAttempts + "); will not retry.";
 				}
 				log.log( Level.WARNING, message );
 				if( willRetry ) {
@@ -318,10 +319,11 @@ public class FmXmlRequest extends FmRequest {
 						Thread.interrupted(); //Not our problem
 					}
 					closeRequest();
-					doRequest( maxAttempts - 1 );
+					doRequest( remainingAttempts - 1, totalAttempts );
+					return;
 				} else {
-					log.log( Level.SEVERE, "maxAttempts is " + maxAttempts + "; no retries remaining. Full URL: " + getFullUrl() );
-					//Just continue to readResult, below. Maybe it can work with the result that we think is bad.
+					log.log( Level.SEVERE, "maxAttempts is " + remainingAttempts + "; no retries remaining. Full URL: " + getFullUrl() );
+					throw new IOException( message );
 				}
 			} else {
 				String header = new String( headerBytes, 0, headerBytesRead, "utf-8" );
@@ -344,18 +346,18 @@ public class FmXmlRequest extends FmRequest {
 			readResult( serverStream );
 		} catch( FileMakerException e ) {
 			boolean retry = false;
-			if( maxAttempts > 1 ) {
+			if( remainingAttempts > 1 ) {
 				if( e.getErrorCode() == 16 ) {
 					retry = true;
-					log.warning( "Received an error 16 retry message from FileMaker Server on attempt " + maxAttempts + ", will try again" );
+					log.warning( "Received an error 16 retry message from FileMaker Server on attempt " + remainingAttempts + ", will try again" );
 				} else if( e.getErrorCode() == 802 && retry802 ) {
 					retry = true;
-					log.warning( "Received an error 802 (no database available) from FileMaker Server on attempt " + maxAttempts + ", will try again" );
+					log.warning( "Received an error 802 (no database available) from FileMaker Server on attempt " + remainingAttempts + ", will try again" );
 				}
 			}
 			if( retry ) { //Error code 16 means retry
 				closeRequest(); //Probably not necessary, but also can't hurt
-				doRequest( maxAttempts - 1 );
+				doRequest( remainingAttempts - 1, totalAttempts );
 			} else {
 				throw e;
 			}
