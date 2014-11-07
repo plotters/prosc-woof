@@ -56,7 +56,7 @@ public class FmBlob implements Blob {
 
 	public byte[] getBytes() {
 		try {
-			return getBytes( 0, (int)length() );
+			return getBytes( 1, (int)length() );
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
