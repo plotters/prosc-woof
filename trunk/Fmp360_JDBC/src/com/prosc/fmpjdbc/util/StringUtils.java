@@ -467,9 +467,13 @@ public class StringUtils {
 	 * @throws IllegalArgumentException If maxLength < 3 (needed for the '...' characters).
 	 * */
 	public static String truncate( String input, int maxLength ) throws IllegalArgumentException {
+		String ellipsis = "\u2026";
+		return truncate(input, maxLength, ellipsis);
+	}
+
+	public static String truncate(final String input, final int maxLength, final String ellipsis) {
 		if( input == null ) return null;
 		if( input.length() < maxLength ) return input;
-		String ellipsis = "\u2026";
 		if( maxLength < ellipsis.length() ) throw new IllegalArgumentException("maxLength must be at least " + ellipsis.length() );
 		return input.substring( 0, maxLength - ellipsis.length() ) + ellipsis;
 	}
