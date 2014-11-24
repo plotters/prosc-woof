@@ -420,7 +420,7 @@ public class FmConnection implements Connection {
 	public void rollback() throws SQLException {}
 
 	public void setReadOnly( boolean b ) throws SQLException {
-		log.log(Level.WARNING, "Read-only is not supported");
+		throw new AbstractMethodError("Read-only is not supported");
 	}
 
 	public SQLWarning getWarnings() throws SQLException {
