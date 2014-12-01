@@ -9,6 +9,7 @@
       <output-path>$PROJECT_DIR$/out/artifacts/Fmp360_JDBC_jar</output-path>
       <root id="archive" name="Fmp360_JDBC.jar">
         <element id="module-output" name="Fmp360_JDBC" />
+        <element id="module-output" name="ProscCore" />
       </root>
     </artifact>
   </component>
@@ -349,6 +350,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Fmp360_JDBC/Fmp360_JDBC.iml" filepath="$PROJECT_DIR$/Fmp360_JDBC/Fmp360_JDBC.iml" />
+      <module fileurl="file://$proscbundle_dir$/ProscCore/ProscCore.iml" filepath="$proscbundle_dir$/ProscCore/ProscCore.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_5" assert-keyword="true" jdk-15="true" project-jdk-name="1.5" project-jdk-type="JavaSDK" />
@@ -360,10 +362,29 @@
     </option>
   </component>
   <component name="SvnBranchConfigurationManager">
+    <option name="myConfigurationMap">
+      <map>
+        <entry key="$proscbundle_dir$/ProscCore">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+      </map>
+    </option>
     <option name="mySupportsUserInfoFilter" value="true" />
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="svn" />
+    <mapping directory="$proscbundle_dir$/ProscCore" vcs="svn" />
   </component>
   <component name="WebServicesPlugin" addRequiredLibraries="true" />
   <component name="com.sixrr.metrics.MetricsReloaded">
@@ -393,6 +414,13 @@
     </doccer>
   </component>
   <component name="libraryTable">
+    <library name="annotations">
+      <CLASSES>
+        <root url="jar://$APPLICATION_HOME_DIR$/lib/annotations.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
     <library name="junit">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/jars_development/junit.jar!/" />
