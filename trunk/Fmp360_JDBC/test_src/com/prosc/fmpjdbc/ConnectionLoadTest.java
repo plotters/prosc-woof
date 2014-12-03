@@ -1,6 +1,7 @@
 package com.prosc.fmpjdbc;
 
 import junit.framework.TestCase;
+import org.xml.sax.SAXParseException;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,5 +31,24 @@ public class ConnectionLoadTest extends TestCase {
 				log.info( "Connected " + count + " times" );
 			}
 		}
+	}
+	
+	public void testSAXParseException() throws Exception {
+		Class.forName("com.prosc.fmpjdbc.Driver");
+		String url = "jdbc:fmp360://72.54.154.242/MD2_EMR";
+		Properties props = new Properties();
+		props.put( "user", "Christina Manus");
+		props.put("password", "globe227");
+		props.put("testCredentials", "always");
+		
+		int count = 0;
+		
+		while (count < 1000) {
+			Connection connection = new FmConnection(url, props);
+			connection.close();
+			count++;
+		}
+		
+		
 	}
 }
