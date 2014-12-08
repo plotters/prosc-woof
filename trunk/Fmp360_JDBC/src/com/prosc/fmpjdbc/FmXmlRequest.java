@@ -168,6 +168,8 @@ public class FmXmlRequest extends FmRequest {
 		if (authString != null) {
 			theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		}
+		final String charset = "UTF-8";
+		//theConnection.setRequestProperty("content-type", "application/x-www-form-urlencoded; charset=" + charset); // this sends gibberish to FileMaker
 		File xmlFile;
 		try {
 			String fullUrl;
@@ -177,7 +179,7 @@ public class FmXmlRequest extends FmRequest {
 				fullUrl = theUrl + "?" + postPrefix + postArgs;
 				concatUrl = fullUrl.length() < maxLogLength ? fullUrl : fullUrl.substring( 0, maxLogLength ) + "...<etc>"; //Duplicate this code instead of place after the else/if because it's important for contactUrl to be set if the next 2 lines fail
 				theConnection.setDoOutput(true);
-				PrintWriter out = new PrintWriter( theConnection.getOutputStream() );
+				PrintWriter out = new PrintWriter( new OutputStreamWriter( theConnection.getOutputStream(), charset) );
 				out.print(postPrefix);
 				out.println(postArgs);
 				out.close();
