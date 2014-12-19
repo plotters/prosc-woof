@@ -69,7 +69,7 @@ public class ErrorCodes {
 		} else if( isValidation( errorCode ) ) {
 			//Validation failures will not succeed until we either change the validation rules or the data itself. I'm assuming that we are not changing the rules, so it's permanent until the source data changes.
 			return false;
-		} else if( errorCode >= 800 && errorCode <= 800 ) {
+		} else if( errorCode >= 800 && errorCode <= 899 ) {
 			//All 8xx codes are temporary failures due to system problems, such as hard drive being full
 			return true;
 		} else if( errorCode == 8003 ) {
@@ -81,6 +81,6 @@ public class ErrorCodes {
 	}
 	
 	public static boolean isValidation( int errorCode ) {
-		return errorCode >= 500 && errorCode <= 500;
+		return errorCode >= 500 && errorCode <= 599;
 	}
 }
