@@ -16,6 +16,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +50,7 @@ public class FmXmlRequest extends FmRequest {
 	private static final Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 	private static final int BUFFER_SIZE = 8192;
 	private static final Map<String,byte[]> entityLookups = new HashMap<String, byte[]>();
+	private static final AtomicInteger openCount = new AtomicInteger();
 
 	/**
 	 * The URL (not including post data) where the response is retrieved from
@@ -162,7 +164,7 @@ public class FmXmlRequest extends FmRequest {
 
 		HttpURLConnection theConnection = (HttpURLConnection) theUrl.openConnection();
 		theConnection.setInstanceFollowRedirects( true ); //Set this to true because OS X Lion Server always redirects all requests to https://
-		theConnection.setUseCaches(false);
+		theConnection.setUseCaches( false );
 		theConnection.setConnectTimeout( connectTimeout ); //FIX!! Make this a configurable connection property
 		//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
 		if (authString != null) {
@@ -259,6 +261,7 @@ public class FmXmlRequest extends FmRequest {
 					serverStream = new BufferedInputStream(theConnection.getInputStream(), 8192 );
 				}
 				isStreamOpen = true;
+				incrementOpenCount();
 			}
 			if( log.isLoggable( Level.CONFIG ) ) {
 				creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
@@ -366,6 +369,17 @@ public class FmXmlRequest extends FmRequest {
 		}
 	}
 
+	private void incrementOpenCount() {
+		int openCount = FmXmlRequest.openCount.incrementAndGet();
+		if( openCount > 500 ) {
+			log.warning( "There are " + openCount + " open FmXmlRequest streams. Either we're extremely busy, or close() is not being called somewhere. Uncomment the finalize() method to find the problem." );
+		}
+	}
+
+	private void decrementOpenCount() {
+		openCount.decrementAndGet();
+	}
+
 	public void closeRequest() {
 		//useSelectFields = false;
 		//fieldDefinitions = null;
@@ -373,6 +387,7 @@ public class FmXmlRequest extends FmRequest {
 		//allFieldNames = new ArrayList();
 		//fmTable = null;
 		//    foundCount = 0;
+		decrementOpenCount();
 		synchronized( FmXmlRequest.this) {
 			try {
 				if( parsingThread != null && parsingThread.isAlive() ) {
@@ -410,7 +425,9 @@ public class FmXmlRequest extends FmRequest {
 		}
 	}
 
-	protected void finalize() throws Throwable {
+	// It turns out that this was causing an OutOfMemoryError in MirrorSync. See Kayako #9837. At the time the application crashed, it 2,775 instances of this object consuming 155,233,136 bytes of memory pending finalization.
+	// If we suspect that close() is not being called, uncomment this method and enable CONFIG logging to see a stack trace of where the problem is occurring.
+	/* protected void finalize() throws Throwable {
 		synchronized( FmXmlRequest.this ) {
 			if( isStreamOpen ) {
 				if( log.isLoggable( Level.CONFIG ) ) {
@@ -423,7 +440,7 @@ public class FmXmlRequest extends FmRequest {
 		}
 		//if (serverStream != null) serverStream.close();
 		super.finalize();
-	}
+	}*/
 
 	void readResult(@NotNull final InputStream streamToParse) throws SQLException {
 		synchronized( FmXmlRequest.this ) {
