@@ -187,8 +187,10 @@ public class StatementProcessor {
 					else if( operator == SearchTerm.LESS_THAN ) operatorString = "lt";
 					else if( operator == SearchTerm.LESS_THAN_OR_EQUALS ) operatorString = "lte";
 					else if( operator == SearchTerm.NOT_EQUALS ) operatorString = "neq";
-					else if( operator == SearchTerm.IS_NULL ) operatorString = "neq";
-					else if( operator == SearchTerm.IS_NOT_NULL ) operatorString = "eq";
+					else if( operator == SearchTerm.IS_NULL && fmVersion <= 11) operatorString = "neq";
+					else if( operator == SearchTerm.IS_NULL) operatorString = "eq";
+					else if( operator == SearchTerm.IS_NOT_NULL && fmVersion <=11 ) operatorString = "eq";
+					else if( operator == SearchTerm.IS_NOT_NULL ) operatorString = "neq";
 					else throw new IllegalArgumentException( "Unknown search term operator " + operator );
 					eachTermSegments[0] = "&" + URLEncoder.encode( fieldName + ".op", "UTF-8" ) + "=" + operatorString;
 				}
@@ -205,7 +207,7 @@ public class StatementProcessor {
 					if(value != null) {
 						throw new SqlParseException("Invalid query. Valid operators are 'IS NOT NULL' and 'IS NULL'");
 					} else {
-						eachTermSegments[2] = "*";
+						eachTermSegments[2] = fmVersion <=11 ? "*" : "=";
 					}
 				} else {
 					eachTermSegments[2] = urlEncodedValue( value, applyFormatter, wildcardsToEscape, operator == SearchTerm.EQUALS );
