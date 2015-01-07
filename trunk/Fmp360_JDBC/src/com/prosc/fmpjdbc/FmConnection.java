@@ -123,6 +123,7 @@ public class FmConnection implements Connection {
 			Long credentialsValidUntil = cachedCredentials.get( lookupKey );
 			if( credentialsValidUntil != null ) {
 				if( credentialsValidUntil >= System.currentTimeMillis() ) {
+					fmVersion = cachedCredentials.get( lookupKey + "fmVersion").intValue();
 					return; //We've already authenticated with this same information within the expiration window
 				} else {
 					cachedCredentials.remove( lookupKey ); //There are matching credentials in the cache, but they're expired and should be removed	
@@ -181,6 +182,7 @@ public class FmConnection implements Connection {
 
 					Long credentialsValidUntil = System.currentTimeMillis() + ( 120 * 1000 ); //Two minutes
 					cachedCredentials.put( lookupKey, credentialsValidUntil );
+					cachedCredentials.put( lookupKey + "fmVersion", new Long(fmVersion));
 				} else {
 					e.setConnection( this );
 					throw e;
