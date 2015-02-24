@@ -899,7 +899,13 @@ public class FmXmlRequest extends FmRequest {
 			} else if ("ROW".equals(qName)) {
 				foundDataForRow = false;
 				final String recidString = attributes.getValue( "RECORDID" );
-				currentRow = new FmRecord(fieldDefinitions, recidString, Long.valueOf(attributes.getValue("MODID")));
+				Long modid = 0L;
+				try {
+					modid = Long.valueOf( attributes.getValue( "MODID" ) );
+				} catch( NumberFormatException e ) {
+					log.log( Level.WARNING, "Could not get MODID as Long from value '" + attributes.getValue("MODID")  + "'; will assume 0." ); //This actually happened for Henry van der Borg; the attribute value was 'R'
+				}
+				currentRow = new FmRecord(fieldDefinitions, recidString, modid );
 				columnIterator = xmlColumns.iterator();
 				currentColumn = columnIterator.next(); //This is always the 'recid' column
 				currentColumn.setDataInRow( new StringBuilder( recidString ), currentRow, 1 );
