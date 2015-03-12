@@ -2,15 +2,19 @@ package com.prosc.fmpjdbc;
 
 import com.prosc.fmpjdbc.util.IOUtils;
 import com.prosc.fmpjdbc.util.StringUtils;
+import com.prosc.shared.Bool;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.xml.sax.*;
 import sun.misc.BASE64Encoder;
+import sun.net.www.protocol.http.AuthCacheImpl;
+import sun.net.www.protocol.http.AuthCacheValue;
 
 import javax.net.ssl.SSLHandshakeException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import java.io.*;
+import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -49,9 +53,16 @@ public class FmXmlRequest extends FmRequest {
 	//private static final int READ_TIMEOUT = 15 * 1000;
 	private static final Logger log = Logger.getLogger( FmXmlRequest.class.getName() );
 	private static final int BUFFER_SIZE = 8192;
+	private static final String SESSION_COOKIE_NAME = "WPCSessionID=";
+	
+	private static final WeakHashMap<String, String> sessionIds = new WeakHashMap<String, String>();
 	private static final Map<String,byte[]> entityLookups = new HashMap<String, byte[]>();
 	private static final AtomicInteger openCount = new AtomicInteger();
 
+	private final short passwordLength;
+	private final String username;
+	private final String authString;
+	
 	/**
 	 * The URL (not including post data) where the response is retrieved from
 	 */
@@ -65,18 +76,15 @@ public class FmXmlRequest extends FmRequest {
 	 */
 	private volatile SAXParser xParser;
 	private volatile SAXParser runningParser = null;
-	private String authString;
 	private String postPrefix = "";
 	private String postArgs;
 	private volatile boolean isStreamOpen = false;
 	private long requestStartTime;
 	private int connectTimeout = 60 * 1000;
-	private short passwordLength;
 
 	/** A set that initially contains all requested fields, and is trimmed down as metadata is parsed.  If there are any missingFields left after parsing metadata, an exception is thrown listing the missing fields. */
 	private Set<String> missingFields;
-	private RuntimeException creationStackTrace;
-	private String username;
+	//private RuntimeException creationStackTrace;
 	private Thread parsingThread;
 	private SQLException metadataError;
 	private Integer fmVersion;
@@ -93,9 +101,17 @@ public class FmXmlRequest extends FmRequest {
 		if ( (username != null && username.length() > 0) || (password != null && password.length() > 0 ) ) {
 			if( password == null ) password = ""; //Otherwise Java will use the word 'null' as the password
 			String tempString = username + ":" + password;
-			authString = new BASE64Encoder().encode(tempString.getBytes());
+			try {
+				authString = new BASE64Encoder().encode(tempString.getBytes("utf-8"));
+			} catch( UnsupportedEncodingException e ) {
+				throw new RuntimeException( e ); //Can't happen
+			}
 			this.username = username;
 			this.passwordLength = (short)password.length();
+		} else {
+			this.username = null;
+			this.passwordLength = 0;
+			this.authString = null;
 		}
 		if (fmVersion >= 5 && fmVersion < 7) {
 			this.setPostPrefix("-format=-fmp_xml&");
@@ -167,6 +183,16 @@ public class FmXmlRequest extends FmRequest {
 		theConnection.setUseCaches( false );
 		theConnection.setConnectTimeout( connectTimeout ); //FIX!! Make this a configurable connection property
 		//FIX!!! Make this a configurable connection property: theConnection.setReadTimeout( READ_TIMEOUT );
+
+		//This is neeeded in order to make sure that any previous values returned by an Authenticator are not used. See email sent by Jesse to 360Staff on 3/10/2015 for more details.
+		//This was causing problem for Ian Weir and Craig Miller, where mis-typed or empty passwords were returning other people's records.
+		Authenticator.setDefault( null );
+		AuthCacheValue.setAuthCache( new AuthCacheImpl() ); //This will reset the cache so the problem is fixed.
+
+		String sessionId = sessionIds.get( username );
+		if( sessionId != null ) {
+			theConnection.addRequestProperty( "Cookie", SESSION_COOKIE_NAME + "=" + sessionId );
+		}
 		if (authString != null) {
 			theConnection.addRequestProperty("Authorization", "Basic " + authString);
 		}
@@ -264,7 +290,7 @@ public class FmXmlRequest extends FmRequest {
 				incrementOpenCount();
 			}
 			if( log.isLoggable( Level.CONFIG ) ) {
-				creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
+				//creationStackTrace = new RuntimeException("Created FmXmlRequest and opened stream");
 			}
 		} catch( SSLHandshakeException e ) {
 			IOException ioe;
@@ -348,6 +374,19 @@ public class FmXmlRequest extends FmRequest {
 				}
 			}
 
+			String cookie = theConnection.getHeaderField( "Set-Cookie" );
+			if( cookie != null ) {
+				String[] cookieSegments = cookie.split( ";" );
+				if( cookieSegments[0].startsWith( SESSION_COOKIE_NAME ) ) {
+					String newSessionId = cookieSegments[0].substring( SESSION_COOKIE_NAME.length() );
+					if( newSessionId.startsWith( "\"" ) && newSessionId.endsWith( "\"" ) ) {
+						newSessionId = newSessionId.substring( 1, newSessionId.length() -1 ); //Strip quotes
+					}
+					if( ! Bool.equals( sessionId, newSessionId ) ) {
+						sessionIds.put( username, newSessionId );
+					}
+				}
+			}
 			readResult( serverStream );
 		} catch( FileMakerException e ) {
 			boolean retry = false;
@@ -805,7 +844,7 @@ public class FmXmlRequest extends FmRequest {
 
 		//private StringBuffer requestContent = new StringBuffer();
 		//private static final boolean debugMode = false; //If true, then the content of the XML will be stored in requestContent
-		private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
+		//private InputSource emptyInput = new InputSource( new ByteArrayInputStream(new byte[0]) );
 		private int sizeEstimate;
 		/** Incremented as metadata fields are parsed */
 		//private int currentMetaDataFieldIndex;
@@ -911,11 +950,7 @@ public class FmXmlRequest extends FmRequest {
 				currentColumn.setDataInRow( new StringBuilder( recidString ), currentRow, 1 );
 			} else if ("COL".equals(qName)) {
 				foundColStart = true; // added to fix a bug with columns that only have an end element - mww
-				try {
-					currentColumn = columnIterator.next();
-				} catch( NoSuchElementException e ) {
-					throw e;
-				}
+				currentColumn = columnIterator.next();
 			}
 			// One-shot nodes
 			else if ("FIELD".equals(qName)) {

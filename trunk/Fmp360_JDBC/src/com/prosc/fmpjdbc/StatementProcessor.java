@@ -39,8 +39,11 @@ import java.util.logging.Logger;
 //FIX!!! Searches WHERE x=NULL do not appear to work correctly. Need a test case. --jsb
 //FIX!!! Search WHERE x LIKE '=' to not appear to work either; you need to do x LIKE '==' to find null values.
 public class StatementProcessor {
-	private final static String DISPLAY_LAYOUT_MARKER="^^";
-	private final static TimeZone defaultTimeZone = TimeZone.getDefault();
+	private static final String DISPLAY_LAYOUT_MARKER="^^";
+	private static final TimeZone defaultTimeZone = TimeZone.getDefault();
+	private static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
+	private static final String WILDCARDS_LIKE = null;// note: this is null b/c when using LIKE we would like to pass in search strings exactly like we would in FileMaker
+	private static final String ESCAPE_C = "\\"; // escaped backslash.  Note, this should NOT be unicode encoded!
 	
 	private final SqlCommand command;
 	private final FmStatement statement;
@@ -52,11 +55,7 @@ public class StatementProcessor {
 	//private FmRecord insertedRecord;
 	private Vector<?> params;
 	private boolean is7OrLater = true; //For some reason I can't set this to final, don't know why...?
-	static final String WILDCARDS_EQUALS ="<>=�!?@#\"~*";
-	//static final String WILDCARDS_LIKE ="<>=�!?@#\"~";// note: * is not included, because that does what it is supposed to for LIKE searches.
-	static final String WILDCARDS_LIKE = null;// note: this is null b/c when using LIKE we would like to pass in search strings exactly like we would in FileMaker
 
-	private static final String ESCAPE_C = "\\"; // escaped backslash.  Note, this should NOT be unicode encoded!
 	//private FieldPosition sharedFieldPosition = new FieldPosition(0);
 	private Logger logger = Logger.getLogger( StatementProcessor.class.getName() );
 	private boolean returnGeneratedKeys = false;
